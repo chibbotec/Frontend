@@ -14,6 +14,8 @@ import {
   SquareTerminal,
 } from "lucide-react"
 
+
+import { useAuth } from "@/context/AuthContext"
 import { NavMain } from "@/components/dashboard/nav-main.tsx"
 import {NavProjects} from "@/components/dashboard/nav-projects"
 import { NavUser } from "@/components/dashboard/nav-user"
@@ -52,86 +54,74 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "이력서&포트폴리오",
       url: "#",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
-          title: "History",
+          title: "이력서",
           url: "#",
         },
         {
-          title: "Starred",
+          title: "포트폴리오",
           url: "#",
         },
         {
-          title: "Settings",
+          title: "일정관리",
           url: "#",
         },
       ],
     },
     {
-      title: "Models",
+      title: "기술면접",
       url: "#",
       icon: Bot,
       items: [
         {
-          title: "Genesis",
+          title: "면접 참여",
           url: "#",
         },
         {
-          title: "Explorer",
+          title: "문제 제출",
           url: "#",
         },
         {
-          title: "Quantum",
+          title: "나의 노트",
           url: "#",
         },
       ],
     },
     {
-      title: "Documentation",
+      title: "코딩테스트",
       url: "#",
       icon: BookOpen,
       items: [
         {
-          title: "Introduction",
+          title: "문제풀러가기",
           url: "#",
         },
         {
-          title: "Get Started",
+          title: "풀이기록",
           url: "#",
         },
         {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
+          title: "오답노트",
           url: "#",
         },
       ],
     },
     {
-      title: "Settings",
+      title: "설정",
       url: "#",
       icon: Settings2,
       items: [
         {
-          title: "General",
+          title: "일반설정",
           url: "#",
         },
         {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
+          title: "팀 설정",
           url: "#",
         },
       ],
@@ -157,6 +147,16 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth();
+
+  // 사용자 정보 구성 (기본 값 설정 및 실제 사용자 정보로 대체)
+  const userData = {
+    name: user?.nickname || user?.username || "사용자",
+    email: user?.email || "이메일 없음",
+    avatar: user?.avatar || "/avatars/default.jpg", // 기본 아바타 경로 설정
+  };
+
+
   return (
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
@@ -167,7 +167,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <NavProjects projects={data.projects} />
         </SidebarContent>
         <SidebarFooter>
-          <NavUser user={data.user} />
+          <NavUser user={userData} />
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
