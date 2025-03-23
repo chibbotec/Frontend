@@ -19,7 +19,7 @@ import { useAuth } from "@/context/AuthContext"
 import { NavMain } from "@/components/dashboard/nav-main.tsx"
 import {NavProjects} from "@/components/dashboard/nav-projects"
 import { NavUser } from "@/components/dashboard/nav-user"
-import { TeamSwitcher } from "@/components/dashboard/team-switcher"
+import { TeamSwitcher } from "@/pages/dashboard/space/team-switcher.tsx"
 import {
   Sidebar,
   SidebarContent,
@@ -35,23 +35,6 @@ const data = {
     email: "m@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
       title: "이력서&포트폴리오",
@@ -60,11 +43,11 @@ const data = {
       isActive: true,
       items: [
         {
-          title: "이력서",
+          title: "이력서 공유",
           url: "#",
         },
         {
-          title: "포트폴리오",
+          title: "포트폴리오 공유",
           url: "#",
         },
         {
@@ -79,7 +62,7 @@ const data = {
       icon: Bot,
       items: [
         {
-          title: "면접 참여",
+          title: "문제 풀기",
           url: "#",
         },
         {
@@ -153,14 +136,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const userData = {
     name: user?.nickname || user?.username || "사용자",
     email: user?.email || "이메일 없음",
-    avatar: user?.avatar || "/avatars/default.jpg", // 기본 아바타 경로 설정
+    avatar: user?.avatar || "/assets/default.jpg", // 기본 아바타 경로 설정
   };
 
 
   return (
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
-          <TeamSwitcher teams={data.teams} />
+          {/*<TeamSwitcher teams={data.teams} />*/}
+          <TeamSwitcher />
         </SidebarHeader>
         <SidebarContent>
           <NavMain items={data.navMain} />
