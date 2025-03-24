@@ -63,11 +63,11 @@ const data = {
       items: [
         {
           title: "문제 풀기",
-          url: "#",
+          url: "/study",
         },
         {
           title: "문제 제출",
-          url: "#",
+          url: "/questions",
         },
         {
           title: "나의 노트",

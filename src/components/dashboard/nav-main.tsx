@@ -1,5 +1,6 @@
 "use client"
 
+import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, type LucideIcon } from "lucide-react"
 
 import {
@@ -32,6 +33,10 @@ export function NavMain({
     }[]
   }[]
 }) {
+  // 현재 활성 스페이스 ID 가져오기
+  const { spaceId } = useParams<{ spaceId: string }>();
+  const activeSpaceId = spaceId || localStorage.getItem('activeSpaceId');
+
   return (
       <SidebarGroup>
         <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -53,15 +58,28 @@ export function NavMain({
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      {item.items?.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton asChild>
-                              <a href={subItem.url}>
-                                <span>{subItem.title}</span>
-                              </a>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                      ))}
+                      {item.items?.map((subItem) => {
+                        // URLs 처리 - 스페이스 ID가 필요한 경로에는 활성 스페이스 ID 삽입
+                        let finalUrl = subItem.url;
+
+                        // subItem.url이 "/study"나 "/questions"와 같은 특정 패턴이면 스페이스 ID 추가
+                        if (activeSpaceId && (
+                            subItem.url === "/study" ||
+                            subItem.url === "/questions"
+                        )) {
+                          finalUrl = `/space/${activeSpaceId}${subItem.url}`;
+                        }
+
+                        return (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton asChild>
+                                <Link to={finalUrl}>
+                                  <span>{subItem.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                        );
+                      })}
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>

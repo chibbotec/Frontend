@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { ChevronsUpDown, Plus, Loader2, Home, Users, AlertCircle } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 import {
   DropdownMenu,
@@ -10,19 +11,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx"
+} from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar.tsx"
-import { Button } from "@/components/ui/button.tsx"
+} from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 import {
   spaceService,
   type Space
-} from "@/pages/dashboard/space/Space.tsx"
-import { CreateSpaceDialog } from "@/pages/dashboard/space/Create-space.tsx"
+} from "@/pages/dashboard/space/Space"
+import { CreateSpaceDialog } from "@/pages/dashboard/space/Create-space"
 
 // 스페이스를 아이콘으로 변환하는 함수
 const getSpaceIcon = (type: string) => {
@@ -36,11 +37,23 @@ const getSpacePlan = (type: string) => {
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar()
+  const navigate = useNavigate()
   const [spaces, setSpaces] = React.useState<Space[]>([])
   const [activeSpace, setActiveSpace] = React.useState<Space | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
+
+  // 스페이스 변경 시 처리 함수
+  const handleSpaceChange = (space: Space) => {
+    setActiveSpace(space);
+
+    // 스페이스 ID를 URL에 반영하고 해당 스페이스의 대시보드로 이동
+    navigate(`/dashboard/${space.id}`);
+
+    // localStorage에 현재 활성 스페이스 저장 (페이지 새로고침 시 유지)
+    localStorage.setItem('activeSpaceId', space.id.toString());
+  };
 
   // 스페이스 목록 조회
   const fetchSpaces = React.useCallback(async () => {
@@ -50,9 +63,26 @@ export function TeamSwitcher() {
       const result = await spaceService.getMySpaces();
       setSpaces(result);
 
-      // 활성 스페이스 선택 (기존 선택이 없거나 목록에 없으면 첫 번째 선택)
-      if (!activeSpace || !result.find(space => space.id === activeSpace.id)) {
-        setActiveSpace(result.length > 0 ? result[0] : null);
+      // localStorage에서 이전에 선택한 스페이스 ID 가져오기
+      const savedSpaceId = localStorage.getItem('activeSpaceId');
+
+      // 활성 스페이스 선택 로직
+      if (result.length > 0) {
+        // 1. 저장된 ID가 있고, 그 ID가 현재 스페이스 목록에 있으면 해당 스페이스 선택
+        if (savedSpaceId) {
+          const savedSpace = result.find(space => space.id.toString() === savedSpaceId);
+          if (savedSpace) {
+            setActiveSpace(savedSpace);
+            return;
+          }
+        }
+
+        // 2. 저장된 ID가 없거나 유효하지 않으면 첫 번째 스페이스 선택
+        setActiveSpace(result[0]);
+        localStorage.setItem('activeSpaceId', result[0].id.toString());
+      } else {
+        setActiveSpace(null);
+        localStorage.removeItem('activeSpaceId');
       }
     } catch (err) {
       console.error("스페이스 목록 조회 실패:", err);
@@ -60,7 +90,7 @@ export function TeamSwitcher() {
     } finally {
       setLoading(false);
     }
-  }, [activeSpace]);
+  }, []);
 
   // 컴포넌트 마운트 시 스페이스 목록 조회
   React.useEffect(() => {
@@ -137,7 +167,7 @@ export function TeamSwitcher() {
               onClose={() => setIsCreateDialogOpen(false)}
               onSpaceCreated={(newSpace) => {
                 setSpaces(prev => [...prev, newSpace]);
-                setActiveSpace(newSpace);
+                handleSpaceChange(newSpace);
                 fetchSpaces(); // 목록 갱신
               }}
           />
@@ -190,7 +220,7 @@ export function TeamSwitcher() {
                 return (
                     <DropdownMenuItem
                         key={space.id}
-                        onClick={() => setActiveSpace(space)}
+                        onClick={() => handleSpaceChange(space)}
                         className="gap-2 p-2"
                     >
                       <div className="flex size-6 items-center justify-center rounded-sm border">
@@ -224,7 +254,7 @@ export function TeamSwitcher() {
             onClose={() => setIsCreateDialogOpen(false)}
             onSpaceCreated={(newSpace) => {
               setSpaces(prev => [...prev, newSpace]);
-              setActiveSpace(newSpace);
+              handleSpaceChange(newSpace);
               fetchSpaces(); // 목록 갱신
             }}
         />
