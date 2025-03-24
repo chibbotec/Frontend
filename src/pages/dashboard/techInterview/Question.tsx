@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSpace } from "@/context/SpaceContext";
 import axios from 'axios';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Eye } from "lucide-react";
 import { useParams } from "react-router-dom";
+
 
 // 타입 정의
 interface Participant {
@@ -63,7 +65,7 @@ const techClassOptions = [
 ];
 
 export function QuestionsTable() {
-  // URL에서 spaceId 가져오기
+  const { currentSpace } = useSpace(); // SpaceContext에서 현재 스페이스 정보 가져오기
   const { spaceId } = useParams<{ spaceId: string }>();
   const currentSpaceId = spaceId || localStorage.getItem('activeSpaceId') || '';
 
@@ -74,11 +76,29 @@ export function QuestionsTable() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
 
+
   const [newQuestion, setNewQuestion] = useState<QuestionCreateRequest>({
     techClass: "JavaScript",
     questionText: "",
-    participants: [] // 빈 배열로 초기화
+    participants: currentSpace ?
+        currentSpace.members.map(member => ({
+          id: member.id,
+          nickname: member.nickname
+        })) :
+        [] // 현재 스페이스 멤버가 있으면 멤버 목록으로, 없으면 빈 배열
   });
+
+  useEffect(() => {
+    if (currentSpace) {
+      setNewQuestion(prev => ({
+        ...prev,
+        participants: currentSpace.members.map(member => ({
+          id: member.id,
+          nickname: member.nickname
+        }))
+      }));
+    }
+  }, [currentSpace]);
 
   // 문제 목록 가져오기
   const fetchQuestions = async () => {
@@ -130,6 +150,8 @@ export function QuestionsTable() {
           newQuestion,
           { withCredentials: true }
       );
+
+      console.log('새 문제 등록 결과:', response.data);
 
       // 성공적으로 추가되면 목록 새로고침
       fetchQuestions();
