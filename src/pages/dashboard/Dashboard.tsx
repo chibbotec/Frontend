@@ -1,5 +1,4 @@
-import { useParams, Outlet } from 'react-router-dom';
-import { AppSidebar } from "@/components/dashboard/app-sidebar"
+import { AppSidebar } from "@/components/dashboard/app-sidebar.tsx"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,17 +13,20 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useSpace } from "@/context/SpaceContext" // SpaceContext import
+import { useEffect } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-// 대시보드 메인 컴포넌트
 export default function Dashboard() {
-  // 현재 활성 스페이스 ID 가져오기
-  const { spaceId } = useParams<{ spaceId: string }>();
+  // 스페이스 컨텍스트에서 현재 스페이스와 로딩 상태 가져오기
+  const { currentSpace, isLoading, error, fetchSpaces } = useSpace()
 
-  // 스페이스 ID가 URL 파라미터로 주어진 경우 localStorage에 저장
-  // (팀 전환 시점에서도 저장하지만, URL로 직접 접근한 경우를 위해 추가 처리)
-  if (spaceId) {
-    localStorage.setItem('activeSpaceId', spaceId);
-  }
+  // 컴포넌트 마운트 시 스페이스 목록 가져오기
+  useEffect(() => {
+    fetchSpaces()
+  }, [fetchSpaces])
 
   return (
       <SidebarProvider>
@@ -34,34 +36,68 @@ export default function Dashboard() {
             <div className="flex items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#">
-                      취업 뽀개기
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="hidden md:block" />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>대시보드</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
+
+              {isLoading ? (
+                  // 로딩 중 상태 표시
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      <BreadcrumbItem>
+                        <Skeleton className="h-5 w-24" />
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <Skeleton className="h-5 w-32" />
+                      </BreadcrumbItem>
+                    </BreadcrumbList>
+                  </Breadcrumb>
+              ) : error ? (
+                  // 오류 상태 표시
+                  <span className="text-red-500 flex items-center gap-1">
+                <AlertCircle size={16} />
+                스페이스 정보를 불러올 수 없습니다
+              </span>
+              ) : currentSpace ? (
+                  // 현재 스페이스 정보 표시
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      <BreadcrumbItem className="hidden md:block">
+                        <BreadcrumbLink href="#">
+                          {currentSpace.type === 'PERSONAL' ? '개인 스페이스' : '팀 스페이스'}
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator className="hidden md:block" />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>{currentSpace.spaceName}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </BreadcrumbList>
+                  </Breadcrumb>
+              ) : (
+                  // 스페이스가 없는 경우
+                  <span className="text-muted-foreground">스페이스가 없습니다</span>
+              )}
             </div>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-            {/* Outlet을 사용하여 자식 라우트 컴포넌트를 렌더링 */}
-            <Outlet />
-
-            {/* 자식 라우트가 없는 경우 기본 대시보드 콘텐츠 표시 - 더 이상 필요하지 않음
-          {!spaceId && (
-            <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-              <div className="aspect-video rounded-xl bg-muted/50" />
-              <div className="aspect-video rounded-xl bg-muted/50" />
-              <div className="aspect-video rounded-xl bg-muted/50" />
-            </div>
-          )}
-          */}
+            {!currentSpace && !isLoading && !error ? (
+                // 스페이스가 없는 경우 안내 메시지
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>스페이스가 없습니다</AlertTitle>
+                  <AlertDescription>
+                    왼쪽 사이드바의 "스페이스 만들기" 버튼을 클릭하여 첫 번째 스페이스를 만들어보세요.
+                  </AlertDescription>
+                </Alert>
+            ) : (
+                // 정상적인 대시보드 콘텐츠
+                <>
+                  <div className="grid auto-rows-min gap-4 md:grid-cols-3">
+                    <div className="aspect-video rounded-xl bg-muted/50" />
+                    <div className="aspect-video rounded-xl bg-muted/50" />
+                    <div className="aspect-video rounded-xl bg-muted/50" />
+                  </div>
+                  <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+                </>
+            )}
           </div>
         </SidebarInset>
       </SidebarProvider>

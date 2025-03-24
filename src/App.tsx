@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { SpaceProvider } from '@/context/SpaceContext' // SpaceProvider 추가
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import LoginPage from "@/pages/login/Login"
 import Dashboard from "@/pages/dashboard/Dashboard"
@@ -29,40 +30,42 @@ const ProtectedRoute = () => {
 // 메인 라우팅 컴포넌트
 function AppRoutes() {
   return (
-      <Router>
-        <Routes>
-          {/* 공개 라우트 */}
-          <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Routes>
+        {/* 공개 라우트 */}
+        <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
 
-          {/* 인증 필요한 라우트 - 개발 모드에서는 인증 검사 건너뛰기 */}
-          <Route element={<ProtectedRoute />}>
-            {/* 대시보드 라우트 - 자식 라우트들을 포함 */}
-            <Route path="/" element={<Dashboard />}>
-              {/* 대시보드 인덱스 */}
-              <Route index element={<div>대시보드 홈</div>} />
+        {/* 인증 필요한 라우트 - 개발 모드에서는 인증 검사 건너뛰기 */}
+        <Route element={<ProtectedRoute />}>
+          {/* 대시보드 라우트 - 자식 라우트들을 포함 */}
+          <Route path="/" element={<Dashboard />}>
+            {/* 대시보드 인덱스 */}
+            <Route index element={<div>대시보드 홈</div>} />
 
-              {/* 스페이스별 라우트 */}
-              <Route path="space/:spaceId">
-                <Route index element={<div>스페이스 홈</div>} />
-                <Route path="study" element={<Study />} />
-                <Route path="questions" element={<Questions />} />
-              </Route>
+            {/* 스페이스별 라우트 */}
+            <Route path="space/:spaceId">
+              <Route index element={<div>스페이스 홈</div>} />
+              <Route path="study" element={<Study />} />
+              <Route path="questions" element={<Questions />} />
             </Route>
-
-            {/* 기본 리다이렉트 */}
-            <Route path="/dashboard" element={<Navigate to="/" replace />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
-        </Routes>
-      </Router>
+
+          {/* 기본 리다이렉트 */}
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
   );
 }
 
 function App() {
   return (
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
+      <Router>
+        <AuthProvider>
+          <SpaceProvider>
+            <AppRoutes />
+          </SpaceProvider>
+        </AuthProvider>
+      </Router>
   );
 }
 

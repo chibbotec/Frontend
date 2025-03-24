@@ -16,10 +16,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   spaceService,
-  type SpaceMember,
   type SpaceMemberRequest
 } from "@/pages/dashboard/space/Space"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useSpace } from "@/context/SpaceContext" // SpaceContext 임포트
 
 // 초대할 사용자 검색 상태 인터페이스
 interface SearchUser {
@@ -32,21 +32,20 @@ interface SearchUser {
 
 // 팀원 초대 버튼 컴포넌트
 export function InviteMembersButton({
-                                      spaceId,
-                                      onMembersAdded,
                                       disabled,
                                       className,
                                       variant = "outline",
                                       size = "default",
                                     }: {
-  spaceId: number
-  onMembersAdded?: (members: SpaceMember[]) => void
   disabled?: boolean
   className?: string
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
   size?: "default" | "sm" | "lg" | "icon"
 }) {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const { currentSpace } = useSpace() // 스페이스 컨텍스트에서 현재 스페이스 가져오기
+
+  if (!currentSpace) return null; // 스페이스가 없으면 렌더링하지 않음
 
   return (
       <>
@@ -64,9 +63,8 @@ export function InviteMembersButton({
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <InviteMembersDialog
-                spaceId={spaceId}
+                spaceId={currentSpace.id}
                 onClose={() => setIsDialogOpen(false)}
-                onMembersAdded={onMembersAdded}
             />
           </DialogContent>
         </Dialog>
@@ -78,14 +76,12 @@ export function InviteMembersButton({
 function InviteMembersDialog({
                                spaceId,
                                onClose,
-                               onMembersAdded
                              }: {
   spaceId: number
   onClose: () => void
-  onMembersAdded?: (members: SpaceMember[]) => void
 }) {
+  const { addMembers } = useSpace() // 스페이스 컨텍스트에서 addMembers 가져오기
   const [searchQuery, setSearchQuery] = React.useState("")
-  // const [loading, setLoading] = React.useState(false)
   const [searching, setSearching] = React.useState(false)
   const [inviting, setInviting] = React.useState(false)
   const [searchResults, setSearchResults] = React.useState<SearchUser[]>([])
@@ -192,10 +188,8 @@ function InviteMembersDialog({
       const addedMembers = await spaceService.addSpaceMembers(spaceId, membersToInvite);
       toast.success(`${addedMembers.length}명의 팀원이 초대되었습니다.`);
 
-      // 부모 컴포넌트에 추가된 멤버 통보
-      if (onMembersAdded) {
-        onMembersAdded(addedMembers);
-      }
+      // 컨텍스트를 통해 스페이스 멤버 목록 업데이트
+      addMembers(addedMembers);
 
       // 다이얼로그 닫기
       onClose();

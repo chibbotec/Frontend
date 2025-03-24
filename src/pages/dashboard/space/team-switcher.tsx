@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { ChevronsUpDown, Plus, Loader2, Home, Users, AlertCircle } from "lucide-react"
-import { useNavigate } from "react-router-dom"
 
 import {
   DropdownMenu,
@@ -19,11 +18,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import {
-  spaceService,
-  type Space
-} from "@/pages/dashboard/space/Space"
 import { CreateSpaceDialog } from "@/pages/dashboard/space/Create-space"
+import { useSpace } from "@/context/SpaceContext" // SpaceContext 임포트
 
 // 스페이스를 아이콘으로 변환하는 함수
 const getSpaceIcon = (type: string) => {
@@ -37,68 +33,14 @@ const getSpacePlan = (type: string) => {
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar()
-  const navigate = useNavigate()
-  const [spaces, setSpaces] = React.useState<Space[]>([])
-  const [activeSpace, setActiveSpace] = React.useState<Space | null>(null)
-  const [loading, setLoading] = React.useState(true)
-  const [error, setError] = React.useState(false)
+
+  // 스페이스 컨텍스트 사용
+  const { spaces, currentSpace, isLoading, error, fetchSpaces, switchSpace, addSpace } = useSpace()
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
 
-  // 스페이스 변경 시 처리 함수
-  const handleSpaceChange = (space: Space) => {
-    setActiveSpace(space);
-
-    // 스페이스 ID를 URL에 반영하고 해당 스페이스의 대시보드로 이동
-    navigate(`/dashboard/${space.id}`);
-
-    // localStorage에 현재 활성 스페이스 저장 (페이지 새로고침 시 유지)
-    localStorage.setItem('activeSpaceId', space.id.toString());
-  };
-
-  // 스페이스 목록 조회
-  const fetchSpaces = React.useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const result = await spaceService.getMySpaces();
-      setSpaces(result);
-
-      // localStorage에서 이전에 선택한 스페이스 ID 가져오기
-      const savedSpaceId = localStorage.getItem('activeSpaceId');
-
-      // 활성 스페이스 선택 로직
-      if (result.length > 0) {
-        // 1. 저장된 ID가 있고, 그 ID가 현재 스페이스 목록에 있으면 해당 스페이스 선택
-        if (savedSpaceId) {
-          const savedSpace = result.find(space => space.id.toString() === savedSpaceId);
-          if (savedSpace) {
-            setActiveSpace(savedSpace);
-            return;
-          }
-        }
-
-        // 2. 저장된 ID가 없거나 유효하지 않으면 첫 번째 스페이스 선택
-        setActiveSpace(result[0]);
-        localStorage.setItem('activeSpaceId', result[0].id.toString());
-      } else {
-        setActiveSpace(null);
-        localStorage.removeItem('activeSpaceId');
-      }
-    } catch (err) {
-      console.error("스페이스 목록 조회 실패:", err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // 컴포넌트 마운트 시 스페이스 목록 조회
-  React.useEffect(() => {
-    fetchSpaces();
-  }, [fetchSpaces]);
-
   // 로딩 중이거나 에러 상태일 때의 렌더링
-  if (loading) {
+  if (isLoading) {
     return (
         <SidebarMenu>
           <SidebarMenuItem>
@@ -166,9 +108,7 @@ export function TeamSwitcher() {
               isOpen={isCreateDialogOpen}
               onClose={() => setIsCreateDialogOpen(false)}
               onSpaceCreated={(newSpace) => {
-                setSpaces(prev => [...prev, newSpace]);
-                handleSpaceChange(newSpace);
-                fetchSpaces(); // 목록 갱신
+                addSpace(newSpace); // 스페이스 컨텍스트를 통해 스페이스 추가
               }}
           />
         </SidebarMenu>
@@ -176,13 +116,13 @@ export function TeamSwitcher() {
   }
 
   // 액티브 스페이스가 없는 경우 (예외 처리)
-  if (!activeSpace) {
+  if (!currentSpace) {
     return null;
   }
 
   // 아이콘 컴포넌트 동적 결정
-  const SpaceIcon = getSpaceIcon(activeSpace.type);
-  const spacePlan = getSpacePlan(activeSpace.type);
+  const SpaceIcon = getSpaceIcon(currentSpace.type);
+  const spacePlan = getSpacePlan(currentSpace.type);
 
   return (
       <SidebarMenu>
@@ -198,7 +138,7 @@ export function TeamSwitcher() {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {activeSpace.spaceName}
+                  {currentSpace.spaceName}
                 </span>
                   <span className="truncate text-xs">{spacePlan}</span>
                 </div>
@@ -220,7 +160,7 @@ export function TeamSwitcher() {
                 return (
                     <DropdownMenuItem
                         key={space.id}
-                        onClick={() => handleSpaceChange(space)}
+                        onClick={() => switchSpace(space)} // 스페이스 컨텍스트의 switchSpace 사용
                         className="gap-2 p-2"
                     >
                       <div className="flex size-6 items-center justify-center rounded-sm border">
@@ -253,9 +193,7 @@ export function TeamSwitcher() {
             isOpen={isCreateDialogOpen}
             onClose={() => setIsCreateDialogOpen(false)}
             onSpaceCreated={(newSpace) => {
-              setSpaces(prev => [...prev, newSpace]);
-              handleSpaceChange(newSpace);
-              fetchSpaces(); // 목록 갱신
+              addSpace(newSpace); // 스페이스 컨텍스트를 통해 스페이스 추가
             }}
         />
       </SidebarMenu>

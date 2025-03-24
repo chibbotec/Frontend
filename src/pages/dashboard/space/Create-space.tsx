@@ -20,6 +20,7 @@ import {
   type SpaceMemberRequest,
   type CreateSpaceRequest
 } from "@/pages/dashboard/space/Space"
+import { useSpace } from "@/context/SpaceContext" // SpaceContext 임포트
 
 // 사용자 검색을 위한 인터페이스
 interface SearchUser {
@@ -64,7 +65,7 @@ export const searchUsers = async (query: string): Promise<SearchUser[]> => {
 export interface CreateSpaceDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSpaceCreated: (space: Space) => void;
+  onSpaceCreated?: (space: Space) => void; // 선택적으로 변경
 }
 
 export function CreateSpaceDialog({
@@ -72,6 +73,7 @@ export function CreateSpaceDialog({
                                     onClose,
                                     onSpaceCreated,
                                   }: CreateSpaceDialogProps) {
+  const { addSpace } = useSpace(); // SpaceContext의 addSpace 사용
   const [spaceName, setSpaceName] = React.useState("");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [searching, setSearching] = React.useState(false);
@@ -188,8 +190,13 @@ export function CreateSpaceDialog({
             "이제 팀원을 초대하고 협업을 시작하세요."
       });
 
-      // 생성된 스페이스 정보 콜백
-      onSpaceCreated(newSpace);
+      // 컨텍스트에 추가
+      addSpace(newSpace);
+
+      // 생성된 스페이스 정보 콜백 (선택적)
+      if (onSpaceCreated) {
+        onSpaceCreated(newSpace);
+      }
 
       // 다이얼로그 닫기
       onClose();
