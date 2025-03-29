@@ -33,7 +33,7 @@ export interface SpaceMemberRoleRequest {
 }
 
 // 목업 사용 설정 (true로 설정하면 실제 API 호출 없이 목업 데이터 사용)
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -69,7 +69,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 스페이스 생성
   createSpace: async (type: 'PERSONAL' | 'TEAM', request: CreateSpaceRequest): Promise<Space> => {
     try {
-      const response = await axios.post(`${apiUrl}/space?type=${type}`, request, {
+      const response = await axios.post(`${apiUrl}/api/v1/space?type=${type}`, request, {
         withCredentials: true
       });
       return response.data;
@@ -82,7 +82,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 스페이스 정보 수정
   updateSpace: async (id: number, request: CreateSpaceRequest): Promise<Space> => {
     try {
-      const response = await axios.patch(`${apiUrl}/space/${id}`, request, {
+      const response = await axios.patch(`${apiUrl}/api/v1/space/${id}`, request, {
         withCredentials: true
       });
       return response.data;
@@ -95,7 +95,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 스페이스 삭제
   deleteSpace: async (id: number): Promise<string> => {
     try {
-      const response = await axios.delete(`${apiUrl}/space/${id}`, {
+      const response = await axios.delete(`${apiUrl}/api/v1/space/${id}`, {
         withCredentials: true
       });
       return response.data;
@@ -108,7 +108,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 스페이스 멤버 목록 조회
   getSpaceMembers: async (spaceId: number): Promise<SpaceMember[]> => {
     try {
-      const response = await axios.get(`${apiUrl}/space/${spaceId}/members`, {
+      const response = await axios.get(`${apiUrl}/api/v1/space/${spaceId}/members`, {
         withCredentials: true
       });
       return response.data;
@@ -121,7 +121,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 스페이스 멤버 추가
   addSpaceMembers: async (spaceId: number, members: SpaceMemberRequest[]): Promise<SpaceMember[]> => {
     try {
-      const response = await axios.post(`${apiUrl}/space/${spaceId}/members`, members, {
+      const response = await axios.post(`${apiUrl}/api/v1/space/${spaceId}/members`, members, {
         withCredentials: true
       });
       return response.data;
@@ -134,7 +134,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 스페이스 멤버 역할 변경
   changeSpaceMemberRole: async (spaceId: number, userId: number, request: SpaceMemberRoleRequest): Promise<string> => {
     try {
-      const response = await axios.put(`${apiUrl}/space/${spaceId}/members/${userId}`, request, {
+      const response = await axios.put(`${apiUrl}/api/v1/space/${spaceId}/members/${userId}`, request, {
         withCredentials: true
       });
       return response.data;
@@ -147,7 +147,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 스페이스 멤버 삭제
   deleteSpaceMember: async (spaceId: number, userId: number): Promise<string> => {
     try {
-      const response = await axios.delete(`${apiUrl}/space/${spaceId}/members/${userId}`, {
+      const response = await axios.delete(`${apiUrl}/api/v1/space/${spaceId}/members/${userId}`, {
         withCredentials: true
       });
       return response.data;

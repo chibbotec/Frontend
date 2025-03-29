@@ -35,7 +35,7 @@ interface SearchUser {
 export const searchUsers = async (query: string): Promise<SearchUser[]> => {
   try {
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const response = await fetch(`${apiUrl}/members/search?keyword=${query}`, {
+    const response = await fetch(`${apiUrl}/api/v1/members/search?keyword=${query}`, {
       credentials: 'include'
     });
 

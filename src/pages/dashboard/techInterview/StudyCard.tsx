@@ -72,7 +72,7 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
 
     try {
       // 파이썬 AI 서비스에 요청
-      const response = await axios.post(`${apiUrl}/ai/${spaceId}/questions/ai-answer`, {
+      const response = await axios.post(`${apiUrl}/api/v1/ai/${spaceId}/questions/ai-answer`, {
         questionId: question.id,
         questionText: question.questionText,
         techClass: question.techClass
@@ -111,7 +111,7 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
 
     try {
       // API 요청
-      await axios.post(`${apiUrl}/space/${targetSpaceId}/questions/answers`, {
+      await axios.post(`${apiUrl}/api/v1/space/${targetSpaceId}/questions/answers`, {
         questionId: question.id,
         answerText,
         techClass: question.techClass

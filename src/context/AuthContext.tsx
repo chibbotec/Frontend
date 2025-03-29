@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkAuth = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || ''
-        const response = await axios.get(`${apiUrl}/members/me`, {
+        const response = await axios.get(`${apiUrl}/api/v1/api/vq/members/me`, {
           withCredentials: true
         });
         console.log('사용자 정보:', response.data);
@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // 사용자가 로그인한 후에 사용자 정보를 가져옵니다
       const apiUrl = import.meta.env.VITE_API_URL || ''
-      const response = await axios.get(`${apiUrl}/members/me`, {
+      const response = await axios.get(`${apiUrl}/api/v1/members/me`, {
         withCredentials: true
       });
       console.log('사용자 정보:', response.data);
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || ''
-      await axios.get(`${apiUrl}/auth/logout`, {
+      await axios.get(`${apiUrl}/api/v1/auth/logout`, {
         withCredentials: true
       });
 

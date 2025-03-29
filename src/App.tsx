@@ -5,9 +5,10 @@ import LoginPage from "@/pages/login/Login"
 import Dashboard from "@/pages/dashboard/Dashboard"
 import Study from "@/pages/dashboard/techInterview/Study"
 import Questions from "@/pages/dashboard/techInterview/Question" // 질문 관리 컴포넌트 (구현 필요)
+import GitHubCallback from "@/pages/login/GitHubCallback";
 
 // 개발 모드 확인 (환경 변수 또는 하드코딩으로 설정)
-const SKIP_LOGIN = true; // 개발 시 true, 배포 시 false로 변경
+const SKIP_LOGIN = false; // 개발 시 true, 배포 시 false로 변경
 
 // 인증 필요한 라우트를 위한 래퍼 컴포넌트
 const ProtectedRoute = () => {
@@ -52,6 +53,10 @@ function AppRoutes() {
           {/* 기본 리다이렉트 */}
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
+
+          {/* 소셜 로그인 콜백 처리 라우트 */}
+          <Route path="/auth/callback/github" element={<GitHubCallback />} />
+
         </Route>
       </Routes>
   );

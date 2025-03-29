@@ -80,7 +80,7 @@ function SignupForm({ className, onSignupSuccess }: SignupFormProps) {
       const apiUrl = import.meta.env.VITE_API_URL || "";
 
       // 회원가입 요청
-      const response = await axios.post(`${apiUrl}/auth/signup`, formData);
+      const response = await axios.post(`${apiUrl}/api/v1/auth/signup`, formData);
 
       console.log("회원가입 성공:", response.data);
 

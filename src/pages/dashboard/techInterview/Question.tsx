@@ -112,7 +112,7 @@ export function QuestionsTable() {
     setError(null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/tech-interview/${currentSpaceId}/questions`, {
+      const response = await axios.get(`${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/questions`, {
         withCredentials: true
       });
       setQuestions(response.data);
@@ -146,7 +146,7 @@ export function QuestionsTable() {
 
     try {
       const response = await axios.post(
-          `${API_BASE_URL}/tech-interview/${currentSpaceId}/questions`,
+          `${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/questions`,
           newQuestion,
           { withCredentials: true }
       );
@@ -184,7 +184,7 @@ export function QuestionsTable() {
 
     try {
       // 실제 API 호출로 삭제 요청
-      await axios.delete(`${API_BASE_URL}/tech-interview/${currentSpaceId}/questions/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/questions/${id}`, {
         withCredentials: true
       });
 
