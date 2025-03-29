@@ -27,16 +27,16 @@ export const mockSpaceService = {
   },
 
   // ID와 상관없이 항상 mockSpace를 반환
-  getSpaceById: async (id: number): Promise<Space> => {
+  getSpaceById: async (_id: number): Promise<Space> => {
     return mockSpace;
   },
 
   // 나머지 필요한 함수들 (최소한으로 구현)
-  createSpace: async (type: 'PERSONAL' | 'TEAM', request: CreateSpaceRequest): Promise<Space> => {
+  createSpace: async (_type: 'PERSONAL' | 'TEAM', _request: CreateSpaceRequest): Promise<Space> => {
     return mockSpace;
   },
 
-  addSpaceMembers: async (spaceId: number, members: any[]): Promise<SpaceMember[]> => {
+  addSpaceMembers: async (_spaceId: number, _members: any[]): Promise<SpaceMember[]> => {
     return mockSpace.members;
   }
 };
