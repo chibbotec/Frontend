@@ -22,8 +22,12 @@ export function GitHubLoginButton({ disabled = false }: { disabled?: boolean }) 
       // // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirect_uri=${encodeURIComponent(redirectUri)}`;
       // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirectUrl=${encodeURIComponent(redirectUri)}`;
 
-      const frontendCallbackUrl = window.location.origin + '/auth/callback/github';
-      const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(frontendCallbackUrl)}&redirectUrl=${encodeURIComponent(frontendCallbackUrl)}`;
+      // const frontendCallbackUrl = window.location.origin + '/auth/callback/github';
+      // const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(frontendCallbackUrl)}&redirectUrl=${encodeURIComponent(frontendCallbackUrl)}`;
+
+      // state만 설정하고 redirect_uri는 백엔드 설정을 따르게 함
+      const stateValue = window.location.origin + '/auth/callback/github';
+      const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(stateValue)}`;
 
       console.log('GitHub 로그인 URL:', finalUrl);
 
