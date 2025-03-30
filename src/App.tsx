@@ -28,11 +28,13 @@ const ProtectedRoute = () => {
   return <Outlet />;
 };
 
+// 메인 라우팅 컴포넌트
 function AppRoutes() {
   return (
       <Routes>
         {/* 공개 라우트 */}
         <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+        <Route path="/auth/callback/github" element={<GitHubCallback />} />
 
         {/* 소셜 로그인 콜백 라우트 - 보호된 라우트 밖으로 이동 */}
         <Route path="/auth/callback/github" element={<GitHubCallback />} />
