@@ -21,20 +21,51 @@ const ProtectedRoute = () => {
 
   // 로그인되지 않았으면 로그인 페이지로 리다이렉트
   if (!isLoggedIn) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // 로그인 되어있으면 자식 컴포넌트 렌더링
   return <Outlet />;
 };
 
-// 메인 라우팅 컴포넌트
+// // 메인 라우팅 컴포넌트
+// function AppRoutes() {
+//   return (
+//       <Routes>
+//         {/* 공개 라우트 */}
+//         <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+//
+//         {/* 인증 필요한 라우트 - 개발 모드에서는 인증 검사 건너뛰기 */}
+//         <Route element={<ProtectedRoute />}>
+//           {/* 대시보드 라우트 - 자식 라우트들을 포함 */}
+//           <Route path="/" element={<Dashboard />}>
+//             {/* 대시보드 인덱스 */}
+//             <Route index element={<div>대시보드 홈</div>} />
+//
+//             {/* 스페이스별 라우트 */}
+//             <Route path="space/:spaceId">
+//               <Route index element={<div>스페이스 홈</div>} />
+//               <Route path="study" element={<Study />} />
+//               <Route path="questions" element={<Questions />} />
+//             </Route>
+//           </Route>
+//
+//           {/* 기본 리다이렉트 */}
+//           <Route path="/dashboard" element={<Navigate to="/" replace />} />
+//           <Route path="*" element={<Navigate to="/" replace />} />
+//
+//           {/* 소셜 로그인 콜백 처리 라우트 */}
+//           <Route path="/auth/callback/github" element={<GitHubCallback />} />
+//
+//         </Route>
+//       </Routes>
+//   );
+// }
 function AppRoutes() {
   return (
       <Routes>
         {/* 공개 라우트 */}
         <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
-        <Route path="/auth/callback/github" element={<GitHubCallback />} />
 
         {/* 소셜 로그인 콜백 라우트 - 보호된 라우트 밖으로 이동 */}
         <Route path="/auth/callback/github" element={<GitHubCallback />} />
