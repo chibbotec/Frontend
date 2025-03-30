@@ -13,15 +13,18 @@ export function GitHubLoginButton({ disabled = false }: { disabled?: boolean }) 
       const apiUrl = import.meta.env.VITE_API_URL || '';
       // const apiUrl = "http://localhost:9010" // 끝에 슬래시 제거
 
-      // 리다이렉트 URL은 현재 도메인 기준으로 설정
+      // // 리다이렉트 URL은 현재 도메인 기준으로 설정
       // const redirectUri = `${window.location.origin}/auth/callback/github`;
-
-      // const redirectUri = `${apiUrl}/login/oauth2/code/github`;
-      const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(window.location.origin + '/auth/callback/github')}`;
-
-      // 최종 URL 로깅
-      // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirect_uri=${encodeURIComponent(redirectUri)}`;
+      //
+      //
+      //
+      // // 최종 URL 로깅
+      // // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirect_uri=${encodeURIComponent(redirectUri)}`;
       // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirectUrl=${encodeURIComponent(redirectUri)}`;
+
+      const frontendCallbackUrl = window.location.origin + '/auth/callback/github';
+      const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(frontendCallbackUrl)}&redirectUrl=${encodeURIComponent(frontendCallbackUrl)}`;
+
       console.log('GitHub 로그인 URL:', finalUrl);
 
       // 실제 인증 URL로 리다이렉트
