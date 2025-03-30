@@ -6,32 +6,52 @@ export function GitHubLoginButton({ disabled = false }: { disabled?: boolean }) 
   const [isLoading, setIsLoading] = useState(false);
 
   // GitHubLoginButton 컴포넌트 수정
-  const handleGitHubLogin = async () => {
+  // const handleGitHubLogin = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     // 소셜 로그인 URL 구성
+  //     const apiUrl = import.meta.env.VITE_API_URL || '';
+  //     // const apiUrl = "http://localhost:9010" // 끝에 슬래시 제거
+  //
+  //     // // 리다이렉트 URL은 현재 도메인 기준으로 설정
+  //     // const redirectUri = `${window.location.origin}/auth/callback/github`;
+  //     //
+  //     //
+  //     //
+  //     // // 최종 URL 로깅
+  //     // // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirect_uri=${encodeURIComponent(redirectUri)}`;
+  //     // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirectUrl=${encodeURIComponent(redirectUri)}`;
+  //
+  //     // const frontendCallbackUrl = window.location.origin + '/auth/callback/github';
+  //     // const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(frontendCallbackUrl)}&redirectUrl=${encodeURIComponent(frontendCallbackUrl)}`;
+  //
+  //     // state만 설정하고 redirect_uri는 백엔드 설정을 따르게 함
+  //     const stateValue = window.location.origin + '/auth/callback/github';
+  //     const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(stateValue)}`;
+  //
+  //     console.log('GitHub 로그인 URL:', finalUrl);
+  //
+  //     // 실제 인증 URL로 리다이렉트
+  //     window.location.href = finalUrl;
+  //   } catch (error) {
+  //     console.error("GitHub 로그인 오류:", error);
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const handleGitHubLogin = () => {
     setIsLoading(true);
     try {
-      // 소셜 로그인 URL 구성
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      // const apiUrl = "http://localhost:9010" // 끝에 슬래시 제거
 
-      // // 리다이렉트 URL은 현재 도메인 기준으로 설정
-      // const redirectUri = `${window.location.origin}/auth/callback/github`;
-      //
-      //
-      //
-      // // 최종 URL 로깅
-      // // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirect_uri=${encodeURIComponent(redirectUri)}`;
-      // const finalUrl = `${apiUrl}/oauth2/authorization/github?redirectUrl=${encodeURIComponent(redirectUri)}`;
+      // frontUrl은 환경에 따라 적절히 설정 (constants.js에서 가져오거나 현재 URL 기반으로 설정)
+      const frontUrl = window.location.origin + '/auth/callback/github';
 
-      // const frontendCallbackUrl = window.location.origin + '/auth/callback/github';
-      // const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(frontendCallbackUrl)}&redirectUrl=${encodeURIComponent(frontendCallbackUrl)}`;
-
-      // state만 설정하고 redirect_uri는 백엔드 설정을 따르게 함
-      const stateValue = window.location.origin + '/auth/callback/github';
-      const finalUrl = `${apiUrl}/oauth2/authorization/github?state=${encodeURIComponent(stateValue)}`;
+      // 카카오 로그인 방식과 유사하게 수정
+      const finalUrl = `${apiUrl}/oauth2/authorization/github?redirectUrl=${encodeURIComponent(frontUrl)}&state=github_auth_state`;
 
       console.log('GitHub 로그인 URL:', finalUrl);
 
-      // 실제 인증 URL로 리다이렉트
       window.location.href = finalUrl;
     } catch (error) {
       console.error("GitHub 로그인 오류:", error);
