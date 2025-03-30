@@ -21,19 +21,21 @@ const ProtectedRoute = () => {
 
   // 로그인되지 않았으면 로그인 페이지로 리다이렉트
   if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // 로그인 되어있으면 자식 컴포넌트 렌더링
   return <Outlet />;
 };
 
-// 메인 라우팅 컴포넌트
 function AppRoutes() {
   return (
       <Routes>
         {/* 공개 라우트 */}
         <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+
+        {/* 소셜 로그인 콜백 라우트 - 보호된 라우트 밖으로 이동 */}
+        <Route path="/auth/callback/github" element={<GitHubCallback />} />
 
         {/* 인증 필요한 라우트 - 개발 모드에서는 인증 검사 건너뛰기 */}
         <Route element={<ProtectedRoute />}>
@@ -53,10 +55,6 @@ function AppRoutes() {
           {/* 기본 리다이렉트 */}
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
-
-          {/* 소셜 로그인 콜백 처리 라우트 */}
-          <Route path="/auth/callback/github" element={<GitHubCallback />} />
-
         </Route>
       </Routes>
   );
