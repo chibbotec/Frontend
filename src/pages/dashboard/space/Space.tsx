@@ -43,7 +43,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 내 스페이스 목록 조회
   getMySpaces: async (): Promise<Space[]> => {
     try {
-      const response = await axios.get(`${apiUrl}/space`, {
+      const response = await axios.get(`${apiUrl}/api/v1/space`, {
         withCredentials: true
       });
       return response.data;
@@ -56,7 +56,7 @@ export const spaceService = USE_MOCK ? mockSpaceService : {
   // 특정 스페이스 조회
   getSpaceById: async (id: number): Promise<Space> => {
     try {
-      const response = await axios.get(`${apiUrl}/space/${id}`, {
+      const response = await axios.get(`${apiUrl}/api/v1/space/${id}`, {
         withCredentials: true
       });
       return response.data;
