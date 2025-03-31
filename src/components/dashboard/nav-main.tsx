@@ -65,7 +65,8 @@ export function NavMain({
                         // subItem.url이 "/study"나 "/questions"와 같은 특정 패턴이면 스페이스 ID 추가
                         if (activeSpaceId && (
                             subItem.url === "/study" ||
-                            subItem.url === "/questions"
+                            subItem.url === "/questions" ||
+                            subItem.url === "/settings"
                         )) {
                           finalUrl = `/space/${activeSpaceId}${subItem.url}`;
                         }

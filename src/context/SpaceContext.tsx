@@ -31,6 +31,13 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(false);
     try {
+      // 로그인 페이지에서는 스페이스 조회를 건너뜁니다
+      if (location.pathname === '/login') {
+        console.log('로그인 페이지에서는 스페이스 조회를 건너뜁니다');
+        setIsLoading(false);
+        return;
+      }
+
       console.log('spaceService.getMySpaces 호출 전');
       const result = await spaceService.getMySpaces();
       console.log('스페이스 목록 조회 결과:', result);

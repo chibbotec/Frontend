@@ -28,6 +28,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 사용자 정보 확인
   useEffect(() => {
     const checkAuth = async () => {
+      // 로그인 페이지에서는 인증 검사를 건너뜀
+      if (location.pathname === '/login') {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const apiUrl = import.meta.env.VITE_API_URL || ''
         const response = await axios.get(`${apiUrl}/api/v1/members/me`, {
@@ -48,22 +54,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async () => {
-    try {
-      // 사용자가 로그인한 후에 사용자 정보를 가져옵니다
-      const apiUrl = import.meta.env.VITE_API_URL || ''
-      const response = await axios.get(`${apiUrl}/api/v1/members/me`, {
-        withCredentials: true
-      });
-      console.log('사용자 정보:', response.data);
-      setUser(response.data);
-      setIsLoggedIn(true);
+  try {
+    // 사용자가 로그인한 후에 사용자 정보를 가져옵니다
+    const apiUrl = import.meta.env.VITE_API_URL || ''
+    const response = await axios.get(`${apiUrl}/api/v1/members/me`, {
+      withCredentials: true
+    });
+    console.log('사용자 정보:', response.data);
+    setUser(response.data);
+    setIsLoggedIn(true);
 
-      // 로컬 스토리지에 로그인 상태 저장 (선택 사항)
-      localStorage.setItem('isLoggedIn', 'true');
-    } catch (error) {
-      console.error('사용자 정보 가져오기 실패:', error);
-    }
+    // 로컬 스토리지에 로그인 상태 저장 (선택 사항)
+    localStorage.setItem('isLoggedIn', 'true');
+    
+    return response.data; // 데이터 반환하도록 수정
+  } catch (error) {
+    console.error('사용자 정보 가져오기 실패:', error);
+    throw error; // 에러를 다시 던져서 호출하는 쪽에서 처리하도록 함
   }
+}
 
   const logout = async () => {
     try {

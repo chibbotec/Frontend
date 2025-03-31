@@ -1,11 +1,12 @@
 // src/services/spaceService.ts
 import axios from 'axios';
-import { mockSpaceService } from '@/pages/dashboard/space/mockSpace';
+// import { mockSpaceService } from '@/pages/dashboard/space/mockSpace';
 
 // Space 관련 타입 정의
 export interface SpaceMember {
   id: number;
   nickname: string;
+  role: 'OWNER' | 'ADMIN' | 'MEMBER';
 }
 
 export interface Space {
@@ -33,13 +34,13 @@ export interface SpaceMemberRoleRequest {
 }
 
 // 목업 사용 설정 (true로 설정하면 실제 API 호출 없이 목업 데이터 사용)
-const USE_MOCK = false;
+// const USE_MOCK = false;
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
 // Space 서비스 함수 정의
-export const spaceService = USE_MOCK ? mockSpaceService : {
+export const spaceService = {
   // 내 스페이스 목록 조회
   getMySpaces: async (): Promise<Space[]> => {
     try {

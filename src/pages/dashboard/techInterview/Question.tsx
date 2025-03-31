@@ -137,39 +137,43 @@ export function QuestionsTable() {
     });
   };
 
-  // 새 문제 등록
-  const handleAddQuestion = async () => {
-    if (!currentSpaceId) {
-      alert('유효한 스페이스 ID가 없습니다.');
-      return;
-    }
+// 새 문제 등록
+const handleAddQuestion = async () => {
+  if (!currentSpaceId) {
+    alert('유효한 스페이스 ID가 없습니다.');
+    return;
+  }
 
-    try {
-      const response = await axios.post(
-          `${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/questions`,
-          newQuestion,
-          { withCredentials: true }
-      );
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/questions`,
+      newQuestion,
+      { withCredentials: true }
+    );
 
-      console.log('새 문제 등록 결과:', response.data);
+    console.log('새 문제 등록 결과:', response.data);
 
-      // 성공적으로 추가되면 목록 새로고침
-      fetchQuestions();
+    // 성공적으로 추가되면 목록 새로고침
+    fetchQuestions();
 
-      // 입력 폼 초기화
-      setNewQuestion({
-        techClass: "JavaScript",
-        questionText: "",
-        participants: [] // 빈 배열 유지
-      });
+    // 입력 폼 초기화 - 현재 스페이스 멤버를 유지
+    setNewQuestion({
+      techClass: "JavaScript",
+      questionText: "",
+      participants: currentSpace ? 
+        currentSpace.members.map(member => ({
+          id: member.id,
+          nickname: member.nickname
+        })) : []
+    });
 
-      // 다이얼로그 닫기
-      setIsDialogOpen(false);
-    } catch (err) {
-      console.error('문제 등록 중 오류 발생:', err);
-      alert('문제를 등록하는데 실패했습니다.');
-    }
-  };
+    // 다이얼로그 닫기
+    setIsDialogOpen(false);
+  } catch (err) {
+    console.error('문제 등록 중 오류 발생:', err);
+    alert('문제를 등록하는데 실패했습니다.');
+  }
+};
 
   // 문제 삭제
   const handleDeleteQuestion = async (id: string) => {
@@ -238,7 +242,7 @@ export function QuestionsTable() {
           <h2 className="text-2xl font-bold">문제 관리</h2>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
                 새 문제 등록
               </Button>
@@ -282,7 +286,7 @@ export function QuestionsTable() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" onClick={handleAddQuestion}>등록하기</Button>
+                <Button variant="outline" type="submit" onClick={handleAddQuestion}>등록하기</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

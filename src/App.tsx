@@ -6,6 +6,7 @@ import Dashboard from "@/pages/dashboard/Dashboard"
 import Study from "@/pages/dashboard/techInterview/Study"
 import Questions from "@/pages/dashboard/techInterview/Question" // 질문 관리 컴포넌트 (구현 필요)
 import GitHubCallback from "@/pages/login/GitHubCallback";
+import SpaceSetting from "@/pages/dashboard/settings/Space-setting";
 
 // 개발 모드 확인 (환경 변수 또는 하드코딩으로 설정)
 const SKIP_LOGIN = false; // 개발 시 true, 배포 시 false로 변경
@@ -82,6 +83,7 @@ function AppRoutes() {
               <Route index element={<div>스페이스 홈</div>} />
               <Route path="study" element={<Study />} />
               <Route path="questions" element={<Questions />} />
+              <Route path="settings" element={<SpaceSetting />} />
             </Route>
           </Route>
 

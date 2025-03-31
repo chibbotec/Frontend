@@ -111,7 +111,7 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
 
     try {
       // API 요청
-      await axios.post(`${apiUrl}/api/v1/space/${targetSpaceId}/questions/answers`, {
+      await axios.post(`${apiUrl}/api/v1/tech-interview/${targetSpaceId}/questions/answers`, {
         questionId: question.id,
         answerText,
         techClass: question.techClass
@@ -277,7 +277,7 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
                   className="w-full mb-4"
               />
               <DialogFooter>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button variant="outline" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? "제출 중..." : "답변 제출"}
                 </Button>
               </DialogFooter>

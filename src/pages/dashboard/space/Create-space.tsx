@@ -20,6 +20,7 @@ import {
   type SpaceMemberRequest,
   type CreateSpaceRequest
 } from "@/pages/dashboard/space/Space"
+import axios from 'axios';
 import { useSpace } from "@/context/SpaceContext" // SpaceContext 임포트
 
 // 사용자 검색을 위한 인터페이스
@@ -35,18 +36,21 @@ interface SearchUser {
 export const searchUsers = async (query: string): Promise<SearchUser[]> => {
   try {
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const response = await fetch(`${apiUrl}/api/v1/members/search?keyword=${query}`, {
-      credentials: 'include'
+    const response = await axios.get(`${apiUrl}/api/v1/members/search`, {
+      params: { keyword: query },
+      withCredentials: true // credentials: 'include'와 동일한 기능
     });
 
-    if (!response.ok) {
-      throw new Error('사용자 검색 실패');
-    }
+    console.log('사용자 검색 결과:', response.data);
 
-    const data = await response.json();
+    // axios는 자동으로 response.data로 JSON을 파싱합니다
+    const data = response.data;
 
-    // API 응답 형식에 따라 조정 필요
-    return data.map((user: any) => ({
+    // API 응답이 배열인지 확인 (배열이 아니면 배열로 변환)
+    const userList = Array.isArray(data) ? data : [data];
+
+    // API 응답 형식에 맞게 처리
+    return userList.map((user: any) => ({
       id: user.id,
       username: user.username,
       nickname: user.nickname || user.username,
@@ -55,7 +59,6 @@ export const searchUsers = async (query: string): Promise<SearchUser[]> => {
     }));
   } catch (error) {
     console.error("사용자 검색 오류:", error);
-
     // 오류 발생 시 빈 배열 반환
     return [];
   }
@@ -71,7 +74,6 @@ export interface CreateSpaceDialogProps {
 export function CreateSpaceDialog({
                                     isOpen,
                                     onClose,
-                                    onSpaceCreated,
                                   }: CreateSpaceDialogProps) {
   const { addSpace } = useSpace(); // SpaceContext의 addSpace 사용
   const [spaceName, setSpaceName] = React.useState("");
@@ -193,10 +195,10 @@ export function CreateSpaceDialog({
       // 컨텍스트에 추가
       addSpace(newSpace);
 
-      // 생성된 스페이스 정보 콜백 (선택적)
-      if (onSpaceCreated) {
-        onSpaceCreated(newSpace);
-      }
+      // // 생성된 스페이스 정보 콜백 (선택적)
+      // if (onSpaceCreated) {
+      //   onSpaceCreated(newSpace);
+      // }
 
       // 다이얼로그 닫기
       onClose();
@@ -323,7 +325,7 @@ export function CreateSpaceDialog({
               취소
             </Button>
             <Button
-                onClick={handleCreateSpace}
+                onClick={handleCreateSpace} variant="outline"
                 disabled={isCreating || !spaceName.trim()}
             >
               {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

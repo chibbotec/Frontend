@@ -156,6 +156,25 @@ export function TeamSwitcher() {
               </DropdownMenuLabel>
 
               {spaces.map((space) => {
+  const SpaceItemIcon = getSpaceIcon(space.type);
+  return (
+      <DropdownMenuItem
+          key={`space-${space.id}`} // 고유한 키 값 생성
+          onClick={() => switchSpace(space)}
+          className="gap-2 p-2"
+      >
+        <div className="flex size-6 items-center justify-center rounded-sm border">
+          <SpaceItemIcon className="size-4 shrink-0" />
+        </div>
+        <span className="truncate">{space.spaceName}</span>
+        {space.type === 'PERSONAL' && (
+            <span className="ml-auto text-xs text-muted-foreground">개인</span>
+        )}
+      </DropdownMenuItem>
+  );
+})}
+
+              {/* {spaces.map((space) => {
                 const SpaceItemIcon = getSpaceIcon(space.type);
                 return (
                     <DropdownMenuItem
@@ -172,7 +191,7 @@ export function TeamSwitcher() {
                       )}
                     </DropdownMenuItem>
                 );
-              })}
+              })} */}
 
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -192,9 +211,9 @@ export function TeamSwitcher() {
         <CreateSpaceDialog
             isOpen={isCreateDialogOpen}
             onClose={() => setIsCreateDialogOpen(false)}
-            onSpaceCreated={(newSpace) => {
-              addSpace(newSpace); // 스페이스 컨텍스트를 통해 스페이스 추가
-            }}
+            // onSpaceCreated={(newSpace) => {
+            //   addSpace(newSpace); // 스페이스 컨텍스트를 통해 스페이스 추가
+            // }}
         />
       </SidebarMenu>
   )

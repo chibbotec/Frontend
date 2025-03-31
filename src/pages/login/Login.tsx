@@ -1,9 +1,18 @@
 import { GalleryVerticalEnd } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
-import { LoginForm } from "@/components/login-form"
+import { LoginForm } from "@/components/authorization/login-form.tsx"
 
 export default function LoginPage() {
   const { login } = useAuth()
+  
+  // login 함수가 Promise를 반환하는 것을 명시적으로 타입 지정
+  const handleLogin = async () => {
+    try {
+      await login();
+    } catch (error) {
+      console.error("로그인 중 오류 발생:", error);
+    }
+  }
   
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
@@ -18,7 +27,7 @@ export default function LoginPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <LoginForm onLogin={login} />
+            <LoginForm onLogin={handleLogin} />
           </div>
         </div>
       </div>

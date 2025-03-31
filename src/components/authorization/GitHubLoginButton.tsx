@@ -62,7 +62,8 @@ export function GitHubLoginButton({ disabled = false }: { disabled?: boolean }) 
   return (
       <Button
           variant="outline"
-          className="w-full bg-[#24292F] hover:bg-[#24292F]/90 text-white"
+          className="w-full bg-[#24292F] hover:bg-[#24292F]/90 text-white font-medium"
+          style={{ color: 'white', backgroundColor: '#24292F' }} // 인라인 스타일로 강제 적용
           onClick={handleGitHubLogin}
           disabled={disabled || isLoading}
           type="button"

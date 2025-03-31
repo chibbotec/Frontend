@@ -101,8 +101,8 @@ const data = {
           url: "#",
         },
         {
-          title: "팀 설정",
-          url: "#",
+          title: "스페이스 설정",
+          url: "/settings",
         },
       ],
     },

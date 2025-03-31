@@ -70,7 +70,9 @@ const Study = () => {
 
     try {
       setIsLoading(true);
-      const response = await axios.get(`${apiUrl}/api/v1/api/v1/tech-interview/${spaceId}/questions`);
+      const response = await axios.get(`${apiUrl}/api/v1/tech-interview/${spaceId}/questions`,{
+        withCredentials: true
+      });
       setQuestions(response.data);
     } catch (error) {
       console.error("질문 목록 조회 실패:", error);
