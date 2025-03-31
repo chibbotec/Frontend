@@ -61,7 +61,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const techClassOptions = [
   "JavaScript", "TypeScript", "React", "Vue", "Angular",
   "Node.js", "Java", "Spring", "Python", "Django",
-  "Database", "DevOps", "Mobile", "Algorithm"
+  "Database", "DevOps", "Mobile", "Algorithm", "Computer Science", "OS",
+  "Network", "Security", "Cloud", "ETC"
 ];
 
 export function QuestionsTable() {
