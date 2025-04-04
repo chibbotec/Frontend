@@ -78,12 +78,12 @@ const data = {
       icon: BookOpen,
       items: [
         {
-          title: "문제풀러가기",
-          url: "#",
+          title: "문제 풀기",
+          url: "/problemList",
         },
         {
           title: "문제 제출",
-          url: "/problemList",
+          url: "/problemPresent",
         },
         {
           title: "오답노트",

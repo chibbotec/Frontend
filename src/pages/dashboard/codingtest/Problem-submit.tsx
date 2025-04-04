@@ -244,6 +244,7 @@ const ProblemSubmit: React.FC = () => {
   const handleSubmissionResult = (result: any) => {
     console.log('결과 업데이트:', result);
     setSubmissionResult(result);
+    setSubmitting(false);
   };
 
   // 제출 ID 핸들러
@@ -409,7 +410,7 @@ const ProblemSubmit: React.FC = () => {
           </Select>
           <Button
             variant={editorTheme === 'dark' || editorTheme === 'monokai' ? 'default' : 'default'}
-            onClick={() => navigate(`/dashboard/codingtest/${spaceId}`)}
+            onClick={() => navigate(`/space/${spaceId}/problemList`)}
             className={editorTheme === 'dark' || editorTheme === 'monokai' ? 'text-white hover:bg-gray-700' : ''}
           >
             목록으로

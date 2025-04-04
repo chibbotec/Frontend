@@ -144,6 +144,8 @@ const Submission: React.FC<SubmissionProps> = ({
           console.log('폴링 종료. 최종 결과:', result.result);
           clearInterval(interval);
           setPollingInterval(null);
+
+          setSubmitting(false);
         } else {
           console.log('아직 채점 중 (PENDING/JUDGING). 폴링 계속...');
         }
@@ -156,6 +158,7 @@ const Submission: React.FC<SubmissionProps> = ({
     }, 2000);
 
     setPollingInterval(interval);
+    setSubmitting(false);
   };
 
   // 컴포넌트가 언마운트될 때 폴링 중지

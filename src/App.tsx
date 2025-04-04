@@ -5,7 +5,8 @@ import LoginPage from "@/pages/login/Login"
 import Dashboard from "@/pages/dashboard/Dashboard"
 import Study from "@/pages/dashboard/techInterview/Study"
 import Questions from "@/pages/dashboard/techInterview/Question"
-import ProblemsTable from "@/pages/dashboard/codingtest/Problem-list"
+import ProblemsList from "@/pages/dashboard/codingtest/Problem-list.tsx"
+import ProblemsPresent from "@/pages/dashboard/codingtest/Problem-present.tsx"
 import Problem from "@/pages/dashboard/codingtest/Problem" 
 import ProblemSubmit from "@/pages/dashboard/codingtest/Problem-submit"
 import GitHubCallback from "@/pages/login/GitHubCallback";
@@ -88,7 +89,8 @@ function AppRoutes() {
               <Route path="questions" element={<Questions />} />
 
               {/* 코딩 테스트 */}
-              <Route path="problemList" element={<ProblemsTable />} />
+              <Route path="problemList" element={<ProblemsList />} />
+              <Route path="problemPresent" element={<ProblemsPresent />} />
               <Route path="create-problem" element={<Problem />} />
               <Route path="edit-problem/:problemId" element={<Problem />} />
               <Route path="submit-problem/:problemId" element={<ProblemSubmit />} />

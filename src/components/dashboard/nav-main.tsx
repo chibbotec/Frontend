@@ -67,6 +67,7 @@ export function NavMain({
                           subItem.url === "/study" ||
                           subItem.url === "/questions" ||
                           subItem.url === "/problemList" ||
+                          subItem.url === "/problemPresent" ||
                           subItem.url === "/create-problem" ||  // 추가
                           subItem.url.startsWith("/edit-problem/") ||  // 추가
                           subItem.url === "/settings"
