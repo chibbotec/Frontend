@@ -4,7 +4,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-
 import LoginPage from "@/pages/login/Login"
 import Dashboard from "@/pages/dashboard/Dashboard"
 import Study from "@/pages/dashboard/techInterview/Study"
-import Questions from "@/pages/dashboard/techInterview/Question" // 질문 관리 컴포넌트 (구현 필요)
+import Questions from "@/pages/dashboard/techInterview/Question"
+import ProblemsTable from "@/pages/dashboard/codingtest/Problem-list"
+import Problem from "@/pages/dashboard/codingtest/Problem" 
+import ProblemSubmit from "@/pages/dashboard/codingtest/Problem-submit"
 import GitHubCallback from "@/pages/login/GitHubCallback";
 import SpaceSetting from "@/pages/dashboard/settings/Space-setting";
 
@@ -83,6 +86,14 @@ function AppRoutes() {
               <Route index element={<div>스페이스 홈</div>} />
               <Route path="study" element={<Study />} />
               <Route path="questions" element={<Questions />} />
+
+              {/* 코딩 테스트 */}
+              <Route path="problemList" element={<ProblemsTable />} />
+              <Route path="create-problem" element={<Problem />} />
+              <Route path="edit-problem/:problemId" element={<Problem />} />
+              <Route path="submit-problem/:problemId" element={<ProblemSubmit />} />
+
+              {/* 설정 라우트 */}
               <Route path="settings" element={<SpaceSetting />} />
             </Route>
           </Route>

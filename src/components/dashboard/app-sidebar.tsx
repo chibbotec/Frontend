@@ -82,8 +82,8 @@ const data = {
           url: "#",
         },
         {
-          title: "풀이기록",
-          url: "#",
+          title: "문제 제출",
+          url: "/problemList",
         },
         {
           title: "오답노트",
