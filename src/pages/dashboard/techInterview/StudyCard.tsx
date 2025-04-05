@@ -64,7 +64,18 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
   const [answerText, setAnswerText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const [aiAnswer, setAiAnswer] = useState<AIAnswer | null>(question.aiAnswer || null);
+  const [aiAnswer, setAiAnswer] = useState<AIAnswer | null>(() => {
+    // question.answers.ai가 있으면 파싱해서 사용
+    if (question.answers && question.answers.ai) {
+      try {
+        return JSON.parse(question.answers.ai) as AIAnswer;
+      } catch (e) {
+        console.error("AI 답변 파싱 실패:", e);
+        return null;
+      }
+    }
+    return null;
+  });
 
   // AI 답변 요청 핸들러
   const handleRequestAIAnswer = async () => {

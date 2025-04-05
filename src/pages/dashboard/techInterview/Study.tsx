@@ -172,68 +172,6 @@ const Study = () => {
                     <p className="text-muted-foreground">새로운 문제를 출제해보세요!</p>
                   </div>
               )}
-
-              {/* API 연동 전까지만 표시할 더미 데이터 - 실 구현 시 삭제 */}
-              {questions.length === 0 && !isLoading && (
-                  <>
-                    <StudyCard
-                        question={{
-                          id: "1",
-                          spaceId: Number(spaceId),
-                          techClass: "Frontend",
-                          questionText: "React에서 상태 관리를 위한 다양한 방법과 각각의 장단점에 대해 설명해주세요.",
-                          author: { id: 1, nickname: "면접관" },
-                          participants: [
-                            { id: 2, nickname: "김철수" },
-                            { id: 3, nickname: "이영희" }
-                          ],
-                          answers: { "memberId:2": "Redux, Context API, Recoil 등이 있습니다..." },
-                          createdAt: new Date().toISOString(),
-                          updatedAt: new Date().toISOString()
-                        }}
-                        onAnswerSubmit={fetchQuestions}
-                    />
-
-                    <StudyCard
-                        question={{
-                          id: "2",
-                          spaceId: Number(spaceId),
-                          techClass: "Backend",
-                          questionText: "REST API와 GraphQL의 차이점에 대해 설명해주세요.",
-                          author: { id: 1, nickname: "면접관" },
-                          participants: [
-                            { id: 2, nickname: "김철수" },
-                            { id: 4, nickname: "박지성" }
-                          ],
-                          answers: {},
-                          createdAt: new Date().toISOString(),
-                          updatedAt: new Date().toISOString()
-                        }}
-                        onAnswerSubmit={fetchQuestions}
-                    />
-
-                    <StudyCard
-                        question={{
-                          id: "3",
-                          spaceId: Number(spaceId),
-                          techClass: "CS Fundamentals",
-                          questionText: "프로세스와 스레드의 차이점에 대해 설명해주세요.",
-                          author: { id: 1, nickname: "면접관" },
-                          participants: [
-                            { id: 3, nickname: "이영희" },
-                            { id: 4, nickname: "박지성" }
-                          ],
-                          answers: {
-                            "memberId:3": "프로세스는 실행 중인 프로그램의 인스턴스이고, 스레드는 프로세스 내에서 실행되는 작업 단위입니다...",
-                            "memberId:4": "프로세스는 독립적인 메모리 공간을 가지지만, 스레드는 메모리를 공유합니다..."
-                          },
-                          createdAt: new Date().toISOString(),
-                          updatedAt: new Date().toISOString()
-                        }}
-                        onAnswerSubmit={fetchQuestions}
-                    />
-                  </>
-              )}
             </div>
           </TabsContent>
 
@@ -251,26 +189,6 @@ const Study = () => {
                   ))
               )}
 
-              {/* 더미 데이터 - 실 구현 시 삭제 */}
-              {filterQuestionsByCategory("frontend").length === 0 && !isLoading && (
-                  <StudyCard
-                      question={{
-                        id: "1",
-                        spaceId: Number(spaceId),
-                        techClass: "Frontend",
-                        questionText: "React에서 상태 관리를 위한 다양한 방법과 각각의 장단점에 대해 설명해주세요.",
-                        author: { id: 1, nickname: "면접관" },
-                        participants: [
-                          { id: 2, nickname: "김철수" },
-                          { id: 3, nickname: "이영희" }
-                        ],
-                        answers: { "memberId:2": "Redux, Context API, Recoil 등이 있습니다..." },
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                      }}
-                      onAnswerSubmit={fetchQuestions}
-                  />
-              )}
             </div>
           </TabsContent>
 
@@ -287,27 +205,6 @@ const Study = () => {
                       />
                   ))
               )}
-
-              {/* 더미 데이터 - 실 구현 시 삭제 */}
-              {filterQuestionsByCategory("backend").length === 0 && !isLoading && (
-                  <StudyCard
-                      question={{
-                        id: "2",
-                        spaceId: Number(spaceId),
-                        techClass: "Backend",
-                        questionText: "REST API와 GraphQL의 차이점에 대해 설명해주세요.",
-                        author: { id: 1, nickname: "면접관" },
-                        participants: [
-                          { id: 2, nickname: "김철수" },
-                          { id: 4, nickname: "박지성" }
-                        ],
-                        answers: {},
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                      }}
-                      onAnswerSubmit={fetchQuestions}
-                  />
-              )}
             </div>
           </TabsContent>
 
@@ -323,30 +220,6 @@ const Study = () => {
                           onAnswerSubmit={fetchQuestions}
                       />
                   ))
-              )}
-
-              {/* 더미 데이터 - 실 구현 시 삭제 */}
-              {filterQuestionsByCategory("cs").length === 0 && !isLoading && (
-                  <StudyCard
-                      question={{
-                        id: "3",
-                        spaceId: Number(spaceId),
-                        techClass: "CS Fundamentals",
-                        questionText: "프로세스와 스레드의 차이점에 대해 설명해주세요.",
-                        author: { id: 1, nickname: "면접관" },
-                        participants: [
-                          { id: 3, nickname: "이영희" },
-                          { id: 4, nickname: "박지성" }
-                        ],
-                        answers: {
-                          "memberId:3": "프로세스는 실행 중인 프로그램의 인스턴스이고, 스레드는 프로세스 내에서 실행되는 작업 단위입니다...",
-                          "memberId:4": "프로세스는 독립적인 메모리 공간을 가지지만, 스레드는 메모리를 공유합니다..."
-                        },
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                      }}
-                      onAnswerSubmit={fetchQuestions}
-                  />
               )}
             </div>
           </TabsContent>
