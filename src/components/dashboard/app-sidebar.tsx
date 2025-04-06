@@ -68,7 +68,7 @@ const data = {
         },
         {
           title: "나의 노트",
-          url: "#",
+          url: "/notes",
         },
       ],
     },

@@ -66,6 +66,8 @@ export function NavMain({
                         if (activeSpaceId && (
                           subItem.url === "/study" ||
                           subItem.url === "/questions" ||
+                          subItem.url === "/notes" ||
+                          subItem.url === "/create-notes/new" ||
                           subItem.url === "/problemList" ||
                           subItem.url === "/problemPresent" ||
                           subItem.url === "/create-problem" ||  // 추가
