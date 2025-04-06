@@ -152,7 +152,7 @@ const NoteCreate: React.FC = () => {
         <Separator className="my-4" />
 
             <div className="markarea h-100vh" data-color-mode="light">
-              <MDEditor height="calc(100vh - 250px)" value={content} onChange={(value) => setContent(value || '')}  />
+              <MDEditor height="calc(100vh - 250px)" value={content} onChange={(value: string | undefined) => setContent(value || '')}  />
             </div>
           {/*/!* 마크다운 에디터 *!/*/}
           {/*<div className="h-full">*/}
