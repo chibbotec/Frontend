@@ -48,6 +48,7 @@ import { z } from "zod";
 
 // 기존 TextEditor 컴포넌트 대신 CodeMirror 사용
 import CodeEditor from '@/pages/dashboard/codingtest/CodeMirror';
+import TestCaseGenerator from './TestCase-provier';
 
 // API 기본 URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -1240,6 +1241,33 @@ const ProblemCreation: React.FC<ProblemCreationProps> = ({
                     />
                   </Label>
 
+                  {/* 테스트 케이스 생성 컴포넌트 */}
+                  <TestCaseGenerator
+                    apiBaseUrl={API_BASE_URL}
+                    spaceId={spaceId || ''}
+                    description={form.watch('description') || ''}
+                    inputDescription={form.watch('input_description') || ''}
+                    outputDescription={form.watch('output_description') || ''}
+                    selectedLanguages={form.watch('languages') || []}
+                    spjChecked={spjChecked}
+                    onSuccess={(testCaseId, fileList) => {
+                      form.setValue('test_case_id', testCaseId);
+                      form.setValue('test_case_score', fileList.map((file) => ({
+                        ...file,
+                        score: Math.floor(100 / fileList.length)
+                      })));
+
+                      setTestCaseId(testCaseId);
+                      setTestCaseUploaded(true);
+                      setDialogMessage('테스트 케이스가 성공적으로 생성되었습니다.');
+                      setShowDialog(true);
+                    }}
+                    onError={(message) => {
+                      setDialogMessage(message);
+                      setShowDialog(true);
+                    }}
+                  />
+
                   {testCaseUploaded ? (
                     <Badge variant="default">테스트 케이스가 업로드되었습니다</Badge>
                   ) : (
@@ -1247,6 +1275,7 @@ const ProblemCreation: React.FC<ProblemCreationProps> = ({
                       테스트 케이스를 업로드해주세요
                     </Badge>
                   )}
+
                 </div>
               </FormItem>
 
