@@ -45,7 +45,7 @@ const data = {
         },
         {
           title: "포트폴리오 공유",
-          url: "#",
+          url: "/portfolios",
         },
         {
           title: "일정관리",
@@ -65,6 +65,10 @@ const data = {
         {
           title: "문제 제출",
           url: "/questions",
+        },
+        {
+          title: "콘테스트",
+          url: "/contests",
         },
         {
           title: "나의 노트",

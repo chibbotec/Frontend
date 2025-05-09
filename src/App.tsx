@@ -4,8 +4,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-
 import { Toaster } from 'sonner'; // sonner의 Toaster 컴포넌트 추가
 import LoginPage from "@/pages/login/Login"
 import Dashboard from "@/pages/dashboard/Dashboard"
+import PortfolioList from "@/pages/dashboard/resume/portfolio/Portfolio-list.tsx"
 import Study from "@/pages/dashboard/techInterview/Study"
 import Questions from "@/pages/dashboard/techInterview/Question"
+import Contest from "@/pages/dashboard/techInterview/contest/Contest-list"
+import ContestDetail from "@/pages/dashboard/techInterview/contest/ContestDetail"
+import ContestTest from "@/pages/dashboard/techInterview/contest/ContestTest"
 import NotesList from "@/pages/dashboard/techInterview/Note-list"
 import NotesCreate from "@/pages/dashboard/techInterview/Note-create"
 import ProblemsList from "@/pages/dashboard/codingtest/Problem-list.tsx"
@@ -14,6 +18,7 @@ import Problem from "@/pages/dashboard/codingtest/Problem"
 import ProblemSubmit from "@/pages/dashboard/codingtest/Problem-submit"
 import GitHubCallback from "@/pages/login/GitHubCallback";
 import SpaceSetting from "@/pages/dashboard/settings/Space-setting";
+import Portfolio from "@/pages/dashboard/resume/portfolio/Portfolio-create.tsx";
 
 // 개발 모드 확인 (환경 변수 또는 하드코딩으로 설정)
 const SKIP_LOGIN = false; // 개발 시 true, 배포 시 false로 변경
@@ -55,10 +60,19 @@ function AppRoutes() {
             {/* 스페이스별 라우트 */}
             <Route path="space/:spaceId">
               <Route index element={<div>스페이스 홈</div>} />
+              {/* 이력서 */}
+              <Route path="study" element={<Study />} />
+              <Route path="questions" element={<Questions />} />
+              <Route path="portfolios" element={<PortfolioList />} />
+              <Route path="create-portfolios/new" element={<Portfolio />} />
+              <Route path="create-notes/:noteId" element={<NotesCreate />} />
 
               {/* 기술 면접 */}
               <Route path="study" element={<Study />} />
               <Route path="questions" element={<Questions />} />
+              <Route path="contests" element={<Contest />} />
+              <Route path="contests/:contestId" element={<ContestDetail />} />
+              <Route path="contests/:contestId/test" element={<ContestTest />} />
               <Route path="notes" element={<NotesList />} />
               <Route path="create-notes/new" element={<NotesCreate />} />
               <Route path="create-notes/:noteId" element={<NotesCreate />} />
