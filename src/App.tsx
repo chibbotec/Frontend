@@ -1,10 +1,18 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext'
-import { SpaceProvider } from '@/context/SpaceContext' // SpaceProvider 추가
+import { SpaceProvider } from '@/context/SpaceContext'
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { Toaster } from 'sonner'; // sonner의 Toaster 컴포넌트 추가
+import { Toaster } from 'sonner';
 import LoginPage from "@/pages/login/Login"
 import Dashboard from "@/pages/dashboard/Dashboard"
+import MainPage from "@/pages/MainPage";
+
+// 이력서 & 포트폴리오 관련 컴포넌트
 import PortfolioList from "@/pages/dashboard/resume/portfolio/Portfolio-list.tsx"
+import Portfolio from "@/pages/dashboard/resume/portfolio/Portfolio-create.tsx";
+// import ResumeShare from "@/pages/dashboard/resume/Resume-share";
+// import Schedule from "@/pages/dashboard/resume/Schedule";
+
+// 기술 면접 관련 컴포넌트
 import Study from "@/pages/dashboard/techInterview/Study"
 import Questions from "@/pages/dashboard/techInterview/Question"
 import Contest from "@/pages/dashboard/techInterview/contest/Contest-list"
@@ -12,101 +20,103 @@ import ContestDetail from "@/pages/dashboard/techInterview/contest/ContestDetail
 import ContestTest from "@/pages/dashboard/techInterview/contest/ContestTest"
 import NotesList from "@/pages/dashboard/techInterview/Note-list"
 import NotesCreate from "@/pages/dashboard/techInterview/Note-create"
+
+// 코딩 테스트 관련 컴포넌트
 import ProblemsList from "@/pages/dashboard/codingtest/Problem-list.tsx"
 import ProblemsPresent from "@/pages/dashboard/codingtest/Problem-present.tsx"
 import Problem from "@/pages/dashboard/codingtest/Problem"
 import ProblemSubmit from "@/pages/dashboard/codingtest/Problem-submit"
+// import WrongAnswerNote from "@/pages/dashboard/codingtest/WrongAnswerNote"
+
 import GitHubCallback from "@/pages/login/GitHubCallback";
 import SpaceSetting from "@/pages/dashboard/settings/Space-setting";
-import Portfolio from "@/pages/dashboard/resume/portfolio/Portfolio-create.tsx";
 
-// 개발 모드 확인 (환경 변수 또는 하드코딩으로 설정)
-const SKIP_LOGIN = false; // 개발 시 true, 배포 시 false로 변경
+// 개발 모드 확인
+const SKIP_LOGIN = false;
 
 // 인증 필요한 라우트를 위한 래퍼 컴포넌트
 const ProtectedRoute = () => {
   const { isLoggedIn } = useAuth();
-
-  // 개발 모드에서는 로그인 검사 건너뛰기
-  if (SKIP_LOGIN) {
-    return <Outlet />;
-  }
-
-  // 로그인되지 않았으면 로그인 페이지로 리다이렉트
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // 로그인 되어있으면 자식 컴포넌트 렌더링
+  if (SKIP_LOGIN) return <Outlet />;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
   return <Outlet />;
 };
 
 function AppRoutes() {
   return (
-      <Routes>
-        {/* 공개 라우트 */}
-        <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+    <Routes>
+      {/* 공개 라우트 */}
+      <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/auth/callback/github" element={<GitHubCallback />} />
 
-        {/* 소셜 로그인 콜백 라우트 - 보호된 라우트 밖으로 이동 */}
-        <Route path="/auth/callback/github" element={<GitHubCallback />} />
+      {/* 인증 필요한 라우트 */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<Dashboard />}>
+          {/* 대시보드 인덱스 */}
+          <Route index element={<MainPage />} />
 
-        {/* 인증 필요한 라우트 - 개발 모드에서는 인증 검사 건너뛰기 */}
-        <Route element={<ProtectedRoute />}>
-          {/* 대시보드 라우트 - 자식 라우트들을 포함 */}
-          <Route path="/" element={<Dashboard />}>
-            {/* 대시보드 인덱스 */}
-            <Route index element={<div>대시보드 홈</div>} />
+          {/* 스페이스별 라우트 */}
+          <Route path="space/:spaceId">
+            {/* 메인 페이지 */}
+            <Route index element={<MainPage />} />
 
-            {/* 스페이스별 라우트 */}
-            <Route path="space/:spaceId">
-              <Route index element={<div>스페이스 홈</div>} />
-              {/* 이력서 */}
-              <Route path="study" element={<Study />} />
-              <Route path="questions" element={<Questions />} />
+            {/* 이력서 & 포트폴리오 섹션 */}
+            <Route path="resume">
+              {/* <Route index element={<ResumeShare />} />
+              <Route path="share" element={<ResumeShare />} /> */}
+              <Route index element={<PortfolioList />} />
               <Route path="portfolios" element={<PortfolioList />} />
-              <Route path="create-portfolios/new" element={<Portfolio />} />
-              <Route path="create-notes/:noteId" element={<NotesCreate />} />
+              <Route path="portfolios/new" element={<Portfolio />} />
+              {/* <Route path="schedule" element={<Schedule />} /> */}
+            </Route>
 
-              {/* 기술 면접 */}
+            {/* 기술 면접 섹션 */}
+            <Route path="interview">
+              <Route index element={<Study />} />
               <Route path="study" element={<Study />} />
               <Route path="questions" element={<Questions />} />
               <Route path="contests" element={<Contest />} />
               <Route path="contests/:contestId" element={<ContestDetail />} />
               <Route path="contests/:contestId/test" element={<ContestTest />} />
               <Route path="notes" element={<NotesList />} />
-              <Route path="create-notes/new" element={<NotesCreate />} />
-              <Route path="create-notes/:noteId" element={<NotesCreate />} />
-
-              {/* 코딩 테스트 */}
-              <Route path="problemList" element={<ProblemsList />} />
-              <Route path="problemPresent" element={<ProblemsPresent />} />
-              <Route path="create-problem" element={<Problem />} />
-              <Route path="edit-problem/:problemId" element={<Problem />} />
-              <Route path="submit-problem/:problemId" element={<ProblemSubmit />} />
-
-              {/* 설정 라우트 */}
-              <Route path="settings" element={<SpaceSetting />} />
+              <Route path="notes/new" element={<NotesCreate />} />
+              <Route path="notes/:noteId" element={<NotesCreate />} />
             </Route>
-          </Route>
 
-          {/* 기본 리다이렉트 */}
-          <Route path="/dashboard" element={<Navigate to="/" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+            {/* 코딩 테스트 섹션 */}
+            <Route path="coding">
+              <Route index element={<ProblemsList />} />
+              <Route path="problems" element={<ProblemsList />} />
+              <Route path="problems/present" element={<ProblemsPresent />} />
+              <Route path="problems/new" element={<Problem />} />
+              <Route path="problems/:problemId/edit" element={<Problem />} />
+              <Route path="problems/:problemId/submit" element={<ProblemSubmit />} />
+              {/* <Route path="wrong-notes" element={<WrongAnswerNote />} /> */}
+            </Route>
+
+            {/* 설정 라우트 */}
+            <Route path="settings" element={<SpaceSetting />} />
+          </Route>
         </Route>
-      </Routes>
+
+        {/* 기본 리다이렉트 */}
+        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
   );
 }
 
 function App() {
   return (
-      <Router>
-        <AuthProvider>
-          <SpaceProvider>
-            <Toaster position="bottom-right" richColors closeButton />
-            <AppRoutes />
-          </SpaceProvider>
-        </AuthProvider>
-      </Router>
+    <Router>
+      <AuthProvider>
+        <SpaceProvider>
+          <Toaster position="bottom-right" richColors closeButton />
+          <AppRoutes />
+        </SpaceProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

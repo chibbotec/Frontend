@@ -62,21 +62,7 @@ export function NavMain({
                     // URLs 처리 - 스페이스 ID가 필요한 경로에는 활성 스페이스 ID 삽입
                     let finalUrl = subItem.url;
 
-                    if (activeSpaceId && (
-                      subItem.url === "/portfolios" ||
-                      subItem.url === "/create-portfolios/new" ||
-                      subItem.url === "/study" ||
-                      subItem.url === "/questions" ||
-                      subItem.url === "/contests" ||
-                      subItem.url.startsWith("/contests/") ||
-                      subItem.url === "/notes" ||
-                      subItem.url === "/create-notes/new" ||
-                      subItem.url === "/problemList" ||
-                      subItem.url === "/problemPresent" ||
-                      subItem.url === "/create-problem" ||
-                      subItem.url.startsWith("/edit-problem/") ||
-                      subItem.url === "/settings"
-                    )) {
+                    if (activeSpaceId && subItem.url !== "#") {
                       finalUrl = `/space/${activeSpaceId}${subItem.url}`;
                     }
 

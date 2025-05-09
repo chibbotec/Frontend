@@ -41,15 +41,15 @@ const data = {
       items: [
         {
           title: "이력서 공유",
-          url: "#",
+          url: "/resume/share",
         },
         {
           title: "포트폴리오 공유",
-          url: "/portfolios",
+          url: "/resume/portfolios",
         },
         {
           title: "일정관리",
-          url: "#",
+          url: "/resume/schedule",
         },
       ],
     },
@@ -60,19 +60,19 @@ const data = {
       items: [
         {
           title: "문제 풀기",
-          url: "/study",
+          url: "/interview/study",
         },
         {
           title: "문제 제출",
-          url: "/questions",
+          url: "/interview/questions",
         },
         {
           title: "콘테스트",
-          url: "/contests",
+          url: "/interview/contests",
         },
         {
           title: "나의 노트",
-          url: "/notes",
+          url: "/interview/notes",
         },
       ],
     },
@@ -83,15 +83,15 @@ const data = {
       items: [
         {
           title: "문제 풀기",
-          url: "/problemList",
+          url: "/coding/problems",
         },
         {
           title: "문제 제출",
-          url: "/problemPresent",
+          url: "/coding/problems/present",
         },
         {
           title: "오답노트",
-          url: "#",
+          url: "/coding/wrong-notes",
         },
       ],
     },
@@ -102,7 +102,7 @@ const data = {
       items: [
         {
           title: "일반설정",
-          url: "#",
+          url: "/settings",
         },
         {
           title: "스페이스 설정",
