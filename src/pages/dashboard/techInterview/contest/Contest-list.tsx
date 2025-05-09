@@ -40,6 +40,10 @@ export function ContestList() {
   const currentSpaceId = spaceId || localStorage.getItem('activeSpaceId') || '';
   const navigate = useNavigate();
 
+  console.log('Current spaceId:', spaceId);
+  console.log('Current spaceId from localStorage:', localStorage.getItem('activeSpaceId'));
+  console.log('Final currentSpaceId:', currentSpaceId);
+
   const [contests, setContests] = useState<Contest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -168,7 +172,9 @@ export function ContestList() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`contests/${contest.id}`)}
+                      onClick={() => {
+                        navigate(`/space/${currentSpaceId}/interview/contests/${contest.id}`);
+                      }}
                     >
                       조회
                     </Button>
@@ -176,7 +182,9 @@ export function ContestList() {
                       variant={isParticipant(contest) ? "default" : "secondary"}
                       size="icon"
                       disabled={!isParticipant(contest)}
-                      onClick={() => navigate(`contests/${contest.id}/test`)}
+                      onClick={() => {
+                        navigate(`/space/${currentSpaceId}/interview/contests/${contest.id}/test`);
+                      }}
                     >
                       <Play className="h-4 w-4" />
                     </Button>
