@@ -168,7 +168,7 @@ export function ContestList() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/space/${currentSpaceId}/contests/${contest.id}`)}
+                      onClick={() => navigate(`contests/${contest.id}`)}
                     >
                       조회
                     </Button>
@@ -176,7 +176,7 @@ export function ContestList() {
                       variant={isParticipant(contest) ? "default" : "secondary"}
                       size="icon"
                       disabled={!isParticipant(contest)}
-                      onClick={() => navigate(`/space/${currentSpaceId}/contests/${contest.id}/test`)}
+                      onClick={() => navigate(`contests/${contest.id}/test`)}
                     >
                       <Play className="h-4 w-4" />
                     </Button>
