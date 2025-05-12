@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,7 +24,7 @@ interface GitHubDirectorySelectorProps {
   repositoryName: string;
   userId: number;
   spaceId: string;
-  onSaveSelection: (selectedPaths: string[]) => void;
+  onSaveSelection: (selectedPaths: string[], totalSize: number) => void;
   initialSelectedPaths?: string[]; // 초기 선택 경로 목록 추가
 }
 
@@ -49,6 +49,62 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const rawDataRef = useRef<GitHubFileItem[]>([]);
+
+  // 디렉토리 크기 계산 함수 (크기를 캐싱하기 위한 맵)
+  const directorySizeCache = useRef<Record<string, number>>({});
+  
+  // 특정 디렉토리의 총 크기 계산
+  const calculateDirectorySize = (node: FileNode): number => {
+    // 캐시된 값이 있으면 반환
+    if (directorySizeCache.current[node.path] !== undefined) {
+      return directorySizeCache.current[node.path];
+    }
+    
+    if (node.type !== 'directory' || !node.children) {
+      return 0;
+    }
+    
+    let total = 0;
+    const calculateSize = (children: FileNode[]) => {
+      for (const child of children) {
+        if (child.type === 'file' && child.original?.size) {
+          total += child.original.size;
+        } else if (child.type === 'directory' && child.children) {
+          calculateSize(child.children);
+        }
+      }
+    };
+    
+    calculateSize(node.children);
+    
+    // 결과 캐싱
+    directorySizeCache.current[node.path] = total;
+    
+    return total;
+  };
+  
+  // 파일 크기 포맷팅 함수
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' B';
+    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  // 선택된 경로와 크기가 변경될 때마다 부모 컴포넌트에 전달
+  useEffect(() => {
+    const selectedPaths = getSelectedPaths(fileTree);
+    const totalSize = calculateTotalSize(fileTree);
+    
+    // 부모 컴포넌트에 정보 전달
+    onSaveSelection(selectedPaths, totalSize);
+    
+    // 크기가 변경되면 디버그 정보 업데이트
+    if (totalSize > 0) {
+      setDebugInfo(`총 선택된 크기: ${formatFileSize(totalSize)}`);
+      // 2초 후 메시지 삭제
+      setTimeout(() => setDebugInfo(null), 2000);
+    }
+  }, [fileTree]);
 
   useEffect(() => {
     if (repositoryName) {
@@ -135,7 +191,7 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
 
       console.log('변환된 파일 트리:', rootTree);
       setFileTree(rootTree);
-    } catch (err) {
+    } catch (err: any) {
       console.error('레포지토리 데이터를 가져오는데 실패했습니다:', err);
 
       let errorMessage = '레포지토리 데이터를 가져오는데 실패했습니다.';
@@ -261,6 +317,13 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
       const newState = updatedNode ? (updatedNode.selected ? '선택됨' : '선택안됨') : '알 수 없음';
 
       console.log(`${nodeTypeStr} '${node.path}' 선택 상태 변경 ${result ? '성공' : '실패'} -> ${newState}`);
+      
+      // 디렉토리 선택시 특별 처리 (사용자에게 정보 표시)
+      if (node.type === 'directory' && updatedNode?.selected) {
+        setDebugInfo(`디렉토리 '${node.path}'를 선택하면 모든 하위 파일이 포함됩니다. 크기 계산 중...`);
+        // 잠시 후 디버그 메시지 삭제
+        setTimeout(() => setDebugInfo(null), 2000);
+      }
 
       // 전체 선택된 경로 로깅 (디버깅용)
       const selectedPaths = getSelectedPaths(updatedTree);
@@ -273,12 +336,25 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
   const toggleNodeSelection = (tree: FileNode[], path: string) => {
     for (const node of tree) {
       if (node.path === path) {
+        // 이전 상태 저장
+        const wasSelected = node.selected;
+        
         // 선택 상태 토글
         node.selected = !node.selected;
 
         // 디렉토리면 모든 하위 항목에 적용
         if (node.type === 'directory' && node.children) {
           toggleChildrenSelection(node.children, node.selected);
+          
+          // 디렉토리 선택 시 디버그 메시지 표시
+          if (node.selected && !wasSelected) {
+            // 선택 시, 캐시된 디렉토리 크기가 있으면 표시
+            const dirSize = directorySizeCache.current[node.path];
+            if (dirSize) {
+              setDebugInfo(`'${node.path}' 디렉토리가 선택되었습니다. 포함된 파일 크기: ${formatFileSize(dirSize)}`);
+              setTimeout(() => setDebugInfo(null), 3000);
+            }
+          }
         }
 
         return true;
@@ -359,56 +435,6 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
     return paths;
   };
 
-  const handleSaveSelection = () => {
-    const selectedPaths = getSelectedPaths(fileTree);
-    console.log('===== 선택 저장 버튼 클릭 =====');
-    console.log(`레포지토리: ${repositoryName}`);
-    console.log(`선택된 경로 수: ${selectedPaths.length}`);
-
-    // 경로 타입별 분류
-    const filePaths = selectedPaths.filter(path => {
-      const node = findNodeInTree(fileTree, path);
-      return node && node.type === 'file';
-    });
-
-    const dirPaths = selectedPaths.filter(path => {
-      const node = findNodeInTree(fileTree, path);
-      return node && node.type === 'directory';
-    });
-
-    console.log(`선택된 파일 경로 수: ${filePaths.length}`);
-    console.log(`선택된 디렉토리 경로 수: ${dirPaths.length}`);
-
-    // 파일/디렉토리 경로 출력 (최대 10개씩)
-    if (filePaths.length > 0) {
-      console.log('선택된 파일 경로:');
-      filePaths.slice(0, 10).forEach((path, index) => {
-        console.log(`  ${index + 1}. ${path}`);
-      });
-      if (filePaths.length > 10) {
-        console.log(`  ... 그리고 ${filePaths.length - 10}개 더`);
-      }
-    }
-
-    if (dirPaths.length > 0) {
-      console.log('선택된 디렉토리 경로:');
-      dirPaths.slice(0, 10).forEach((path, index) => {
-        console.log(`  ${index + 1}. ${path}`);
-      });
-      if (dirPaths.length > 10) {
-        console.log(`  ... 그리고 ${dirPaths.length - 10}개 더`);
-      }
-    }
-
-    console.log('==============================');
-
-    // 부모 컴포넌트로 선택된 경로 전달
-    onSaveSelection(selectedPaths);
-
-    // 디버깅용 - 전달 후 메시지
-    console.log('선택된 경로를 부모 컴포넌트로 전달 완료');
-  };
-
   // 데이터 새로고침
   const handleRefresh = () => {
     fetchRepositoryData();
@@ -417,68 +443,102 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
   const renderTree = (nodes: FileNode[], depth = 0) => {
     if (!nodes || nodes.length === 0) return null;
 
-    return nodes.map(node => (
-      <div key={node.path} className="py-1">
-        <div
-          className="flex items-center gap-1 hover:bg-gray-100 rounded px-1 py-0.5"
-          style={{ paddingLeft: `${depth * 12 + 4}px` }}
-        >
-          <Checkbox
-            id={`checkbox-${node.path}`}
-            checked={node.selected}
-            onCheckedChange={() => handleToggleSelect(node)}
-            className="mr-1"
-          />
+    return nodes.map(node => {
+      // 디렉토리인 경우 크기 계산 (UI 표시용)
+      const dirSize = node.type === 'directory' ? calculateDirectorySize(node) : 0;
+      
+      return (
+        <div key={node.path} className="py-1">
+          <div
+            className="flex items-center gap-1 hover:bg-gray-100 rounded px-1 py-0.5"
+            style={{ paddingLeft: `${depth * 12 + 4}px` }}
+          >
+            <Checkbox
+              id={`checkbox-${node.path}`}
+              checked={node.selected}
+              onCheckedChange={() => handleToggleSelect(node)}
+              className="mr-1"
+            />
 
-          {node.type === 'directory' && (
+            {node.type === 'directory' && (
+              <div
+                className="cursor-pointer p-0.5 rounded-sm hover:bg-gray-200"
+                onClick={() => handleToggleExpand(node)}
+              >
+                {node.expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </div>
+            )}
+
             <div
-              className="cursor-pointer p-0.5 rounded-sm hover:bg-gray-200"
-              onClick={() => handleToggleExpand(node)}
+              className="flex items-center cursor-pointer flex-1"
+              onClick={() => {
+                if (node.type === 'directory') {
+                  handleToggleExpand(node);
+                } else {
+                  handleToggleSelect(node);
+                }
+              }}
             >
-              {node.expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              {node.type === 'directory' ? (
+                node.expanded ? <FolderOpen size={16} className="mr-1 text-blue-500" /> : <Folder size={16} className="mr-1 text-blue-500" />
+              ) : (
+                <FileIcon size={16} className="mr-1 text-gray-500" />
+              )}
+              <span className="text-sm">{node.name}</span>
+
+              {/* 파일 크기 표시 (파일인 경우) */}
+              {node.type === 'file' && node.original && node.original.size && (
+                <span className="ml-2 text-xs text-gray-400">
+                  ({formatFileSize(node.original.size)})
+                </span>
+              )}
+              
+              {/* 디렉토리 크기 표시 (디렉토리인 경우) */}
+              {node.type === 'directory' && dirSize > 0 && (
+                <span className="ml-2 text-xs text-gray-400">
+                  ({formatFileSize(dirSize)})
+                </span>
+              )}
+            </div>
+          </div>
+
+          {node.type === 'directory' && node.expanded && node.children && node.children.length > 0 && (
+            <div>
+              {renderTree(node.children, depth + 1)}
             </div>
           )}
-
-          <div
-            className="flex items-center cursor-pointer flex-1"
-            onClick={() => {
-              if (node.type === 'directory') {
-                handleToggleExpand(node);
-              } else {
-                handleToggleSelect(node);
-              }
-            }}
-          >
-            {node.type === 'directory' ? (
-              node.expanded ? <FolderOpen size={16} className="mr-1 text-blue-500" /> : <Folder size={16} className="mr-1 text-blue-500" />
-            ) : (
-              <FileIcon size={16} className="mr-1 text-gray-500" />
-            )}
-            <span className="text-sm">{node.name}</span>
-
-            {/* 파일 크기 표시 (파일인 경우) */}
-            {node.type === 'file' && node.original && node.original.size && (
-              <span className="ml-2 text-xs text-gray-400">
-                ({formatFileSize(node.original.size)})
-              </span>
-            )}
-          </div>
         </div>
-
-        {node.type === 'directory' && node.expanded && node.children && node.children.length > 0 && (
-          <div>
-            {renderTree(node.children, depth + 1)}
-          </div>
-        )}
-      </div>
-    ));
+      );
+    });
   };
 
-  // 파일 크기 포맷팅 함수
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  // 총 선택된 크기 계산
+  const calculateTotalSize = (tree: FileNode[]): number => {
+    let total = 0;
+
+    const traverse = (nodes: FileNode[], parentSelected: boolean = false) => {
+      for (const node of nodes) {
+        if (node.selected || parentSelected) {
+          // 파일인 경우 크기 더하기
+          if (node.type === 'file' && node.original && node.original.size) {
+            total += node.original.size;
+          }
+          
+          // 하위 노드 처리 (선택된 경우 모든 하위 노드도 선택된 것으로 처리)
+          if (node.children && node.children.length > 0) {
+            traverse(node.children, true);
+          }
+        } else if (node.children && node.children.length > 0) {
+          // 선택되지 않은 노드의 하위 항목 중 선택된 항목 처리
+          traverse(node.children, false);
+        }
+      }
+    };
+
+    traverse(tree);
+    
+    console.log(`총 선택된 크기: ${total} 바이트 (${formatFileSize(total)})`);
+    return total;
   };
 
   return (
@@ -499,14 +559,6 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
               <RefreshCw size={12} className={`mr-1 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSaveSelection}
-          >
-            선택 저장
-          </Button>
         </div>
 
         {error && (

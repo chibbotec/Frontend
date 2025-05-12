@@ -98,7 +98,7 @@ export function ProblemCardsView() {
 
   // 문제 풀기 핸들러
   const handleSolveProblem = (problemId: string) => {
-    navigate(`/space/${currentSpaceId}/submit-problem/${problemId}`);
+    navigate(`/space/${currentSpaceId}/coding/problems/${problemId}/submit`);
   };
 
   if (isLoading) {
@@ -115,7 +115,7 @@ export function ProblemCardsView() {
           <h2 className="text-2xl font-bold">코딩 테스트 문제</h2>
           <Button
               variant="outline"
-              onClick={() => navigate(`/space/${currentSpaceId}/create-problem`)}
+              onClick={() => navigate(`/space/${currentSpaceId}/coding/problems/new`)}
           >
             새 문제 등록
           </Button>

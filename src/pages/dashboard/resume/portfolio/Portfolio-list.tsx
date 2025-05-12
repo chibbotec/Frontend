@@ -101,11 +101,11 @@ const PortfolioList: React.FC = () => {
   };
 
   const handlePortfolioClick = (portfolioId: string) => {
-    navigate(`/space/${spaceId}/portfolio/${portfolioId}`);
+    navigate(`/space/${spaceId}/resume/portfolios/${portfolioId}/detail`);
   };
 
   const handleCreatePortfolio = () => {
-    navigate(`/space/${spaceId}/create-portfolios/new`);
+    navigate(`/space/${spaceId}/resume/portfolios/new`);
   };
 
   // 포트폴리오 카드 렌더링 함수 (신규 생성 버튼 포함)

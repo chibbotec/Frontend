@@ -78,12 +78,12 @@ const NoteList: React.FC = () => {
 
   const handleNoteClick = (noteId: string) => {
     // 수정된 부분: App.tsx의 라우트 구조에 맞게 경로 설정
-    navigate(`/space/${spaceId}/create-notes/${noteId}`);
+    navigate(`/space/${spaceId}/interview/notes/${noteId}`);
   };
 
   const handleCreateNote = () => {
     // 수정된 부분: App.tsx의 라우트 구조에 맞게 경로 설정
-    navigate(`/space/${spaceId}/create-notes/new`);
+    navigate(`/space/${spaceId}/interview/notes/new`);
   };
 
   // 기존 renderNoteCards 함수를 사용하면서 신규 버튼을 추가하는 함수

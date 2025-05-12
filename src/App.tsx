@@ -9,6 +9,7 @@ import MainPage from "@/pages/MainPage";
 // 이력서 & 포트폴리오 관련 컴포넌트
 import PortfolioList from "@/pages/dashboard/resume/portfolio/Portfolio-list.tsx"
 import Portfolio from "@/pages/dashboard/resume/portfolio/Portfolio-create.tsx";
+import PortfolioDetail from "@/pages/dashboard/resume/portfolio/PortfolioDetail.tsx";
 // import ResumeShare from "@/pages/dashboard/resume/Resume-share";
 // import Schedule from "@/pages/dashboard/resume/Schedule";
 
@@ -67,6 +68,7 @@ function AppRoutes() {
               <Route index element={<PortfolioList />} />
               <Route path="portfolios" element={<PortfolioList />} />
               <Route path="portfolios/new" element={<Portfolio />} />
+              <Route path="portfolios/:id/detail" element={<PortfolioDetail />} />
               {/* <Route path="schedule" element={<Schedule />} /> */}
             </Route>
 

@@ -23,9 +23,15 @@ import {
 } from '@/components/ui/card';
 import { AlertCircle, Loader2, RefreshCw, Folder } from 'lucide-react';
 import GitHubDirectorySelector from './GitHubDirectorySelector';
+import { Progress } from '@/components/ui/progress';
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
+
+interface FileInfo {
+  path: string;
+  size: number;
+}
 
 interface GitHubRepo {
   name: string;
@@ -33,6 +39,7 @@ interface GitHubRepo {
   description?: string;
   language?: string;
   lineCount?: number;
+  byteSize?: number;
   selectedDirectories?: string[];
 }
 
@@ -44,6 +51,9 @@ interface AddRepoDialogProps {
   onFilesSaved: (response: any) => void;
   userId: number;
   spaceId: string;
+  onSavingChange?: (saving: boolean) => void;
+  currentTotalByteSize?: number; // 현재 총 바이트 크기
+  maxByteSize?: number; // 최대 바이트 크기
 }
 
 const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
@@ -54,21 +64,39 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
   onFilesSaved,
   userId,
   spaceId,
+  onSavingChange,
+  currentTotalByteSize = 0,
+  maxByteSize = 10000000,
 }) => {
-  const [tempSelectedRepos, setTempSelectedRepos] = useState<GitHubRepo[]>(selectedRepos);
+  const [tempSelectedRepo, setTempSelectedRepo] = useState<GitHubRepo | null>(selectedRepos[0] || null);
   const [availableRepos, setAvailableRepos] = useState<GitHubRepo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentRepo, setCurrentRepo] = useState<GitHubRepo | null>(null);
-  const [syncingDb, setSyncingDb] = useState(false); // DB 동기화 상태
-  const [saving, setSaving] = useState(false); // 파일 저장 상태
+  const [syncingDb, setSyncingDb] = useState(false);
+  const [selectedFileInfos, setSelectedFileInfos] = useState<FileInfo[]>([]);
+  const [calculatingSize, setCalculatingSize] = useState(false);
+  
+  // 바이트 크기 계산 상태
+  const [totalByteSize, setTotalByteSize] = useState(0);
+
+  // UI에 표시할 남은 공간 계산
+  const remainingBytes = maxByteSize - currentTotalByteSize;
+  const currentRepoExceedsLimit = totalByteSize > remainingBytes;
+  
+  // 프로그레스 바 계산
+  const currentUsagePercent = (currentTotalByteSize / maxByteSize) * 100;
+  const projectedUsagePercent = ((currentTotalByteSize + totalByteSize) / maxByteSize) * 100;
+  const isProjectedOverLimit = projectedUsagePercent > 100;
 
   // 다이얼로그가 열릴 때 GitHub 저장소 목록 가져오기
   useEffect(() => {
     if (open) {
       fetchGitHubRepositories();
-      setTempSelectedRepos(selectedRepos);
+      setTempSelectedRepo(selectedRepos[0] || null);
       setCurrentRepo(null);
+      setSelectedFileInfos([]);
+      setTotalByteSize(0);
     }
   }, [open, userId]);
 
@@ -96,6 +124,7 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
           description: repo.description,
           language: repo.language,
           lineCount: repo.size || 0,
+          byteSize: 0,
           selectedDirectories: []
         }))
         : [];
@@ -106,6 +135,39 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
       setError('GitHub 저장소 목록을 가져오는데 실패했습니다. DB에 저장된 데이터가 없거나 서버 오류가 발생했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 선택된 파일/디렉토리의 크기 계산
+  const calculateFileSize = async (repoName: string, filePath: string): Promise<number> => {
+    try {
+      // 이미 계산된 파일 정보가 있는지 확인
+      const existingFileInfo = selectedFileInfos.find(info => info.path === filePath);
+      if (existingFileInfo) {
+        return existingFileInfo.size;
+      }
+
+      // 파일 크기 정보 가져오기
+      const response = await axios.get(
+        `${apiUrl}/api/v1/resume/${spaceId}/github/users/${userId}/file-size`,
+        {
+          params: {
+            repository: repoName,
+            path: filePath
+          },
+          withCredentials: true
+        }
+      );
+
+      const size = response.data.size || 0;
+      
+      // 계산된 파일 정보 저장
+      setSelectedFileInfos(prev => [...prev, { path: filePath, size }]);
+      
+      return size;
+    } catch (err) {
+      console.error(`파일 크기 정보를 가져오는데 실패했습니다: ${filePath}`, err);
+      return 0;
     }
   };
 
@@ -138,91 +200,105 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
   };
 
   const handleSaveRepoSelection = async () => {
+    if (!tempSelectedRepo) return;
+
     // 선택된 레포지토리와 디렉토리 정보를 콘솔에 출력
     console.log('====== 선택된 레포지토리 및 디렉토리 정보 ======');
-    tempSelectedRepos.forEach(repo => {
-      console.log(`레포지토리 이름: ${repo.name}`);
-      console.log(`선택된 디렉토리/파일 목록:`, repo.selectedDirectories || []);
-      console.log('---');
-    });
+    console.log(`레포지토리 이름: ${tempSelectedRepo.name}`);
+    console.log(`선택된 디렉토리/파일 목록:`, tempSelectedRepo.selectedDirectories || []);
+    console.log(`총 바이트 크기: ${totalByteSize} bytes (${(totalByteSize/1024).toFixed(2)} KB)`);
     console.log('===============================================');
 
-    // 저장 상태 설정
-    setSaving(true);
     setError(null);
+    
+    // 먼저 다이얼로그를 닫고
+    handleCloseDialog();
+
+    // 그 다음 저장 프로세스 시작
+    onSavingChange?.(true);
 
     try {
-      // 선택된 각 레포지토리와 파일/디렉토리를 서버에 저장
-      for (const repo of tempSelectedRepos) {
-        if (repo.selectedDirectories && repo.selectedDirectories.length > 0) {
-          console.log(`서버에 ${repo.name} 레포지토리 파일 저장 시작...`);
+      // 최종 바이트 크기 설정
+      const repoWithSize = {
+        ...tempSelectedRepo,
+        byteSize: totalByteSize
+      };
 
-          // POST 요청 전송
-          const response = await axios.post(
-            `${apiUrl}/api/v1/resume/${spaceId}/github/users/${userId}/save-files`,
-            {
-              repository: repo.name,
-              filePaths: repo.selectedDirectories,
-              branch: 'main' // 기본 브랜치
-            },
-            { withCredentials: true }
-          );
+      if (tempSelectedRepo.selectedDirectories && tempSelectedRepo.selectedDirectories.length > 0) {
+        console.log(`서버에 ${tempSelectedRepo.name} 레포지토리 파일 저장 시작...`);
 
-          // 응답 처리
-          const result = response.data;
-          if (result.success) {
-            console.log(`${repo.name} 파일 저장 성공:`, result.savedFiles);
-            console.log('저장 경로:', result.savedPath);
-            
-            // 부모 컴포넌트에 저장된 파일 정보 전달
-            onFilesSaved({
-              ...result,
-              repository: repo.name
-            });
-          } else {
-            console.error(`${repo.name} 파일 저장 실패:`, result.error);
-          }
+        // POST 요청 전송
+        const response = await axios.post(
+          `${apiUrl}/api/v1/resume/${spaceId}/github/users/${userId}/save-files`,
+          {
+            repository: tempSelectedRepo.name,
+            filePaths: tempSelectedRepo.selectedDirectories,
+            branch: 'main' // 기본 브랜치
+          },
+          { withCredentials: true }
+        );
+
+        // 응답 처리
+        const result = response.data;
+        if (result.success) {
+          console.log(`${tempSelectedRepo.name} 파일 저장 성공:`, result.savedFiles);
+          console.log('저장 경로:', result.savedPath);
+          
+          // 부모 컴포넌트에 저장된 파일 정보 전달
+          onFilesSaved({
+            ...result,
+            repository: tempSelectedRepo.name
+          });
+        } else {
+          console.error(`${tempSelectedRepo.name} 파일 저장 실패:`, result.error);
         }
       }
 
-      // 부모 컴포넌트 콜백 호출
-      onSave(tempSelectedRepos);
+      // 부모 컴포넌트 콜백 호출 - 바이트 크기 포함
+      onSave([repoWithSize]);
 
-      // 대화상자 닫기
-      handleCloseDialog();
     } catch (err) {
       console.error('파일 저장에 실패했습니다:', err);
       setError('서버에 파일을 저장하는 중 오류가 발생했습니다.');
-      setSaving(false);
+    } finally {
+      onSavingChange?.(false);
     }
   };
 
   const handleToggleRepo = (repo: GitHubRepo) => {
-    if (tempSelectedRepos.some(r => r.name === repo.name)) {
-      setTempSelectedRepos(tempSelectedRepos.filter(r => r.name !== repo.name));
-    } else {
-      setTempSelectedRepos([...tempSelectedRepos, repo]);
+    setTempSelectedRepo(tempSelectedRepo?.name === repo.name ? null : repo);
+  };
+
+  const handleSaveDirectorySelection = async (selectedPaths: string[], totalSize: number) => {
+    if (currentRepo) {
+      setCalculatingSize(true);
+      
+      try {
+        // 총 바이트 크기 설정
+        setTotalByteSize(totalSize);
+
+        const updatedRepo = { 
+          ...currentRepo, 
+          selectedDirectories: selectedPaths,
+          byteSize: totalSize
+        };
+
+        // 선택된 경로 정보를 콘솔에 출력
+        console.log(`[${currentRepo.name}] 선택된 디렉토리/파일 경로:`, selectedPaths);
+        console.log(`총 바이트 크기: ${totalSize} bytes (${(totalSize/1024).toFixed(2)} KB)`);
+
+        setTempSelectedRepo(updatedRepo);
+      } catch (err) {
+        console.error('파일 크기 계산에 실패했습니다:', err);
+      } finally {
+        setCalculatingSize(false);
+      }
     }
   };
 
-  const handleSaveDirectorySelection = (selectedPaths: string[]) => {
-    if (currentRepo) {
-      const updatedRepo = { ...currentRepo, selectedDirectories: selectedPaths };
-
-      // 선택된 경로 정보를 콘솔에 출력
-      console.log(`[${currentRepo.name}] 선택된 디렉토리/파일 경로:`, selectedPaths);
-
-      // 임시 선택 목록에 업데이트된 레포 정보 저장
-      const updatedSelectedRepos = tempSelectedRepos.map(repo =>
-        repo.name === currentRepo.name ? updatedRepo : repo
-      );
-
-      if (!tempSelectedRepos.some(repo => repo.name === currentRepo.name)) {
-        updatedSelectedRepos.push(updatedRepo);
-      }
-
-      setTempSelectedRepos(updatedSelectedRepos);
-    }
+  // KB 단위로 크기 포맷팅
+  const formatSize = (bytes: number): string => {
+    return (bytes / 1024).toFixed(1) + ' KB';
   };
 
   return (
@@ -253,9 +329,10 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
                       const selectedRepo = availableRepos.find(repo => repo.name === value);
                       if (selectedRepo) {
                         setCurrentRepo(selectedRepo);
-                        // 선택된 레포가 tempSelectedRepos에 없으면 추가
-                        if (!tempSelectedRepos.some(r => r.name === selectedRepo.name)) {
-                          setTempSelectedRepos([...tempSelectedRepos, selectedRepo]);
+                        // 선택된 레포가 tempSelectedRepo에 없으면 추가
+                        if (!tempSelectedRepo || tempSelectedRepo.name !== selectedRepo.name) {
+                          setTempSelectedRepo(selectedRepo);
+                          setTotalByteSize(0); // 새 레포 선택시 바이트 크기 초기화
                         }
                       } else {
                         setCurrentRepo(null);
@@ -301,48 +378,66 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
                 <span>{error}</span>
               </div>
             )}
-          </div>
-
-          {/* 선택된 레포지토리 목록 */}
-          {tempSelectedRepos.length > 0 && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                선택된 레포지토리
-              </label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {tempSelectedRepos.map((repo) => (
-                  <Badge
-                    key={repo.name}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    <span>{repo.name}</span>
-                    <button
-                      onClick={() => handleToggleRepo(repo)}
-                      className="ml-1 p-0.5 rounded-full hover:bg-gray-200"
-                    >
-                      <span className="sr-only">삭제</span>
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M3 11L11 3M3 3L11 11"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </Badge>
-                ))}
+            
+            {/* 스토리지 사용량 프로그레스 바 */}
+            <div className="mt-3 space-y-1">
+              <div className="flex justify-between text-xs">
+                <span>
+                  사용량: {formatSize(currentTotalByteSize)}
+                  {totalByteSize > 0 && (
+                    <span className={isProjectedOverLimit ? "text-red-600 font-medium" : "text-amber-500"}>
+                      {" + "}{formatSize(totalByteSize)}
+                      {isProjectedOverLimit && " (초과)"}
+                    </span>
+                  )}
+                </span>
+                <span>최대 용량: {formatSize(maxByteSize)}</span>
+              </div>
+              <div className="relative">
+                {/* 현재 사용량 프로그레스 바 */}
+                <Progress 
+                  value={currentUsagePercent} 
+                  className={`h-1.5 ${currentUsagePercent > 80 ? "[&>div]:bg-amber-500" : ""}`}
+                />
+                
+                {/* 예상 사용량 영역 */}
+                {totalByteSize > 0 && (
+                  <div 
+                    className={`absolute top-0 left-0 h-1.5 rounded-r-full transition-all ${isProjectedOverLimit ? "bg-red-500" : "bg-blue-400"}`} 
+                    style={{ 
+                      width: `${Math.min(projectedUsagePercent, 100)}%`,
+                      opacity: 0.8,
+                      clipPath: totalByteSize > 0 ? `inset(0 0 0 ${currentUsagePercent}%)` : 'none'
+                    }}
+                  />
+                )}
+              </div>
+              
+              {/* 사용량 표시 텍스트 */}
+              <div className="flex justify-between text-xs">
+                <span className={isProjectedOverLimit ? "text-red-600 font-medium" : ""}>
+                  {totalByteSize > 0 
+                    ? `예상 사용량: ${formatSize(currentTotalByteSize + totalByteSize)} (${Math.min(projectedUsagePercent, 100).toFixed(1)}%)` 
+                    : `현재 사용량: ${formatSize(currentTotalByteSize)} (${currentUsagePercent.toFixed(1)}%)`
+                  }
+                </span>
+                <span className={isProjectedOverLimit ? "text-red-600 font-medium" : ""}>
+                  {isProjectedOverLimit 
+                    ? `초과: ${formatSize((currentTotalByteSize + totalByteSize) - maxByteSize)}` 
+                    : `남은 용량: ${formatSize(maxByteSize - (currentTotalByteSize + totalByteSize))}`
+                  }
+                </span>
               </div>
             </div>
-          )}
+            
+            {/* 크기 계산 중 표시 */}
+            {calculatingSize && (
+              <div className="mt-2 text-xs text-blue-600 flex items-center">
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                크기 계산 중...
+              </div>
+            )}
+          </div>
 
           {/* 레포의 디렉토리 구조 - 항상 표시 */}
           {currentRepo ? (
@@ -379,7 +474,9 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
 
         <DialogFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            {tempSelectedRepos.length}개 레포지토리 선택됨
+            {tempSelectedRepo ? 
+              `1개 레포지토리 선택됨${totalByteSize > 0 ? ` (${(totalByteSize/1024).toFixed(1)} KB)` : ''}` : 
+              '레포지토리를 선택해주세요'}
           </div>
           <div className="flex space-x-2">
             <Button variant="outline" onClick={handleCloseDialog}>
@@ -387,14 +484,9 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
             </Button>
             <Button
               onClick={handleSaveRepoSelection}
-              disabled={tempSelectedRepos.length === 0 || saving}
+              disabled={!tempSelectedRepo || currentRepoExceedsLimit}
             >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  저장 중...
-                </>
-              ) : '완료'}
+              완료
             </Button>
           </div>
         </DialogFooter>
