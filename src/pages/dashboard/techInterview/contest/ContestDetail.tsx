@@ -245,7 +245,7 @@ const ContestDetail: React.FC = () => {
                 <h3 className="text-lg font-semibold">득점 현황</h3>
                 <div className="h-[300px]">
                   <BarChart
-                    width={300}
+                    width={Math.max(400, getChartData().length * 70)}
                     height={250}
                     data={getChartData()}
                   >
@@ -258,6 +258,8 @@ const ContestDetail: React.FC = () => {
                       tickFormatter={(value) =>
                         value.length > 6 ? value.slice(0, 6) + '…' : value
                       }
+                      interval={0}
+                      tick={{ fontSize: 12 }}
                     />
                     <YAxis
                       tickLine={false}
