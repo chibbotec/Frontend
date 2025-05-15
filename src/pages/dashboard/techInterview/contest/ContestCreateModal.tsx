@@ -259,7 +259,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
               <table className="w-full">
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
-                    <th className="p-2 bg-gray-50 text-sm w-2/8">
+                    <th className="p-2 bg-gray-50 text-sm w-[40px] max-w-[48px] min-w-[32px] text-center">
                       <div className="flex justify-center">
                         <Checkbox
                           id="select-all"
@@ -274,6 +274,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
                               setSelectedQuestions([]);
                             }
                           }}
+                          className="h-4 w-4"
                         />
                       </div>
                     </th>
@@ -284,7 +285,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
                 <tbody>
                   {questions.map((question) => (
                     <tr key={question.id} className="border-t">
-                      <td className="p-2 w-2/8">
+                      <td className="p-2 w-[40px] max-w-[48px] min-w-[32px] text-center">
                         <div className="flex justify-center">
                           <Checkbox
                             id={`question-${question.id}`}
@@ -292,6 +293,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
                               q.techClass === question.techClass && q.questionText === question.questionText
                             )}
                             onCheckedChange={() => handleQuestionSelect(question)}
+                            className="h-4 w-4"
                           />
                         </div>
                       </td>
