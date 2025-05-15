@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -105,6 +106,53 @@ const ContestDetail: React.FC = () => {
     }
   };
 
+  const calculateTotalScores = () => {
+    if (!contest) return [];
+    
+    const scores = contest.participants.map(participant => {
+      const totalScore = contest.problems.reduce((sum, problem) => {
+        const answer = problem.answers.find(a => a.memberId === participant.id);
+        return sum + (answer?.rank || 0);
+      }, 0);
+      
+      return {
+        nickname: participant.nickname,
+        totalScore,
+        memberId: participant.id
+      };
+    });
+
+    return scores.sort((a, b) => b.totalScore - a.totalScore);
+  };
+
+  const getChartData = () => {
+    if (!contest) return [];
+    return calculateTotalScores().map(score => ({
+      name: score.nickname,
+      score: score.totalScore
+    }));
+  };
+
+  // 공동 순위 방식으로 순위 계산
+  const getRankedScores = () => {
+    const scores = calculateTotalScores();
+    let prevScore: number | null = null;
+    let prevRank = 0;
+    let skip = 0;
+    return scores.map((score, idx) => {
+      if (score.totalScore === prevScore) {
+        skip++;
+        return { ...score, rank: prevRank };
+      } else {
+        const rank = idx + 1;
+        prevRank = rank;
+        prevScore = score.totalScore;
+        skip = 1;
+        return { ...score, rank };
+      }
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -184,6 +232,85 @@ const ContestDetail: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {contest.submit === 'EVALUATED' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>종합 평가</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-8">
+              {/* Left side - Bar Chart */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">득점 현황</h3>
+                <div className="h-[300px]">
+                  <BarChart
+                    width={300}
+                    height={250}
+                    data={getChartData()}
+                  >
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                    />
+                    <RechartsTooltip
+                      cursor={false}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        padding: '8px'
+                      }}
+                      formatter={(value) => [`${value}점`, '점수']}
+                    />
+                    <Bar
+  dataKey="score"
+  fill="#2563eb" // tailwind blue-600
+  radius={4}
+/>
+                  </BarChart>
+                </div>
+              </div>
+
+              {/* Right side - Ranking List */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">순위</h3>
+                <div className="space-y-3">
+                  {getRankedScores().map((score, index) => (
+                    <div 
+                      key={score.memberId}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium
+                          ${score.rank === 1 ? 'bg-yellow-100 text-yellow-800' : 
+                            score.rank === 2 ? 'bg-gray-100 text-gray-800' : 
+                            score.rank === 3 ? 'bg-orange-100 text-orange-800' : 
+                            'bg-blue-100 text-blue-800'}`}
+                        >
+                          {score.rank}
+                        </span>
+                        <span className="font-medium">{score.nickname}</span>
+                      </div>
+                      <span className="text-lg font-semibold text-blue-600">
+                        {score.totalScore}점
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-4">
         {contest.problems.map((problem, index) => (
