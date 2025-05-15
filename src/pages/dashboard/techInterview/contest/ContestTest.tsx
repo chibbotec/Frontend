@@ -43,6 +43,7 @@ interface ContestDetailResponse {
   timeoutMillis: number;
   participants: MemberResponse[];
   problems: ProblemResponse[];
+  submit: string;
 }
 
 const ContestTest: React.FC = () => {
@@ -54,6 +55,17 @@ const ContestTest: React.FC = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [answers, setAnswers] = useState<string[]>([]);
+
+  // Add function to check if user has submitted
+  const hasUserSubmitted = () => {
+    if (!user || !contest) return false;
+    // 대회가 EVALUATED 상태이거나
+    if (contest.submit === 'EVALUATED') return true;
+    
+    // 사용자의 제출 상태가 COMPLETED나 EVALUATED인 경우
+    const participant = contest.participants.find(p => p.id === user.id);
+    return participant?.submmit === 'COMPLETED' || participant?.submmit === 'EVALUATED';
+  };
 
   useEffect(() => {
     const fetchContestDetail = async () => {
@@ -169,8 +181,20 @@ const ContestTest: React.FC = () => {
         body,
         { withCredentials: true }
       );
+      
+      // Update contest state after successful submission
+      setContest(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          participants: prev.participants.map(p => 
+            p.id === user.id ? { ...p, submmit: 'COMPLETED' } : p
+          )
+        };
+      });
+      
+      setIsStarted(false);
       toast.success("제출이 완료되었습니다!");
-      // 필요시 페이지 이동 등 추가
     } catch (e) {
       toast.error("제출에 실패했습니다.");
     }
@@ -271,12 +295,20 @@ const ContestTest: React.FC = () => {
             </div>
             <div className="flex flex-col items-center justify-center space-y-4">
               {!isStarted ? (
-                <Button 
-                  onClick={handleStart}
-                  className="w-32"
-                >
-                  시작하기
-                </Button>
+                hasUserSubmitted() ? (
+                  <div className="text-center flex flex-col items-center space-y-2">
+                    <div className="text-2xl font-bold text-green-600">
+                      제출 완료
+                    </div>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={handleStart}
+                    className="w-32"
+                  >
+                    시작하기
+                  </Button>
+                )
               ) : (
                 <div className="text-center flex flex-col items-center space-y-2">
                   <div className="text-2xl font-bold text-blue-600">
@@ -285,13 +317,19 @@ const ContestTest: React.FC = () => {
                   <div className="text-sm text-gray-500 mt-1">
                     남은 시간
                   </div>
-                  <Button
-                    className="w-32 mt-2"
-                    onClick={handleSubmit}
-                    variant="secondary"
-                  >
-                    제출하기
-                  </Button>
+                  {hasUserSubmitted() ? (
+                    <div className="text-2xl font-bold text-green-600">
+                      제출 완료
+                    </div>
+                  ) : (
+                    <Button
+                      className="w-32 mt-2"
+                      onClick={handleSubmit}
+                      variant="secondary"
+                    >
+                      제출하기
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

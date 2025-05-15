@@ -4,6 +4,12 @@ import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -20,6 +26,7 @@ interface AnswerResponse {
   nickname: string;
   answer: string;
   rank: number;
+  feedback: string;
 }
 
 interface ProblemResponse {
@@ -247,7 +254,18 @@ const ContestDetail: React.FC = () => {
                               </span>
                               <span className="font-medium text-sm md:text-base">{answer.nickname}</span>
                             </div>
-                            <span className="text-xs md:text-sm text-blue-600 font-medium">{answer.rank}점</span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <span className="text-xs md:text-sm text-blue-600 font-medium cursor-help">
+                                    {answer.rank}점
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-[300px]">
+                                  <p className="text-sm">{answer.feedback}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         ))}
                     </div>
