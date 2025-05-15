@@ -108,13 +108,13 @@ const ContestDetail: React.FC = () => {
 
   const calculateTotalScores = () => {
     if (!contest) return [];
-    
+
     const scores = contest.participants.map(participant => {
       const totalScore = contest.problems.reduce((sum, problem) => {
         const answer = problem.answers.find(a => a.memberId === participant.id);
         return sum + (answer?.rank || 0);
       }, 0);
-      
+
       return {
         nickname: participant.nickname,
         totalScore,
@@ -255,6 +255,9 @@ const ContestDetail: React.FC = () => {
                       tickLine={false}
                       tickMargin={10}
                       axisLine={false}
+                      tickFormatter={(value) =>
+                        value.length > 6 ? value.slice(0, 6) + '…' : value
+                      }
                     />
                     <YAxis
                       tickLine={false}
@@ -272,10 +275,10 @@ const ContestDetail: React.FC = () => {
                       formatter={(value) => [`${value}점`, '점수']}
                     />
                     <Bar
-  dataKey="score"
-  fill="#2563eb" // tailwind blue-600
-  radius={4}
-/>
+                      dataKey="score"
+                      fill="#2563eb" // tailwind blue-600
+                      radius={4}
+                    />
                   </BarChart>
                 </div>
               </div>
@@ -285,16 +288,16 @@ const ContestDetail: React.FC = () => {
                 <h3 className="text-lg font-semibold">순위</h3>
                 <div className="space-y-3">
                   {getRankedScores().map((score, index) => (
-                    <div 
+                    <div
                       key={score.memberId}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                     >
                       <div className="flex items-center gap-3">
                         <span className={`w-6 h-6 flex items-center justify-center rounded-full text-sm font-medium
-                          ${score.rank === 1 ? 'bg-yellow-100 text-yellow-800' : 
-                            score.rank === 2 ? 'bg-gray-100 text-gray-800' : 
-                            score.rank === 3 ? 'bg-orange-100 text-orange-800' : 
-                            'bg-blue-100 text-blue-800'}`}
+                          ${score.rank === 1 ? 'bg-yellow-100 text-yellow-800' :
+                            score.rank === 2 ? 'bg-gray-100 text-gray-800' :
+                              score.rank === 3 ? 'bg-orange-100 text-orange-800' :
+                                'bg-blue-100 text-blue-800'}`}
                         >
                           {score.rank}
                         </span>
