@@ -34,6 +34,8 @@ interface ProblemResponse {
   problem: string;
   techClass: string;
   aiAnswer: string | null;
+  keyPoints?: string;
+  additionalTopics?: string;
   answers: AnswerResponse[];
 }
 
@@ -340,7 +342,20 @@ const ContestDetail: React.FC = () => {
                 </TabsList>
                 <TabsContent value="ai" className="mt-4 h-[180px] overflow-y-auto">
                   {contest.submit === 'EVALUATED' ? problem.aiAnswer ? (
-                    <p className="whitespace-pre-wrap text-sm md:text-base">{problem.aiAnswer}</p>
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-sm font-medium">모범 답변</h4>
+                        <p className="text-sm mt-1 whitespace-pre-line">{problem.aiAnswer}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium">면접 팁</h4>
+                        <p className="text-sm mt-1 whitespace-pre-line">{problem.keyPoints}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium">관련 주제</h4>
+                        <p className="text-sm mt-1">{problem.additionalTopics}</p>
+                      </div>
+                    </div>
                   ) : (
                     <p className="text-red-500 text-sm md:text-base">AI 답변이 없습니다</p>
                   ) : (
