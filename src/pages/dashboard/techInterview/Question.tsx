@@ -146,10 +146,10 @@ export function QuestionsTable() {
     }
 
     try {
-      // Convert techClass to uppercase to match backend enum
+      // Convert techClass to match backend enum format
       const requestData = {
         ...newQuestion,
-        techClass: newQuestion.techClass.toUpperCase()
+        techClass: newQuestion.techClass.replace(/\s+/g, '_').toUpperCase()
       };
 
       const response = await axios.post(
