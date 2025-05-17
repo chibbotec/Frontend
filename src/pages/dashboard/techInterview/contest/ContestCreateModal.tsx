@@ -32,8 +32,7 @@ interface Question {
 }
 
 interface SelectedQuestion {
-  techClass: string;
-  questionText: string;
+  id: string;
   aiAnswer?: string;
 }
 
@@ -42,11 +41,15 @@ interface Participant {
   nickname: string;
 }
 
+interface ProblemRequest {
+  problemId: number;
+}
+
 interface ContestCreateRequest {
   title: string;
   createAt: string;
   timeoutMillis: number;
-  problems: SelectedQuestion[];
+  problems: ProblemRequest[];
   participants: Participant[];
 }
 
@@ -110,14 +113,10 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
 
   const handleQuestionSelect = (question: Question) => {
     setSelectedQuestions(prev => {
-      const isSelected = prev.some(q => 
-        q.techClass === question.techClass && q.questionText === question.questionText
-      );
+      const isSelected = prev.some(q => q.id === question.id);
       
       if (isSelected) {
-        return prev.filter(q => 
-          !(q.techClass === question.techClass && q.questionText === question.questionText)
-        );
+        return prev.filter(q => q.id !== question.id);
       } else {
         let aiAnswer = undefined;
         if (question.answers?.ai) {
@@ -130,8 +129,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
         }
         
         return [...prev, { 
-          techClass: question.techClass, 
-          questionText: question.questionText,
+          id: question.id,
           aiAnswer
         }];
       }
@@ -160,7 +158,9 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
         title,
         createAt: now.toISOString(),
         timeoutMillis: timeoutMinutes * 60 * 1000,
-        problems: selectedQuestions,
+        problems: selectedQuestions.map(q => ({
+          problemId: parseInt(q.id)
+        })),
         participants: selectedParticipants
       };
 
@@ -267,8 +267,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
                           onCheckedChange={(checked) => {
                             if (checked) {
                               setSelectedQuestions(questions.map(q => ({
-                                techClass: q.techClass,
-                                questionText: q.questionText
+                                id: q.id
                               })));
                             } else {
                               setSelectedQuestions([]);
@@ -289,9 +288,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
                         <div className="flex justify-center">
                           <Checkbox
                             id={`question-${question.id}`}
-                            checked={selectedQuestions.some(q => 
-                              q.techClass === question.techClass && q.questionText === question.questionText
-                            )}
+                            checked={selectedQuestions.some(q => q.id === question.id)}
                             onCheckedChange={() => handleQuestionSelect(question)}
                             className="h-4 w-4"
                           />

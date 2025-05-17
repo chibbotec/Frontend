@@ -40,6 +40,13 @@ type AIAnswer = {
   related_topics: string;
 };
 
+type Answer = {
+  id: number;
+  memberId: number;
+  nickname: string;
+  comment: string;
+};
+
 type QuestionResponse = {
   id: string;
   spaceId: number;
@@ -47,8 +54,10 @@ type QuestionResponse = {
   questionText: string;
   author: Participant;
   participants: Participant[];
-  answers: Record<string, string>;
-  aiAnswer?: AIAnswer; // AI 답변 필드 추가
+  answers: Answer[];
+  aiAnswer?: string;
+  keyPoints?: string;
+  additionalTopics?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -65,10 +74,9 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [aiAnswer, setAiAnswer] = useState<AIAnswer | null>(() => {
-    // question.answers.ai가 있으면 파싱해서 사용
-    if (question.answers && question.answers.ai) {
+    if (question.aiAnswer) {
       try {
-        return JSON.parse(question.answers.ai) as AIAnswer;
+        return JSON.parse(question.aiAnswer) as AIAnswer;
       } catch (e) {
         console.error("AI 답변 파싱 실패:", e);
         return null;
@@ -84,9 +92,9 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
     try {
       // 파이썬 AI 서비스에 요청
       const response = await axios.post(`${apiUrl}/api/v1/ai/${spaceId}/questions/ai-answer`, {
-        questionId: question.id,
-        questionText: question.questionText,
-        techClass: question.techClass
+        id: question.id,
+        techClass: question.techClass,
+        questionText: question.questionText
       });
 
       // 응답 데이터 설정
@@ -150,7 +158,7 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
 
   // 참여자 수와 답변 수 계산
   const participantCount = question.participants.length;
-  const answerCount = Object.keys(question.answers).filter(key => key.startsWith("memberId:")).length;
+  const answerCount = question.answers.length;
 
   // 날짜 포맷팅
   const formattedDate = new Date(question.createdAt).toLocaleDateString("ko-KR", {
@@ -185,7 +193,7 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
                   {question.participants.map((participant) => (
                       <Badge key={participant.id} variant="secondary" className="text-xs">
                         {participant.nickname}
-                        {question.answers[`memberId:${participant.id}`] && (
+                        {question.answers.some(answer => answer.memberId === participant.id) && (
                             <span className="ml-1 text-green-500">✓</span>
                         )}
                       </Badge>
@@ -252,25 +260,16 @@ const StudyCard = ({ question, onAnswerSubmit }: StudyCardProps) => {
             {/* 기존 답변 목록 섹션 */}
             <div>
               <h3 className="text-base font-semibold mb-2">답변 목록</h3>
-              {Object.entries(question.answers)
-              .filter(([key]) => key.startsWith("memberId:"))
-                  .length > 0 ? (
+              {question.answers.length > 0 ? (
                   <div className="space-y-3">
-                    {Object.entries(question.answers)
-                    .filter(([key]) => key.startsWith("memberId:"))
-                    .map(([key, value]) => {
-                      const memberId = key.replace("memberId:", "");
-                      const participant = question.participants.find(p => p.id.toString() === memberId);
-
-                      return (
-                          <div key={key} className="p-3 bg-muted rounded-md">
-                            <div className="flex justify-between items-center mb-1">
-                              <Badge variant="outline">{participant?.nickname || "알 수 없음"}</Badge>
-                            </div>
-                            <p className="text-sm whitespace-pre-line">{value}</p>
+                    {question.answers.map((answer) => (
+                        <div key={answer.id} className="p-3 bg-muted rounded-md">
+                          <div className="flex justify-between items-center mb-1">
+                            <Badge variant="outline">{answer.nickname}</Badge>
                           </div>
-                      );
-                    })}
+                          <p className="text-sm whitespace-pre-line">{answer.comment}</p>
+                        </div>
+                    ))}
                   </div>
               ) : (
                   <p className="text-muted-foreground">아직 답변이 없습니다.</p>

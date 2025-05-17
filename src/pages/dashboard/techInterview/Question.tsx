@@ -146,9 +146,15 @@ export function QuestionsTable() {
     }
 
     try {
+      // Convert techClass to uppercase to match backend enum
+      const requestData = {
+        ...newQuestion,
+        techClass: newQuestion.techClass.toUpperCase()
+      };
+
       const response = await axios.post(
         `${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/questions`,
-        newQuestion,
+        requestData,
         { withCredentials: true }
       );
 

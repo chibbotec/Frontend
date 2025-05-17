@@ -28,6 +28,13 @@ type Participant = {
   nickname: string;
 };
 
+type Answer = {
+  id: number;
+  memberId: number;
+  nickname: string;
+  comment: string;
+};
+
 type QuestionResponse = {
   id: string;
   spaceId: number;
@@ -35,7 +42,10 @@ type QuestionResponse = {
   questionText: string;
   author: Participant;
   participants: Participant[];
-  answers: Record<string, string>;
+  answers: Answer[];
+  aiAnswer?: string;
+  keyPoints?: string;
+  additionalTopics?: string;
   createdAt: string;
   updatedAt: string;
 };
