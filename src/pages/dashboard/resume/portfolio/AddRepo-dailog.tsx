@@ -299,10 +299,11 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
         const result: TaskResponse = response.data;
         
         if (result.taskId) {
-          // Start polling
-          setIsPolling(true);
-          const interval = setInterval(() => pollTaskStatus(result.taskId), 2000); // Poll every 2 seconds
-          setPollingInterval(interval);
+          // Pass taskId to parent component for polling
+          onFilesSaved({
+            taskId: result.taskId,
+            repository: tempSelectedRepo.name
+          });
         } else {
           throw new Error('작업 ID를 받지 못했습니다.');
         }

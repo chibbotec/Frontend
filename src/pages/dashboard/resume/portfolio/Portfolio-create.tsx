@@ -135,6 +135,10 @@ const Portfolio: React.FC = () => {
     in_progress: number;
   } | null>(null);
 
+  // 파일 다운로드 상태 추가
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadPollingInterval, setDownloadPollingInterval] = useState<NodeJS.Timeout | null>(null);
+
   // AI 요약 요청 함수
   const handleAISummary = async () => {
     try {
@@ -191,11 +195,11 @@ const Portfolio: React.FC = () => {
 
               // 결과 데이터 처리
               const data = statusResponse.data.result;
-              
+
               // 요약 정보 업데이트
               setSummary(data.summary);
               setDescription(data.overview);
-              
+
               // 기술 스택 처리
               let processedTechStack: string[] = [];
               if (Array.isArray(data.tech_stack)) {
@@ -264,6 +268,57 @@ const Portfolio: React.FC = () => {
       toast.error('AI 요약 요청에 실패했습니다.');
     }
   };
+  // 저장된 파일 처리 함수 수정
+  const handleSavedFiles = (response: any) => {
+    if (response.taskId) {
+      let interval: NodeJS.Timeout | null = null;
+
+      const pollTaskStatus = async () => {
+        try {
+          const statusResponse = await axios.get(
+            `${apiUrl}/api/v1/resume/${spaceId}/github/tasks/${response.taskId}`,
+            { withCredentials: true }
+          );
+          const status = statusResponse.data;
+          console.log('파일 저장 상태=======================:', status);
+
+          if (status.completed || status.error) {
+            console.log('폴링 중지 조건 충족:=========', { completed: status.completed, error: status.error });
+            if (interval) clearInterval(interval);
+            setIsDownloading(false);
+            setIsSavingFiles(false);
+
+            if (status.error) {
+              toast.error(`파일 저장 중 오류가 발생했습니다: ${status.error}`);
+            } else {
+              const newFiles = status.savedFiles.map((filePath: string, index: number) => ({
+                id: Date.now().toString() + index,
+                name: filePath.split('/').pop() || '',
+                path: filePath,
+                repository: response.repository || '',
+                savedPath: status.savedPath || ''
+              }));
+              setSavedFiles(prev => [...prev, ...newFiles]);
+              toast.success('파일 저장 성공', {
+                description: `${newFiles.length}개의 파일이 저장되었습니다.`
+              });
+            }
+          }
+        } catch (err) {
+          if (interval) clearInterval(interval);
+          setIsDownloading(false);
+          setIsSavingFiles(false);
+          toast.error('작업 상태를 확인하는 중 오류가 발생했습니다.');
+        }
+      };
+
+      interval = setInterval(pollTaskStatus, 2000);
+      setIsDownloading(true);
+      setIsSavingFiles(true);
+      pollTaskStatus();
+    }
+  };
+
 
   // 컴포넌트 언마운트 시 폴링 중지
   useEffect(() => {
@@ -359,7 +414,7 @@ const Portfolio: React.FC = () => {
           // 지식 공량 퍼센트 계산
           const totalBytes = portfolio.githubRepos.reduce((sum, repo) => sum + (repo.byteSize || 0), 0);
           setTotalByteSize(totalBytes);
-          
+
           // 지식 공량 퍼센트 계산
           const percent = Math.min(Math.floor((totalBytes / MAX_BYTE_SIZE) * 100), 100);
           setKnowledgePercent(percent);
@@ -489,18 +544,41 @@ const Portfolio: React.FC = () => {
   };
 
   const handleSaveRepos = (repos: GitHubRepo[]) => {
-    // 기존 레포지토리와 새로운 레포지토리 합치기
-    const updatedRepos = [...selectedRepos, ...repos];
-    setSelectedRepos(updatedRepos);
+    setSelectedRepos(prevRepos => {
+      const repoMap = new Map<string, GitHubRepo>();
+
+      // 기존 레포 먼저 넣기
+      prevRepos.forEach(repo => {
+        repoMap.set(repo.name, { ...repo });
+      });
+
+      // 새로 추가된 레포 처리
+      repos.forEach(newRepo => {
+        if (repoMap.has(newRepo.name)) {
+          // 이미 있으면 selectedDirectories, byteSize 등 합치기
+          const oldRepo = repoMap.get(newRepo.name)!;
+          repoMap.set(newRepo.name, {
+            ...oldRepo,
+            selectedDirectories: Array.from(new Set([...(oldRepo.selectedDirectories || []), ...(newRepo.selectedDirectories || [])])),
+            byteSize: (oldRepo.byteSize || 0) + (newRepo.byteSize || 0),
+          });
+        } else {
+          repoMap.set(newRepo.name, newRepo);
+        }
+      });
+
+      return Array.from(repoMap.values());
+    });
 
     // 바이트 크기 합계 계산
+    const updatedRepos = [...selectedRepos, ...repos];
     const newTotalBytes = updatedRepos.reduce((sum, repo) => sum + (repo.byteSize || 0), 0);
     setTotalByteSize(newTotalBytes);
-    
+
     // 지식 공량 퍼센트 계산
     const percent = Math.min(Math.floor((newTotalBytes / MAX_BYTE_SIZE) * 100), 100);
     setKnowledgePercent(percent);
-    
+
     toast.success('성공.', {
       description: `${repos.length}개의 레포지토리가 포트폴리오에 추가되었습니다.`,
     });
@@ -509,34 +587,13 @@ const Portfolio: React.FC = () => {
   // 바이트 크기 업데이트 핸들러 
   const handleUpdateTotalByteSize = (newByteSize: number) => {
     setTotalByteSize(prevSize => prevSize + newByteSize);
-    
+
     // 지식 공량 퍼센트 재계산
     const newTotal = totalByteSize + newByteSize;
     const percent = Math.min(Math.floor((newTotal / MAX_BYTE_SIZE) * 100), 100);
     setKnowledgePercent(percent);
   };
 
-  // 저장된 파일 처리 함수 추가
-  const handleSavedFiles = (response: any) => {
-    if (response.success && response.savedFiles) {
-      const newFiles = response.savedFiles.map((filePath: string, index: number) => ({
-        id: Date.now().toString() + index,
-        name: filePath.split('/').pop() || '',
-        path: filePath,
-        repository: response.repository || '',
-        savedPath: response.savedPath || ''
-      }));
-
-      setSavedFiles(prev => [...prev, ...newFiles]);
-      toast.success('파일 저장 성공', {
-        description: `${newFiles.length}개의 파일이 저장되었습니다.`
-      });
-    } else {
-      toast.error('파일 저장 실패', {
-        description: '일부 파일 저장에 실패했습니다.'
-      });
-    }
-  };
 
   const getLanguageBadgeColor = (language?: string) => {
     const languageMap: Record<string, string> = {
@@ -746,7 +803,7 @@ const Portfolio: React.FC = () => {
                   ) : (
                     <div className="space-y-3">
                       {features.map((feature, featureIndex) => (
-                        <div 
+                        <div
                           key={featureIndex}
                           className="bg-white border rounded-md shadow-sm hover:shadow transition-all group relative"
                         >
@@ -761,7 +818,7 @@ const Portfolio: React.FC = () => {
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                           </button>
-                          
+
                           <div className="p-3 pt-3 grid grid-cols-5 gap-3">
                             <div className="col-span-3 space-y-3">
                               <div>
@@ -801,7 +858,7 @@ const Portfolio: React.FC = () => {
                                 />
                               </div>
                             </div>
-                            
+
                             <div className="col-span-2 flex flex-col h-full">
                               <Label className="text-xs font-medium mb-1 block">이미지</Label>
                               <div className="border rounded-md p-2 flex flex-col items-center justify-center flex-1 bg-gray-50">
@@ -848,7 +905,7 @@ const Portfolio: React.FC = () => {
               </CardContent>
             </Card>
 
-           
+
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-6">
@@ -878,7 +935,7 @@ const Portfolio: React.FC = () => {
                 <Github className="h-4 w-4 mr-1" />
                 GitHub 연동하기
               </div>
-              
+
               {!isGitHubConnected ? (
                 <div className="flex flex-col items-center space-y-2 py-3 mt-2">
                   <Github className="h-10 w-10 text-gray-400" />
@@ -903,9 +960,9 @@ const Portfolio: React.FC = () => {
                         </svg>
                       </span>
                     </div>
-                    <Progress 
-                      value={knowledgePercent} 
-                      className={`h-1.5 ${knowledgePercent > 90 ? "[&>div]:bg-red-500" : knowledgePercent > 80 ? "[&>div]:bg-amber-500" : ""}`} 
+                    <Progress
+                      value={knowledgePercent}
+                      className={`h-1.5 ${knowledgePercent > 90 ? "[&>div]:bg-red-500" : knowledgePercent > 80 ? "[&>div]:bg-amber-500" : ""}`}
                     />
                   </div>
 
@@ -922,13 +979,6 @@ const Portfolio: React.FC = () => {
                       </Button>
                     </div>
 
-                    {isSavingFiles && (
-                      <div className="border rounded-lg p-2 flex items-center justify-center mb-1">
-                        <Loader2 className="h-3 w-3 animate-spin text-blue-500 mr-1" />
-                        <p className="text-xs text-gray-600">파일 저장 중...</p>
-                      </div>
-                    )}
-
                     {selectedRepos.length > 0 ? (
                       <div className="space-y-1">
                         {selectedRepos.map(repo => (
@@ -937,16 +987,16 @@ const Portfolio: React.FC = () => {
                             className="flex items-center justify-between py-1.5 px-2 border-b border-gray-100 hover:bg-gray-50 rounded group"
                           >
                             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                              {repo.name.includes('/') ? (
-                                <Github className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+                              {isDownloading ? (
+                                <Loader2 className="h-3.5 w-3.5 flex-shrink-0 animate-spin text-blue-500" />
                               ) : (
-                                <FileCode className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+                                <Github className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
                               )}
                               <span className="text-xs font-medium truncate">{repo.name}</span>
                               <div className="flex items-center gap-1 ml-1">
                                 <span className="text-[10px] text-muted-foreground">{repo.lineCount}줄</span>
                                 {repo.byteSize && (
-                                  <span className="text-[10px] text-blue-500">({(repo.byteSize/1024).toFixed(1)} KB)</span>
+                                  <span className="text-[10px] text-blue-500">({(repo.byteSize / 1024).toFixed(1)} KB)</span>
                                 )}
                               </div>
                             </div>
@@ -981,128 +1031,128 @@ const Portfolio: React.FC = () => {
             </div>
           </Card>
           <Card className="mb-6">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle>저장된 파일</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={() => {
-                      // 테스트용 AI 요약 요청
-                      axios.post(
-                        `${apiUrl}/api/v1/ai/${spaceId}/resume/${user?.id}/create-portfolio`,
-                        {
-                          repositories: ['58_8_kknaks-chijoontec_back']
-                        },
-                        {
-                          withCredentials: true,
-                          headers: {
-                            'Content-Type': 'application/json'
-                          }
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>저장된 파일</CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => {
+                    // 테스트용 AI 요약 요청
+                    axios.post(
+                      `${apiUrl}/api/v1/ai/${spaceId}/resume/${user?.id}/create-portfolio`,
+                      {
+                        repositories: ['58_8_kknaks-chijoontec_back']
+                      },
+                      {
+                        withCredentials: true,
+                        headers: {
+                          'Content-Type': 'application/json'
                         }
-                      ).then(response => {
-                        if (response.data) {
-                          const data = response.data;
-                          
-                          // 요약 정보 업데이트
-                          setSummary(data.summary);
-                          setDescription(data.overview);
-                          
-                          // 기술 스택 처리
-                          let processedTechStack: string[] = [];
-                          if (Array.isArray(data.tech_stack)) {
-                            processedTechStack = data.tech_stack;
-                          } else if (typeof data.tech_stack === 'string') {
-                            processedTechStack = data.tech_stack
-                              .split(',')
-                              .map((tech: string) => tech.trim())
-                              .filter((tech: string) => tech.length > 0)
-                              .map((tech: string) => {
-                                return tech.charAt(0).toUpperCase() + tech.slice(1).toLowerCase();
-                              });
-                          }
-                          setTechStack(processedTechStack);
+                      }
+                    ).then(response => {
+                      if (response.data) {
+                        const data = response.data;
 
-                          // 기능 정보 업데이트
-                          const newFeatures = Object.entries(data.features).map(([title, descriptions]) => ({
-                            title,
-                            descriptions: descriptions as string[],
-                            imageUrl: undefined
-                          }));
-                          setFeatures(newFeatures);
+                        // 요약 정보 업데이트
+                        setSummary(data.summary);
+                        setDescription(data.overview);
 
-                          // 아키텍처와 배포 정보 업데이트
-                          setArchitecture(data.architecture.communication);
-                          setDeployment(data.architecture.deployment);
-
-                          toast.success('AI가 포트폴리오 내용을 생성했습니다.');
+                        // 기술 스택 처리
+                        let processedTechStack: string[] = [];
+                        if (Array.isArray(data.tech_stack)) {
+                          processedTechStack = data.tech_stack;
+                        } else if (typeof data.tech_stack === 'string') {
+                          processedTechStack = data.tech_stack
+                            .split(',')
+                            .map((tech: string) => tech.trim())
+                            .filter((tech: string) => tech.length > 0)
+                            .map((tech: string) => {
+                              return tech.charAt(0).toUpperCase() + tech.slice(1).toLowerCase();
+                            });
                         }
-                      }).catch(error => {
-                        console.error('AI 요약 요청 실패:', error);
-                        toast.error('AI 요약 요청에 실패했습니다.');
-                      });
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                      <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z"/>
-                      <path d="M12 6v4"/>
-                      <path d="M12 14h.01"/>
-                    </svg>
-                    테스트
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={handleAISummary}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                      <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z"/>
-                      <path d="M12 6v4"/>
-                      <path d="M12 14h.01"/>
-                    </svg>
-                    AI 요약하기
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {savedFiles.length === 0 ? (
-                    <div className="border border-dashed rounded-lg p-6 text-center">
-                      <p className="text-sm text-muted-foreground mb-2">
-                        아직 저장된 파일이 없습니다.
-                      </p>
-                    </div>
-                  ) : (
-                    <ScrollArea className="h-[300px] pr-4">
-                      <div className="space-y-1">
-                        {savedFiles.map((file) => (
-                          <div 
-                            key={file.id} 
-                            className="flex items-center justify-between py-1.5 px-2 border-b border-gray-100 hover:bg-gray-50 rounded group"
-                          >
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <Badge variant="secondary" className="truncate max-w-[70px] px-1.5 py-0 text-xs h-5 flex-shrink-0">{file.repository}</Badge>
-                              <span className="text-xs font-medium truncate">{file.name}</span>
-                            </div>
-                            <button
-                              type="button"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 h-5 w-5 flex items-center justify-center flex-shrink-0"
-                              onClick={() => {
-                                setSavedFiles(prev => prev.filter(f => f.id !== file.id));
-                              }}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                            </button>
+                        setTechStack(processedTechStack);
+
+                        // 기능 정보 업데이트
+                        const newFeatures = Object.entries(data.features).map(([title, descriptions]) => ({
+                          title,
+                          descriptions: descriptions as string[],
+                          imageUrl: undefined
+                        }));
+                        setFeatures(newFeatures);
+
+                        // 아키텍처와 배포 정보 업데이트
+                        setArchitecture(data.architecture.communication);
+                        setDeployment(data.architecture.deployment);
+
+                        toast.success('AI가 포트폴리오 내용을 생성했습니다.');
+                      }
+                    }).catch(error => {
+                      console.error('AI 요약 요청 실패:', error);
+                      toast.error('AI 요약 요청에 실패했습니다.');
+                    });
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                    <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z" />
+                    <path d="M12 6v4" />
+                    <path d="M12 14h.01" />
+                  </svg>
+                  테스트
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={handleAISummary}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
+                    <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z" />
+                    <path d="M12 6v4" />
+                    <path d="M12 14h.01" />
+                  </svg>
+                  AI 요약하기
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {savedFiles.length === 0 ? (
+                  <div className="border border-dashed rounded-lg p-6 text-center">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      아직 저장된 파일이 없습니다.
+                    </p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[300px] pr-4">
+                    <div className="space-y-1">
+                      {savedFiles.map((file) => (
+                        <div
+                          key={file.id}
+                          className="flex items-center justify-between py-1.5 px-2 border-b border-gray-100 hover:bg-gray-50 rounded group"
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <Badge variant="secondary" className="truncate max-w-[70px] px-1.5 py-0 text-xs h-5 flex-shrink-0">{file.repository}</Badge>
+                            <span className="text-xs font-medium truncate">{file.name}</span>
                           </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                          <button
+                            type="button"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 h-5 w-5 flex items-center justify-center flex-shrink-0"
+                            onClick={() => {
+                              setSavedFiles(prev => prev.filter(f => f.id !== file.id));
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -1141,8 +1191,8 @@ const Portfolio: React.FC = () => {
                     <span>진행률</span>
                     <span>{Math.round((progress.completed / progress.total) * 100)}%</span>
                   </div>
-                  <Progress 
-                    value={(progress.completed / progress.total) * 100} 
+                  <Progress
+                    value={(progress.completed / progress.total) * 100}
                     className="h-1.5"
                   />
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
