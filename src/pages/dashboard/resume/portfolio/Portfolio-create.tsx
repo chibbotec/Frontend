@@ -138,6 +138,12 @@ const Portfolio: React.FC = () => {
   // AI 요약 요청 함수
   const handleAISummary = async () => {
     try {
+      // 기존 폴링이 있다면 중지
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+      }
+
       console.log('=== 현재 저장된 레포지토리 목록 ===');
       console.log('총 레포지토리 수:', selectedRepos.length);
       selectedRepos.forEach((repo, index) => {
@@ -173,12 +179,12 @@ const Portfolio: React.FC = () => {
               { withCredentials: true }
             );
 
+            console.log('Status response:', statusResponse.data); // 디버깅용 로그
+
             if (statusResponse.data.status === 'completed') {
               // 폴링 중지
-              if (pollingInterval) {
-                clearInterval(pollingInterval);
-                setPollingInterval(null);
-              }
+              clearInterval(interval);
+              setPollingInterval(null);
               setIsAISummarizing(false);
               setElapsedTime(0);
               setProgress(null);
@@ -220,10 +226,8 @@ const Portfolio: React.FC = () => {
               toast.success('AI가 포트폴리오 내용을 생성했습니다.');
             } else if (statusResponse.data.status === 'failed') {
               // 폴링 중지
-              if (pollingInterval) {
-                clearInterval(pollingInterval);
-                setPollingInterval(null);
-              }
+              clearInterval(interval);
+              setPollingInterval(null);
               setIsAISummarizing(false);
               setElapsedTime(0);
               setProgress(null);
@@ -236,10 +240,8 @@ const Portfolio: React.FC = () => {
           } catch (error) {
             console.error('상태 확인 실패:', error);
             // 폴링 중지
-            if (pollingInterval) {
-              clearInterval(pollingInterval);
-              setPollingInterval(null);
-            }
+            clearInterval(interval);
+            setPollingInterval(null);
             setIsAISummarizing(false);
             setElapsedTime(0);
             setProgress(null);
@@ -251,6 +253,11 @@ const Portfolio: React.FC = () => {
       }
     } catch (error) {
       console.error('AI 요약 요청 실패:', error);
+      // 기존 폴링이 있다면 중지
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+      }
       setIsAISummarizing(false);
       setElapsedTime(0);
       setProgress(null);
@@ -263,6 +270,7 @@ const Portfolio: React.FC = () => {
     return () => {
       if (pollingInterval) {
         clearInterval(pollingInterval);
+        setPollingInterval(null);
       }
     };
   }, [pollingInterval]);
