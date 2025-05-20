@@ -122,6 +122,19 @@ const Portfolio: React.FC = () => {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [savedFiles, setSavedFiles] = useState<SavedFile[]>([]);
 
+  // AI 요약 관련 상태
+  const [isAISummarizing, setIsAISummarizing] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [progress, setProgress] = useState<{
+    total: number;
+    completed: number;
+    success: number;
+    failed: number;
+    skipped: number;
+    in_progress: number;
+  } | null>(null);
+
   // AI 요약 요청 함수
   const handleAISummary = async () => {
     try {
@@ -132,6 +145,10 @@ const Portfolio: React.FC = () => {
         console.log('- 이름:', repo.name);
       });
       console.log('========================');
+
+      setIsAISummarizing(true);
+      setElapsedTime(0);
+      setProgress(null);
 
       // AI 요약 API 호출
       const response = await axios.post(
@@ -148,48 +165,107 @@ const Portfolio: React.FC = () => {
       );
 
       if (response.data) {
-        const data = response.data;
-        
-        // 요약 정보 업데이트
-        setSummary(data.summary);
-        setDescription(data.overview);
-        
-        // 기술 스택 처리
-        let processedTechStack: string[] = [];
-        if (Array.isArray(data.tech_stack)) {
-          processedTechStack = data.tech_stack;
-        } else if (typeof data.tech_stack === 'string') {
-          // 문자열인 경우 쉼표로 분리하고 각 항목 정리
-          processedTechStack = data.tech_stack
-            .split(',')
-            .map((tech: string) => tech.trim())
-            .filter((tech: string) => tech.length > 0)
-            .map((tech: string) => {
-              // 첫 글자를 대문자로 변환
-              return tech.charAt(0).toUpperCase() + tech.slice(1).toLowerCase();
-            });
-        }
-        setTechStack(processedTechStack);
+        // 폴링 시작
+        const interval = setInterval(async () => {
+          try {
+            const statusResponse = await axios.get(
+              `${apiUrl}/api/v1/ai/${spaceId}/resume/${user?.id}/portfolio-status`,
+              { withCredentials: true }
+            );
 
-        // 기능 정보 업데이트
-        const newFeatures = Object.entries(data.features).map(([title, descriptions]) => ({
-          title,
-          descriptions: descriptions as string[],
-          imageUrl: undefined
-        }));
-        setFeatures(newFeatures);
+            if (statusResponse.data.status === 'completed') {
+              // 폴링 중지
+              if (pollingInterval) {
+                clearInterval(pollingInterval);
+                setPollingInterval(null);
+              }
+              setIsAISummarizing(false);
+              setElapsedTime(0);
+              setProgress(null);
 
-        // 아키텍처와 배포 정보 업데이트
-        setArchitecture(data.architecture.communication);
-        setDeployment(data.architecture.deployment);
+              // 결과 데이터 처리
+              const data = statusResponse.data.result;
+              
+              // 요약 정보 업데이트
+              setSummary(data.project_summary);
+              setDescription(data.project_overview);
+              
+              // 기술 스택 처리
+              let processedTechStack: string[] = [];
+              if (Array.isArray(data.tech_stack)) {
+                processedTechStack = data.tech_stack;
+              } else if (typeof data.tech_stack === 'string') {
+                processedTechStack = data.tech_stack
+                  .split(',')
+                  .map((tech: string) => tech.trim())
+                  .filter((tech: string) => tech.length > 0)
+                  .map((tech: string) => {
+                    return tech.charAt(0).toUpperCase() + tech.slice(1).toLowerCase();
+                  });
+              }
+              setTechStack(processedTechStack);
 
-        toast.success('AI가 포트폴리오 내용을 생성했습니다.');
+              // 기능 정보 업데이트
+              const newFeatures = Object.entries(data.main_features).map(([title, descriptions]) => ({
+                title,
+                descriptions: descriptions as string[],
+                imageUrl: undefined
+              }));
+              setFeatures(newFeatures);
+
+              // 아키텍처와 배포 정보 업데이트
+              setArchitecture(data.system_architecture.communication);
+              setDeployment(data.system_architecture.deployment);
+
+              toast.success('AI가 포트폴리오 내용을 생성했습니다.');
+            } else if (statusResponse.data.status === 'failed') {
+              // 폴링 중지
+              if (pollingInterval) {
+                clearInterval(pollingInterval);
+                setPollingInterval(null);
+              }
+              setIsAISummarizing(false);
+              setElapsedTime(0);
+              setProgress(null);
+              toast.error('AI 요약 생성에 실패했습니다.');
+            } else if (statusResponse.data.status === 'processing') {
+              // 처리 중일 때 경과 시간과 진행 상태 업데이트
+              setElapsedTime(Math.floor(statusResponse.data.elapsed_time));
+              setProgress(statusResponse.data.progress);
+            }
+          } catch (error) {
+            console.error('상태 확인 실패:', error);
+            // 폴링 중지
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              setPollingInterval(null);
+            }
+            setIsAISummarizing(false);
+            setElapsedTime(0);
+            setProgress(null);
+            toast.error('상태 확인에 실패했습니다.');
+          }
+        }, 2000); // 2초마다 상태 확인
+
+        setPollingInterval(interval);
       }
     } catch (error) {
       console.error('AI 요약 요청 실패:', error);
+      setIsAISummarizing(false);
+      setElapsedTime(0);
+      setProgress(null);
       toast.error('AI 요약 요청에 실패했습니다.');
     }
   };
+
+  // 컴포넌트 언마운트 시 폴링 중지
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   // 현재 로그인한 사용자 정보 가져오기
   useEffect(() => {
@@ -1039,6 +1115,55 @@ const Portfolio: React.FC = () => {
           />
         )
       }
+
+      {/* AI 요약 로딩 모달 */}
+      {isAISummarizing && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="flex flex-col items-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <h3 className="text-lg font-semibold">AI 요약 생성 중</h3>
+              <p className="text-sm text-gray-500 text-center">
+                AI가 포트폴리오 내용을 분석하고 요약하고 있습니다.
+                잠시만 기다려주세요...
+              </p>
+              {progress && (
+                <div className="w-full space-y-2">
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>진행률</span>
+                    <span>{Math.round((progress.completed / progress.total) * 100)}%</span>
+                  </div>
+                  <Progress 
+                    value={(progress.completed / progress.total) * 100} 
+                    className="h-1.5"
+                  />
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span>성공: {progress.success}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                      <span>실패: {progress.failed}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                      <span>진행중: {progress.in_progress}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-gray-400"></div>
+                      <span>건너뜀: {progress.skipped}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-gray-400">
+                경과 시간: {Math.floor(elapsedTime / 60)}분 {elapsedTime % 60}초
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   );
 };
