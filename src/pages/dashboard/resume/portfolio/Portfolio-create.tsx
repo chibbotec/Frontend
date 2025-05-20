@@ -187,8 +187,8 @@ const Portfolio: React.FC = () => {
               const data = statusResponse.data.result;
               
               // 요약 정보 업데이트
-              setSummary(data.project_summary);
-              setDescription(data.project_overview);
+              setSummary(data.summary);
+              setDescription(data.overview);
               
               // 기술 스택 처리
               let processedTechStack: string[] = [];
@@ -206,7 +206,7 @@ const Portfolio: React.FC = () => {
               setTechStack(processedTechStack);
 
               // 기능 정보 업데이트
-              const newFeatures = Object.entries(data.main_features).map(([title, descriptions]) => ({
+              const newFeatures = Object.entries(data.features).map(([title, descriptions]) => ({
                 title,
                 descriptions: descriptions as string[],
                 imageUrl: undefined
@@ -214,8 +214,8 @@ const Portfolio: React.FC = () => {
               setFeatures(newFeatures);
 
               // 아키텍처와 배포 정보 업데이트
-              setArchitecture(data.system_architecture.communication);
-              setDeployment(data.system_architecture.deployment);
+              setArchitecture(data.architecture.communication);
+              setDeployment(data.architecture.deployment);
 
               toast.success('AI가 포트폴리오 내용을 생성했습니다.');
             } else if (statusResponse.data.status === 'failed') {
