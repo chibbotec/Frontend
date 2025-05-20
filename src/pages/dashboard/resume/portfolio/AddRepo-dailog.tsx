@@ -43,6 +43,23 @@ interface GitHubRepo {
   selectedDirectories?: string[];
 }
 
+interface TaskStatusResponse {
+  taskId: string;
+  completed: boolean;
+  progress: number;
+  totalFiles: number;
+  completedFiles: number;
+  savedFiles: string[];
+  failedFiles: string[];
+  error: string;
+  savedPath: string;
+}
+
+interface TaskResponse {
+  taskId: string;
+  message: string;
+}
+
 interface AddRepoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -88,6 +105,59 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
   const currentUsagePercent = (currentTotalByteSize / maxByteSize) * 100;
   const projectedUsagePercent = ((currentTotalByteSize + totalByteSize) / maxByteSize) * 100;
   const isProjectedOverLimit = projectedUsagePercent > 100;
+
+  const [taskStatus, setTaskStatus] = useState<TaskStatusResponse | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  // Poll task status
+  const pollTaskStatus = async (taskId: string) => {
+    try {
+      const response = await axios.get(
+        `${apiUrl}/api/v1/resume/${spaceId}/github/tasks/${taskId}`,
+        { withCredentials: true }
+      );
+      
+      const status: TaskStatusResponse = response.data;
+      setTaskStatus(status);
+
+      if (status.completed || status.error) {
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
+        }
+        setIsPolling(false);
+
+        if (status.error) {
+          setError(`파일 저장 중 오류가 발생했습니다: ${status.error}`);
+        } else {
+          // Success case
+          onFilesSaved({
+            savedFiles: status.savedFiles,
+            savedPath: status.savedPath,
+            repository: tempSelectedRepo?.name
+          });
+        }
+      }
+    } catch (err) {
+      console.error('작업 상태 확인 중 오류 발생:', err);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+      }
+      setIsPolling(false);
+      setError('작업 상태를 확인하는 중 오류가 발생했습니다.');
+    }
+  };
 
   // 다이얼로그가 열릴 때 GitHub 저장소 목록 가져오기
   useEffect(() => {
@@ -202,23 +272,11 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
   const handleSaveRepoSelection = async () => {
     if (!tempSelectedRepo) return;
 
-    // 선택된 레포지토리와 디렉토리 정보를 콘솔에 출력
-    console.log('====== 선택된 레포지토리 및 디렉토리 정보 ======');
-    console.log(`레포지토리 이름: ${tempSelectedRepo.name}`);
-    console.log(`선택된 디렉토리/파일 목록:`, tempSelectedRepo.selectedDirectories || []);
-    console.log(`총 바이트 크기: ${totalByteSize} bytes (${(totalByteSize/1024).toFixed(2)} KB)`);
-    console.log('===============================================');
-
     setError(null);
-    
-    // 먼저 다이얼로그를 닫고
     handleCloseDialog();
-
-    // 그 다음 저장 프로세스 시작
     onSavingChange?.(true);
 
     try {
-      // 최종 바이트 크기 설정
       const repoWithSize = {
         ...tempSelectedRepo,
         byteSize: totalByteSize
@@ -227,40 +285,34 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
       if (tempSelectedRepo.selectedDirectories && tempSelectedRepo.selectedDirectories.length > 0) {
         console.log(`서버에 ${tempSelectedRepo.name} 레포지토리 파일 저장 시작...`);
 
-        // POST 요청 전송
+        // Start async download task
         const response = await axios.post(
           `${apiUrl}/api/v1/resume/${spaceId}/github/users/${userId}/save-files`,
           {
             repository: tempSelectedRepo.name,
             filePaths: tempSelectedRepo.selectedDirectories,
-            branch: 'main' // 기본 브랜치
+            branch: 'main'
           },
           { withCredentials: true }
         );
 
-        // 응답 처리
-        const result = response.data;
-        if (result.success) {
-          console.log(`${tempSelectedRepo.name} 파일 저장 성공:`, result.savedFiles);
-          console.log('저장 경로:', result.savedPath);
-          
-          // 부모 컴포넌트에 저장된 파일 정보 전달
-          onFilesSaved({
-            ...result,
-            repository: tempSelectedRepo.name
-          });
+        const result: TaskResponse = response.data;
+        
+        if (result.taskId) {
+          // Start polling
+          setIsPolling(true);
+          const interval = setInterval(() => pollTaskStatus(result.taskId), 2000); // Poll every 2 seconds
+          setPollingInterval(interval);
         } else {
-          console.error(`${tempSelectedRepo.name} 파일 저장 실패:`, result.error);
+          throw new Error('작업 ID를 받지 못했습니다.');
         }
       }
 
-      // 부모 컴포넌트 콜백 호출 - 바이트 크기 포함
       onSave([repoWithSize]);
 
     } catch (err) {
       console.error('파일 저장에 실패했습니다:', err);
       setError('서버에 파일을 저장하는 중 오류가 발생했습니다.');
-    } finally {
       onSavingChange?.(false);
     }
   };
@@ -472,6 +524,20 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
           )}
         </div>
 
+        {/* Add task status display */}
+        {isPolling && taskStatus && (
+          <div className="mt-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>파일 저장 진행 중...</span>
+              <span>{taskStatus.completedFiles} / {taskStatus.totalFiles} 파일</span>
+            </div>
+            <Progress value={taskStatus.progress} className="h-2" />
+            {taskStatus.error && (
+              <div className="text-sm text-red-600">{taskStatus.error}</div>
+            )}
+          </div>
+        )}
+
         <DialogFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             {tempSelectedRepo ? 
@@ -484,9 +550,16 @@ const AddRepoDialog: React.FC<AddRepoDialogProps> = ({
             </Button>
             <Button
               onClick={handleSaveRepoSelection}
-              disabled={!tempSelectedRepo || currentRepoExceedsLimit}
+              disabled={!tempSelectedRepo || currentRepoExceedsLimit || isPolling}
             >
-              완료
+              {isPolling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  저장 중...
+                </>
+              ) : (
+                '완료'
+              )}
             </Button>
           </div>
         </DialogFooter>
