@@ -30,6 +30,7 @@ interface Contents {
   description: string;
   features: Record<string, string[]>;
   architecture: Architecture;
+  roles?: string[];
 }
 
 interface PortfolioDetail {
@@ -141,6 +142,15 @@ const PortfolioDetail: React.FC = () => {
               <div className="space-y-2">
                 <h3 className="text-sm font-medium">개요</h3>
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{portfolio.contents.description}</p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">주요역할 및 성과</h3>
+                <div className="space-y-1">
+                  {portfolio.contents.roles?.map((role, index) => (
+                    <p key={index} className="text-sm text-gray-600">• {role}</p>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">

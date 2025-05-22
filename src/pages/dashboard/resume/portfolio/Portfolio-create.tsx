@@ -29,6 +29,7 @@ interface Contents {
   techStack: string;
   summary: string;
   description: string;
+  roles?: string[];
   features?: Record<string, string[]>;
 }
 
@@ -80,6 +81,24 @@ interface Feature {
   title: string;
   descriptions: string[];
   imageUrl?: string;
+}
+
+// 단일 레포지토리의 커밋 파일 정보
+interface CommitFileInfo {
+  repository: string;      // 레포지토리 이름
+  commitFiles: string[];   // 커밋된 파일 경로 배열
+}
+
+// 전체 응답 데이터 구조
+interface CommitSummaryResponse {
+  commitFiles: CommitFileInfo[];  // 레포지토리별 커밋 파일 정보 배열
+}
+
+// AI 생성 상태 관리를 위한 인터페이스
+interface AIGenerationStatus {
+  status: 'idle' | 'processing' | 'completed' | 'failed';
+  currentStep: 'commit_collection' | 'portfolio_generation' | 'role_generation' | 'completed';
+  message: string;
 }
 
 // API 기본 URL
@@ -139,6 +158,16 @@ const Portfolio: React.FC = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadPollingInterval, setDownloadPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
+  // AI 생성 상태 추가
+  const [aiStatus, setAiStatus] = useState<AIGenerationStatus>({
+    status: 'idle',
+    currentStep: 'commit_collection',
+    message: ''
+  });
+
+  // 주요 역할 상태 추가
+  const [roles, setRoles] = useState<string[]>([]);
+
   // AI 요약 요청 함수
   const handleAISummary = async () => {
     try {
@@ -160,11 +189,38 @@ const Portfolio: React.FC = () => {
       setElapsedTime(0);
       setProgress(null);
 
+      // 1단계: Commit 정보 수집
+      setAiStatus({
+        status: 'processing',
+        currentStep: 'commit_collection',
+        message: 'Commit 정보 수집중입니다.'
+      });
+
+      // Commit 정보 수집 요청
+      const commitResponse = await axios.post<CommitSummaryResponse>(
+        `${apiUrl}/api/v1/resume/${spaceId}/github/users/${user?.id}/repositories/commit/summary`,
+        {
+          repoNames: selectedRepos.map(repo => repo.name)
+        },
+        {
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      // 2단계: AI 포트폴리오 생성 시작
+      setAiStatus({
+        status: 'processing',
+        currentStep: 'portfolio_generation',
+        message: 'AI 포트폴리오 생성 중입니다.'
+      });
+
       // AI 요약 API 호출
       const response = await axios.post(
         `${apiUrl}/api/v1/ai/${spaceId}/resume/${user?.id}/create-portfolio`,
         {
-          repositories: selectedRepos.map(repo => `${spaceId}_${user?.id}_${repo.name.replace(/\//g, '-')}`)
+          repositories: selectedRepos.map(repo => `${spaceId}_${user?.id}_${repo.name.replace(/\//g, '-')}`),
+          commitFiles: commitResponse.data.commitFiles
         },
         {
           withCredentials: true,
@@ -183,7 +239,7 @@ const Portfolio: React.FC = () => {
               { withCredentials: true }
             );
 
-            console.log('Status response:', statusResponse.data); // 디버깅용 로그
+            console.log('Status response:', statusResponse.data);
 
             if (statusResponse.data.status === 'completed') {
               // 폴링 중지
@@ -192,9 +248,15 @@ const Portfolio: React.FC = () => {
               setIsAISummarizing(false);
               setElapsedTime(0);
               setProgress(null);
+              setAiStatus({
+                status: 'completed',
+                currentStep: 'completed',
+                message: '포트폴리오 생성이 완료되었습니다.'
+              });
 
               // 결과 데이터 처리
-              const data = statusResponse.data.result;
+              const data = statusResponse.data.result.portfolio;
+              const rolesData = statusResponse.data.result.roles;
 
               // 요약 정보 업데이트
               setSummary(data.summary);
@@ -227,6 +289,11 @@ const Portfolio: React.FC = () => {
               setArchitecture(data.architecture.communication);
               setDeployment(data.architecture.deployment);
 
+              // 주요 역할 정보 업데이트
+              if (rolesData && rolesData.roles) {
+                setRoles(rolesData.roles);
+              }
+
               toast.success('AI가 포트폴리오 내용을 생성했습니다.');
             } else if (statusResponse.data.status === 'failed') {
               // 폴링 중지
@@ -235,11 +302,31 @@ const Portfolio: React.FC = () => {
               setIsAISummarizing(false);
               setElapsedTime(0);
               setProgress(null);
+              setAiStatus({
+                status: 'failed',
+                currentStep: 'completed',
+                message: '포트폴리오 생성에 실패했습니다.'
+              });
               toast.error('AI 요약 생성에 실패했습니다.');
             } else if (statusResponse.data.status === 'processing') {
               // 처리 중일 때 경과 시간과 진행 상태 업데이트
               setElapsedTime(Math.floor(statusResponse.data.elapsed_time));
               setProgress(statusResponse.data.progress);
+
+              // 현재 단계에 따른 메시지 업데이트
+              if (statusResponse.data.current_step === 'portfolio_generation') {
+                setAiStatus({
+                  status: 'processing',
+                  currentStep: 'portfolio_generation',
+                  message: 'AI 포트폴리오 생성 중입니다.'
+                });
+              } else if (statusResponse.data.current_step === 'role_generation') {
+                setAiStatus({
+                  status: 'processing',
+                  currentStep: 'role_generation',
+                  message: '주요 역할을 정리 중입니다.'
+                });
+              }
             }
           } catch (error) {
             console.error('상태 확인 실패:', error);
@@ -249,9 +336,14 @@ const Portfolio: React.FC = () => {
             setIsAISummarizing(false);
             setElapsedTime(0);
             setProgress(null);
+            setAiStatus({
+              status: 'failed',
+              currentStep: 'completed',
+              message: '상태 확인에 실패했습니다.'
+            });
             toast.error('상태 확인에 실패했습니다.');
           }
-        }, 2000); // 2초마다 상태 확인
+        }, 2000);
 
         setPollingInterval(interval);
       }
@@ -265,6 +357,11 @@ const Portfolio: React.FC = () => {
       setIsAISummarizing(false);
       setElapsedTime(0);
       setProgress(null);
+      setAiStatus({
+        status: 'failed',
+        currentStep: 'completed',
+        message: 'AI 생성 프로세스에 실패했습니다.'
+      });
       toast.error('AI 요약 요청에 실패했습니다.');
     }
   };
@@ -318,7 +415,6 @@ const Portfolio: React.FC = () => {
       pollTaskStatus();
     }
   };
-
 
   // 컴포넌트 언마운트 시 폴링 중지
   useEffect(() => {
@@ -481,6 +577,7 @@ const Portfolio: React.FC = () => {
           techStack: techStack.join(', '),
           summary: summary.trim(),
           description: description.trim(),
+          roles: roles,
           features: features.reduce((acc: Record<string, string[]>, feature) => {
             if (feature.title.trim()) {
               acc[feature.title] = feature.descriptions
@@ -682,7 +779,7 @@ const Portfolio: React.FC = () => {
               <CardHeader>
                 <CardTitle>포트폴리오 개요</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="summary">요약</Label>
                   <Textarea
@@ -692,7 +789,7 @@ const Portfolio: React.FC = () => {
                     placeholder="프로젝트에 대한 간략한 요약을 입력하세요"
                     rows={2}
                   />
-                  <p className="text-xs text-muted-foreground">예시: 이 프로젝트는 Spring Boot와 JPA를 사용하여 기술 카테고리를 관리하는 웹 애플리케이션입니다.</p>
+                  <p className="text-xs text-muted-foreground">프로젝트의 핵심 내용을 간단히 설명하세요.</p>
                 </div>
 
                 <div className="space-y-2">
@@ -702,9 +799,21 @@ const Portfolio: React.FC = () => {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="프로젝트에 대한 상세 개요를 입력하세요"
-                    rows={6}
+                    rows={4}
                   />
                   <p className="text-xs text-muted-foreground">프로젝트의 목적, 주요 문제 해결 방식, 사용된 시스템을 설명하세요.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="roles">주요역할 및 성과</Label>
+                  <Textarea
+                    id="roles"
+                    value={roles.join('\n')}
+                    onChange={(e) => setRoles(e.target.value.split('\n'))}
+                    placeholder="프로젝트에 대한 주요역할과 성과를 입력하세요"
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">AI가 분석한 주요 역할과 성과가 표시됩니다.</p>
                 </div>
 
                 <div className="space-y-2">
@@ -714,7 +823,7 @@ const Portfolio: React.FC = () => {
                       <Badge
                         key={index}
                         variant="secondary"
-                        className="flex items-center gap-1 px-3 py-1"
+                        className="flex items-center gap-1 px-2 py-0.5 text-xs"
                       >
                         {tech}
                         <button
@@ -724,7 +833,7 @@ const Portfolio: React.FC = () => {
                           }}
                           className="ml-1 hover:text-destructive"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                         </button>
                       </Badge>
                     ))}
@@ -733,7 +842,8 @@ const Portfolio: React.FC = () => {
                     <Input
                       value={newTech}
                       onChange={(e) => setNewTech(e.target.value)}
-                      placeholder="기술 스택 입력 후 Enter"
+                      placeholder="기술 스택 입력"
+                      className="h-8 text-sm"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && newTech.trim()) {
                           e.preventDefault();
@@ -747,6 +857,7 @@ const Portfolio: React.FC = () => {
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={() => {
                         if (newTech.trim() && !techStack.includes(newTech.trim())) {
                           setTechStack(prev => [...prev, newTech.trim()]);
@@ -757,7 +868,6 @@ const Portfolio: React.FC = () => {
                       추가
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">기술 스택을 입력하고 Enter를 누르거나 추가 버튼을 클릭하세요.</p>
                 </div>
               </CardContent>
             </Card>
@@ -1041,9 +1151,10 @@ const Portfolio: React.FC = () => {
                   onClick={() => {
                     // 테스트용 AI 요약 요청
                     axios.post(
-                      `${apiUrl}/api/v1/ai/${spaceId}/resume/${user?.id}/create-portfolio`,
+                      
+                      `${apiUrl}/api/v1/resume/${spaceId}/github/users/${user?.id}/repositories/commit/summary`,
                       {
-                        repositories: ['58_8_kknaks-chijoontec_back']
+                        "repoNames" : ["BackEndSchoolPlus3th/StockNote_BE", "kknaks/chijoontec_back"]
                       },
                       {
                         withCredentials: true,
@@ -1054,43 +1165,13 @@ const Portfolio: React.FC = () => {
                     ).then(response => {
                       if (response.data) {
                         const data = response.data;
-
-                        // 요약 정보 업데이트
-                        setSummary(data.summary);
-                        setDescription(data.overview);
-
-                        // 기술 스택 처리
-                        let processedTechStack: string[] = [];
-                        if (Array.isArray(data.tech_stack)) {
-                          processedTechStack = data.tech_stack;
-                        } else if (typeof data.tech_stack === 'string') {
-                          processedTechStack = data.tech_stack
-                            .split(',')
-                            .map((tech: string) => tech.trim())
-                            .filter((tech: string) => tech.length > 0)
-                            .map((tech: string) => {
-                              return tech.charAt(0).toUpperCase() + tech.slice(1).toLowerCase();
-                            });
-                        }
-                        setTechStack(processedTechStack);
-
-                        // 기능 정보 업데이트
-                        const newFeatures = Object.entries(data.features).map(([title, descriptions]) => ({
-                          title,
-                          descriptions: descriptions as string[],
-                          imageUrl: undefined
-                        }));
-                        setFeatures(newFeatures);
-
-                        // 아키텍처와 배포 정보 업데이트
-                        setArchitecture(data.architecture.communication);
-                        setDeployment(data.architecture.deployment);
-
-                        toast.success('AI가 포트폴리오 내용을 생성했습니다.');
+                        console.log(data);
+                        // 응답 구조 확인
+                        console.log('CommitFiles:', data.commitFiles);
                       }
                     }).catch(error => {
                       console.error('AI 요약 요청 실패:', error);
-                      toast.error('AI 요약 요청에 실패했습니다.');
+                      console.error('에러 상세:', error.response?.data);
                     });
                   }}
                 >
@@ -1180,39 +1261,13 @@ const Portfolio: React.FC = () => {
           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
             <div className="flex flex-col items-center space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-              <h3 className="text-lg font-semibold">AI 요약 생성 중</h3>
-              <p className="text-sm text-gray-500 text-center">
-                AI가 포트폴리오 내용을 분석하고 요약하고 있습니다.
-                잠시만 기다려주세요...
-              </p>
+              <h3 className="text-lg font-semibold">{aiStatus.message}</h3>
               {progress && (
                 <div className="w-full space-y-2">
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>진행률</span>
-                    <span>{Math.round((progress.completed / progress.total) * 100)}%</span>
-                  </div>
-                  <Progress
-                    value={(progress.completed / progress.total) * 100}
-                    className="h-1.5"
-                  />
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      <span>성공: {progress.success}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                      <span>실패: {progress.failed}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                      <span>진행중: {progress.in_progress}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-                      <span>건너뜀: {progress.skipped}</span>
-                    </div>
-                  </div>
+                  <Progress value={(progress.completed / progress.total) * 100} className="h-1.5" />
+                  <p className="text-xs text-gray-500 text-center">
+                    진행률: {Math.round((progress.completed / progress.total) * 100)}%
+                  </p>
                 </div>
               )}
               <p className="text-xs text-gray-400">
