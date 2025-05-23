@@ -6,11 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Calendar, Save, Github, FileCode, Plus, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Save, FileCode, Plus, AlertCircle, Loader2, CalendarIcon, Globe } from 'lucide-react';
+import { FaGithub } from 'react-icons/fa';
 import { Switch } from '@/components/ui/switch';
 import { toast } from "sonner";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import AddRepoDialog from './AddRepo-dailog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -31,6 +37,10 @@ interface Contents {
   description: string;
   roles?: string[];
   features?: Record<string, string[]>;
+  architecture?: {
+    communication: string;
+    deployment: string;
+  };
 }
 
 interface GitHubRepo {
@@ -61,6 +71,10 @@ interface PortfolioRequest {
   features?: Record<string, string[]>;
   githubRepos?: GitHubRepo[];
   savedFiles?: SavedFile[];
+  githubLink: string;
+  deployLink: string;
+  memberCount: number;
+  memberRoles: string;
 }
 
 interface PortfolioCreate {
@@ -167,6 +181,14 @@ const Portfolio: React.FC = () => {
 
   // 주요 역할 상태 추가
   const [roles, setRoles] = useState<string[]>([]);
+
+  // 상태 추가
+  const [memberCount, setMemberCount] = useState<number>(0);
+  const [memberRole, setMemberRole] = useState<string>('');
+
+  // 상태 추가
+  const [githubLink, setGithubLink] = useState<string>('');
+  const [deployLink, setDeployLink] = useState<string>('');
 
   // AI 요약 요청 함수
   const handleAISummary = async () => {
@@ -563,7 +585,7 @@ const Portfolio: React.FC = () => {
         savedPath: file.savedPath
       })) : [];
 
-      const portfolioData = {
+      const portfolioData: PortfolioRequest = {
         title: title.trim(),
         author: {
           id: user.id,
@@ -593,7 +615,11 @@ const Portfolio: React.FC = () => {
         },
         publicAccess,
         githubRepos: githubReposData,
-        savedFiles: savedFilesData
+        savedFiles: savedFilesData,
+        githubLink: githubLink ? githubLink.trim() : '',
+        deployLink: deployLink ? deployLink.trim() : '',
+        memberCount: memberCount,
+        memberRoles: memberRole
       };
 
       console.log('전송할 데이터:', JSON.stringify(portfolioData, null, 2));
@@ -725,45 +751,11 @@ const Portfolio: React.FC = () => {
         </h2>
       </div>
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="col-span-2">
+        <div className="col-span-3">
           <form onSubmit={handleSubmit}>
             <Card className="mb-6">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>기본 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">제목 *</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="포트폴리오 제목을 입력하세요"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="startDate">시작일</Label>
-                    <Input
-                      id="startDate"
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="endDate">종료일</Label>
-                    <Input
-                      id="endDate"
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="publicAccess"
@@ -771,6 +763,280 @@ const Portfolio: React.FC = () => {
                     onCheckedChange={setPublicAccess}
                   />
                   <Label htmlFor="publicAccess">공개 설정</Label>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                  <div className="w-full md:w-1/2 md:pr-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <Label htmlFor="title" className="w-20 text-xs">제목</Label>
+                        <Input
+                          id="title"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          placeholder="포트폴리오 제목을 입력하세요"
+                          required
+                          className="flex-1"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <Label htmlFor="memberCount" className="w-20 text-xs">참여인원</Label>
+                        <Select
+                          value={memberCount ? String(memberCount) : ''}
+                          onValueChange={value => setMemberCount(Number(value))}
+                        >
+                          <SelectTrigger className="h-8 text-xs flex-1" id="memberCount">
+                            <SelectValue placeholder="선택" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">개인</SelectItem>
+                            <SelectItem value="2">2명</SelectItem>
+                            <SelectItem value="3">3명</SelectItem>
+                            <SelectItem value="4">4명</SelectItem>
+                            <SelectItem value="5">5명</SelectItem>
+                            <SelectItem value="6">6명 이상</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <Label htmlFor="memberRole" className="w-20 text-xs">역할</Label>
+                        <Select
+                          value={memberRole}
+                          onValueChange={value => setMemberRole(value)}
+                        >
+                          <SelectTrigger className="h-8 text-xs flex-1" id="memberRole">
+                            <SelectValue placeholder="선택" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PO">PO</SelectItem>
+                            <SelectItem value="PM">PM</SelectItem>
+                            <SelectItem value="Fullstack">Fullstack</SelectItem>
+                            <SelectItem value="Backend">Backend</SelectItem>
+                            <SelectItem value="Frontend">Frontend</SelectItem>
+                            <SelectItem value="Publisher">Publisher</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full md:w-1/2 md:pl-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <Label className="w-20 text-xs">기간</Label>
+                        <div className="flex-1 grid grid-cols-2 gap-4">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="h-8 text-xs w-full justify-start text-left font-normal"
+                              >
+                                {startDate ? (
+                                  format(new Date(startDate), 'yyyy.MM.dd', { locale: ko })
+                                ) : (
+                                  <span>시작일</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-3 w-3 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <CalendarComponent
+                                mode="single"
+                                selected={startDate ? new Date(startDate) : undefined}
+                                onSelect={(date) => {
+                                  setStartDate(date ? date.toISOString().split('T')[0] : '');
+                                }}
+                                locale={ko}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="h-8 text-xs w-full justify-start text-left font-normal"
+                              >
+                                {endDate ? (
+                                  format(new Date(endDate), 'yyyy.MM.dd', { locale: ko })
+                                ) : (
+                                  <span>종료일</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-3 w-3 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <CalendarComponent
+                                mode="single"
+                                selected={endDate ? new Date(endDate) : undefined}
+                                onSelect={(date) => {
+                                  setEndDate(date ? date.toISOString().split('T')[0] : '');
+                                }}
+                                locale={ko}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="w-20 flex items-center gap-2">
+                          <FaGithub className="w-4 h-4" />
+                          <span className="text-xs">GitHub</span>
+                        </div>
+                        <Input
+                          className="h-9 text-xs flex-1"
+                          placeholder="링크 입력"
+                          value={githubLink}
+                          onChange={e => setGithubLink(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="w-20 flex items-center gap-2">
+                          <Globe className="w-4 h-4" />
+                          <span className="text-xs">Deploy</span>
+                        </div>
+                        <Input
+                          className="h-9 text-xs flex-1"
+                          placeholder="링크 입력"
+                          value={deployLink}
+                          onChange={e => setDeployLink(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="mb-6">
+              <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                <div className="flex items-center">
+                  <FaGithub className="w-4 h-4 mr-2" />
+                  <CardTitle>GitHub 연동하기</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row gap-4">
+                  {/* 왼쪽 컨테이너 */}
+                  <div className="w-full md:w-1/3">
+                    {!isGitHubConnected ? (
+                      <div className="flex flex-col items-center space-y-2 py-3">
+                        <FaGithub className="h-10 w-10 text-gray-400" />
+                        <p className="text-center text-xs text-muted-foreground">
+                          GitHub 계정을 연동하여 포트폴리오에 저장소를 추가하세요
+                        </p>
+                        <Button onClick={handleConnectGitHub} className="mt-1 h-7 text-xs">
+                          <FaGithub className="h-3 w-3 mr-1" />
+                          GitHub 연동하기
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="flex items-center justify-center">
+                            <FaGithub className="h-10 w-10 text-gray-400" />
+                          </div>
+                          <div className="col-span-2 space-y-2">
+                            <p className="text-sm text-muted-foreground">
+                              레포를 불러오세요
+                            </p>
+                            <Button
+                              onClick={handleOpenRepoDialog}
+                              size="sm"
+                              className="h-5 text-xs"
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1" />
+                              레포지토리 추가
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xs font-medium">지식 공간의 {knowledgePercent}% 사용됨 ({(totalByteSize / 1024).toFixed(1)}KB)</h3>
+                          <span className="text-xs text-muted-foreground flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M12 16v-4" />
+                              <path d="M12 8h.01" />
+                            </svg>
+                          </span>
+                        </div>
+                        <Progress
+                          value={knowledgePercent}
+                          className={`h-1.5 ${knowledgePercent > 90 ? "[&>div]:bg-red-500" : knowledgePercent > 80 ? "[&>div]:bg-amber-500" : ""}`}
+                        />
+                        <div className="flex justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={handleAISummary}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                              <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z" />
+                              <path d="M12 6v4" />
+                              <path d="M12 14h.01" />
+                            </svg>
+                            AI 요약
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 오른쪽 컨테이너 */}
+                  <div className="w-full md:w-2/3 md:border-l md:pl-4">
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-medium mb-2">프로젝트 지식</h3>
+                      {selectedRepos.length > 0 ? (
+                        <div className="space-y-1">
+                          {selectedRepos.map(repo => (
+                            <div
+                              key={repo.name}
+                              className="flex items-center justify-between py-1.5 px-2 border-b border-gray-100 hover:bg-gray-50 rounded group"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                {isDownloading ? (
+                                  <Loader2 className="h-3.5 w-3.5 flex-shrink-0 animate-spin text-blue-500" />
+                                ) : (
+                                  <FaGithub className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
+                                )}
+                                <span className="text-xs font-medium truncate">{repo.name}</span>
+                                <div className="flex items-center gap-1 ml-1">
+                                  <span className="text-[10px] text-muted-foreground">{repo.lineCount}줄</span>
+                                  {repo.byteSize && (
+                                    <span className="text-[10px] text-blue-500">({(repo.byteSize / 1024).toFixed(1)} KB)</span>
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 h-5 w-5 flex items-center justify-center flex-shrink-0"
+                                onClick={() => {
+                                  setSelectedRepos(prev => prev.filter(r => r.name !== repo.name));
+                                  const newTotalBytes = selectedRepos
+                                    .filter(r => r.name !== repo.name)
+                                    .reduce((sum, r) => sum + (r.byteSize || 0), 0);
+                                  setTotalByteSize(newTotalBytes);
+                                  setKnowledgePercent(Math.min(Math.floor((newTotalBytes / MAX_BYTE_SIZE) * 100), 100));
+                                }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-3 border border-dashed rounded-lg">
+                          <p className="text-xs text-muted-foreground text-center">
+                            아직 추가된 레포지토리가 없습니다
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -929,8 +1195,8 @@ const Portfolio: React.FC = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                           </button>
 
-                          <div className="p-3 pt-3 grid grid-cols-5 gap-3">
-                            <div className="col-span-3 space-y-3">
+                          <div className="p-3 pt-3 grid grid-cols-1 md:grid-cols-5 gap-3">
+                            <div className="col-span-1 md:col-span-3 space-y-3">
                               <div>
                                 <Label htmlFor={`feature-title-${featureIndex}`} className="text-xs font-medium mb-1 block">기능</Label>
                                 <Input
@@ -953,7 +1219,6 @@ const Portfolio: React.FC = () => {
                                   value={feature.descriptions.join('\n')}
                                   onChange={(e) => {
                                     const newFeatures = [...features];
-                                    // 줄바꿈을 기준으로 설명을 분리하거나, 쉼표로 구분된 항목을 처리
                                     const descriptions = e.target.value
                                       .split(/\n|,/)
                                       .map(desc => desc.trim())
@@ -969,7 +1234,7 @@ const Portfolio: React.FC = () => {
                               </div>
                             </div>
 
-                            <div className="col-span-2 flex flex-col h-full">
+                            <div className="col-span-1 md:col-span-2 flex flex-col h-full">
                               <Label className="text-xs font-medium mb-1 block">이미지</Label>
                               <div className="border rounded-md p-2 flex flex-col items-center justify-center flex-1 bg-gray-50">
                                 <div className="text-center mb-1">
@@ -1037,203 +1302,6 @@ const Portfolio: React.FC = () => {
               </Button>
             </div>
           </form>
-        </div>
-        <div className="col-span-1">
-          <Card className="mb-6">
-            <div className="px-3 pt-0">
-              <div className="flex items-center text-m font-semibold">
-                <Github className="h-4 w-4 mr-1" />
-                GitHub 연동하기
-              </div>
-
-              {!isGitHubConnected ? (
-                <div className="flex flex-col items-center space-y-2 py-3 mt-2">
-                  <Github className="h-10 w-10 text-gray-400" />
-                  <p className="text-center text-xs text-muted-foreground">
-                    GitHub 계정을 연동하여 포트폴리오에 저장소를 추가하세요
-                  </p>
-                  <Button onClick={handleConnectGitHub} className="mt-1 h-7 text-xs">
-                    <Github className="h-3 w-3 mr-1" />
-                    GitHub 연동하기
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3 mt-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-medium">지식 공간의 {knowledgePercent}% 사용됨 ({(totalByteSize / 1024).toFixed(1)}KB)</h3>
-                      <span className="text-xs text-muted-foreground flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 mr-1">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M12 16v-4" />
-                          <path d="M12 8h.01" />
-                        </svg>
-                      </span>
-                    </div>
-                    <Progress
-                      value={knowledgePercent}
-                      className={`h-1.5 ${knowledgePercent > 90 ? "[&>div]:bg-red-500" : knowledgePercent > 80 ? "[&>div]:bg-amber-500" : ""}`}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <h3 className="text-xs font-medium">프로젝트 지식</h3>
-                      <Button
-                        onClick={handleOpenRepoDialog}
-                        size="sm"
-                        className="h-6 text-xs"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        레포 추가하기
-                      </Button>
-                    </div>
-
-                    {selectedRepos.length > 0 ? (
-                      <div className="space-y-1">
-                        {selectedRepos.map(repo => (
-                          <div
-                            key={repo.name}
-                            className="flex items-center justify-between py-1.5 px-2 border-b border-gray-100 hover:bg-gray-50 rounded group"
-                          >
-                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                              {isDownloading ? (
-                                <Loader2 className="h-3.5 w-3.5 flex-shrink-0 animate-spin text-blue-500" />
-                              ) : (
-                                <Github className="h-3.5 w-3.5 flex-shrink-0 text-blue-600" />
-                              )}
-                              <span className="text-xs font-medium truncate">{repo.name}</span>
-                              <div className="flex items-center gap-1 ml-1">
-                                <span className="text-[10px] text-muted-foreground">{repo.lineCount}줄</span>
-                                {repo.byteSize && (
-                                  <span className="text-[10px] text-blue-500">({(repo.byteSize / 1024).toFixed(1)} KB)</span>
-                                )}
-                              </div>
-                            </div>
-                            <button
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 h-5 w-5 flex items-center justify-center flex-shrink-0"
-                              onClick={() => {
-                                // 레포지토리 제거 기능
-                                setSelectedRepos(prev => prev.filter(r => r.name !== repo.name));
-                                // 바이트 크기 재계산
-                                const newTotalBytes = selectedRepos
-                                  .filter(r => r.name !== repo.name)
-                                  .reduce((sum, r) => sum + (r.byteSize || 0), 0);
-                                setTotalByteSize(newTotalBytes);
-                                setKnowledgePercent(Math.min(Math.floor((newTotalBytes / MAX_BYTE_SIZE) * 100), 100));
-                              }}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center p-3 border border-dashed rounded-lg">
-                        <p className="text-xs text-muted-foreground text-center">
-                          아직 추가된 레포지토리가 없습니다
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </Card>
-          <Card className="mb-6">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>저장된 파일</CardTitle>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8"
-                  onClick={() => {
-                    // 테스트용 AI 요약 요청
-                    axios.post(
-                      
-                      `${apiUrl}/api/v1/resume/${spaceId}/github/users/${user?.id}/repositories/commit/summary`,
-                      {
-                        "repoNames" : ["BackEndSchoolPlus3th/StockNote_BE", "kknaks/chijoontec_back"]
-                      },
-                      {
-                        withCredentials: true,
-                        headers: {
-                          'Content-Type': 'application/json'
-                        }
-                      }
-                    ).then(response => {
-                      if (response.data) {
-                        const data = response.data;
-                        console.log(data);
-                        // 응답 구조 확인
-                        console.log('CommitFiles:', data.commitFiles);
-                      }
-                    }).catch(error => {
-                      console.error('AI 요약 요청 실패:', error);
-                      console.error('에러 상세:', error.response?.data);
-                    });
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                    <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z" />
-                    <path d="M12 6v4" />
-                    <path d="M12 14h.01" />
-                  </svg>
-                  테스트
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8"
-                  onClick={handleAISummary}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                    <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z" />
-                    <path d="M12 6v4" />
-                    <path d="M12 14h.01" />
-                  </svg>
-                  AI 요약하기
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {savedFiles.length === 0 ? (
-                  <div className="border border-dashed rounded-lg p-6 text-center">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      아직 저장된 파일이 없습니다.
-                    </p>
-                  </div>
-                ) : (
-                  <ScrollArea className="h-[300px] pr-4">
-                    <div className="space-y-1">
-                      {savedFiles.map((file) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center justify-between py-1.5 px-2 border-b border-gray-100 hover:bg-gray-50 rounded group"
-                        >
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <Badge variant="secondary" className="truncate max-w-[70px] px-1.5 py-0 text-xs h-5 flex-shrink-0">{file.repository}</Badge>
-                            <span className="text-xs font-medium truncate">{file.name}</span>
-                          </div>
-                          <button
-                            type="button"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 h-5 w-5 flex items-center justify-center flex-shrink-0"
-                            onClick={() => {
-                              setSavedFiles(prev => prev.filter(f => f.id !== file.id));
-                            }}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 

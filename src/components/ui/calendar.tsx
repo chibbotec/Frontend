@@ -1,102 +1,73 @@
-'use client'
+import * as React from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { DayPicker } from "react-day-picker"
 
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import {
-    addMonths,
-    eachDayOfInterval,
-    endOfMonth,
-    endOfWeek,
-    format,
-    isSameDay,
-    isSameMonth,
-    startOfMonth,
-    startOfWeek,
-    subMonths,
-} from 'date-fns'
-import { ko } from 'date-fns/locale'
-import { useState } from 'react'
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
 
-interface CalendarProps {
-    selectedDate: Date | null
-    onChange: (date: Date) => void
-    markedDates?: Date[]
-    startDate?: Date | null
-    endDate?: Date | null
+function Calendar({
+  className,
+  classNames,
+  showOutsideDays = true,
+  ...props
+}: React.ComponentProps<typeof DayPicker>) {
+  return (
+    <DayPicker
+      showOutsideDays={showOutsideDays}
+      className={cn("p-3", className)}
+      classNames={{
+        months: "flex flex-col sm:flex-row gap-2",
+        month: "flex flex-col gap-4",
+        caption: "flex justify-center pt-1 relative items-center w-full",
+        caption_label: "text-sm font-medium",
+        nav: "flex items-center gap-1",
+        nav_button: cn(
+          buttonVariants({ variant: "outline" }),
+          "size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+        ),
+        nav_button_previous: "absolute left-1",
+        nav_button_next: "absolute right-1",
+        table: "w-full border-collapse space-x-1",
+        head_row: "flex",
+        head_cell:
+          "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
+        row: "flex w-full mt-2",
+        cell: cn(
+          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-range-end)]:rounded-r-md",
+          props.mode === "range"
+            ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
+            : "[&:has([aria-selected])]:rounded-md"
+        ),
+        day: cn(
+          buttonVariants({ variant: "ghost" }),
+          "size-8 p-0 font-normal aria-selected:opacity-100"
+        ),
+        day_range_start:
+          "day-range-start aria-selected:bg-primary aria-selected:text-primary-foreground",
+        day_range_end:
+          "day-range-end aria-selected:bg-primary aria-selected:text-primary-foreground",
+        day_selected:
+          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        day_today: "bg-accent text-accent-foreground",
+        day_outside:
+          "day-outside text-muted-foreground aria-selected:text-muted-foreground",
+        day_disabled: "text-muted-foreground opacity-50",
+        day_range_middle:
+          "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        day_hidden: "invisible",
+        ...classNames,
+      }}
+      components={{
+        IconLeft: ({ className, ...props }) => (
+          <ChevronLeft className={cn("size-4", className)} {...props} />
+        ),
+        IconRight: ({ className, ...props }) => (
+          <ChevronRight className={cn("size-4", className)} {...props} />
+        ),
+      }}
+      {...props}
+    />
+  )
 }
 
-export function Calendar({ selectedDate, onChange, markedDates = [], startDate, endDate }: CalendarProps) {
-    const [currentMonth, setCurrentMonth] = useState(new Date())
-
-    const monthStart = startOfMonth(currentMonth)
-    const monthEnd = endOfMonth(monthStart)
-    const calendarStart = startOfWeek(monthStart)
-    const calendarEnd = endOfWeek(monthEnd)
-
-    const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
-
-    const weekDays = ['일', '월', '화', '수', '목', '금', '토']
-
-    const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
-    const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
-
-    const isMarkedDate = (date: Date) => markedDates.some((markedDate) => isSameDay(date, markedDate))
-
-    const isDateInRange = (date: Date) => {
-        if (!startDate || !endDate) return false
-        return date >= startDate && date <= endDate && !isSameDay(date, startDate) && !isSameDay(date, endDate)
-    }
-
-    return (
-        <div className="w-full">
-            <div className="flex justify-between items-center">
-                <h2 className="text-lg font-medium text-gray-900">
-                    {format(currentMonth, 'yyyy년 MM월', { locale: ko })}
-                </h2>
-                <div className="flex gap-2">
-                    <button
-                        onClick={goToPreviousMonth}
-                        className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-                    >
-                        <ChevronLeftIcon className="w-5 h-5 text-gray-900" />
-                    </button>
-                    <button onClick={goToNextMonth} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                        <ChevronRightIcon className="w-5 h-5 text-gray-900" />
-                    </button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-7 gap-0.5 md:gap-1">
-                {weekDays.map((day) => (
-                    <div key={day} className="h-8 flex items-center justify-center text-xs md:text-sm font-medium text-gray-900">
-                        {day}
-                    </div>
-                ))}
-
-                {days.map((day: Date, dayIdx: number) => {
-                    const isCurrentMonth = isSameMonth(day, currentMonth)
-                    const isSelected = selectedDate && isSameDay(day, selectedDate)
-                    const isMarked = isMarkedDate(day)
-                    const isInRange = isDateInRange(day)
-
-                    return (
-                        <button
-                            key={day.toString()}
-                            onClick={() => onChange(day)}
-                            className={`
-                min-w-8 min-h-8 h-8 w-8 md:h-10 md:w-10 flex flex-col items-center justify-center relative
-                ${isMarked ? 'bg-[#FFB130] text-white' :
-                  isSelected ? 'bg-blue-500 text-white' :
-                  isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
-                ${isInRange ? 'bg-[#FFB130]/30' : ''}
-                hover:bg-blue-100
-                rounded-lg transition-colors
-              `}
-                        >
-                            <span className={isMarked ? 'font-bold' : ''}>{format(day, 'd')}</span>
-                        </button>
-                    )
-                })}
-            </div>
-        </div>
-    )
-} 
+export { Calendar }

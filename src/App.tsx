@@ -10,6 +10,9 @@ import MainPage from "@/pages/MainPage";
 import PortfolioList from "@/pages/dashboard/resume/portfolio/Portfolio-list.tsx"
 import Portfolio from "@/pages/dashboard/resume/portfolio/Portfolio-create.tsx";
 import PortfolioDetail from "@/pages/dashboard/resume/portfolio/PortfolioDetail.tsx";
+import ResumeList from "@/pages/dashboard/resume/resume/Resume-list.tsx";
+import Resume from "@/pages/dashboard/resume/resume/Resume-create.tsx";
+import ResumeDetail from "@/pages/dashboard/resume/resume/Resume-detail.tsx";
 // import ResumeShare from "@/pages/dashboard/resume/Resume-share";
 // import Schedule from "@/pages/dashboard/resume/Schedule";
 
@@ -63,9 +66,10 @@ function AppRoutes() {
 
             {/* 이력서 & 포트폴리오 섹션 */}
             <Route path="resume">
-              {/* <Route index element={<ResumeShare />} />
-              <Route path="share" element={<ResumeShare />} /> */}
-              <Route index element={<PortfolioList />} />
+              <Route index element={<ResumeList />} />
+              <Route path="resumes" element={<ResumeList />} />
+              <Route path="resumes/new" element={<Resume />} />
+              <Route path="resumes/:id/detail" element={<ResumeDetail />} />
               <Route path="portfolios" element={<PortfolioList />} />
               <Route path="portfolios/new" element={<Portfolio />} />
               <Route path="portfolios/:id/detail" element={<PortfolioDetail />} />

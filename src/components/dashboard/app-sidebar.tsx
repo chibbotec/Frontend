@@ -14,7 +14,7 @@ import {
 
 import { useAuth } from "@/context/AuthContext"
 import { NavMain } from "@/components/dashboard/nav-main.tsx"
-import {NavProjects} from "@/components/dashboard/nav-projects"
+import { NavProjects } from "@/components/dashboard/nav-projects"
 import { NavUser } from "@/components/dashboard/nav-user"
 import { TeamSwitcher } from "@/pages/dashboard/space/team-switcher.tsx"
 import {
@@ -40,11 +40,11 @@ const data = {
       isActive: true,
       items: [
         {
-          title: "이력서 공유",
-          url: "/resume/share",
+          title: "이력서",
+          url: "/resume/resumes",
         },
         {
-          title: "포트폴리오 공유",
+          title: "포트폴리오",
           url: "/resume/portfolios",
         },
         {
@@ -142,19 +142,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
 
   return (
-      <Sidebar collapsible="icon" {...props}>
-        <SidebarHeader>
-          {/*<TeamSwitcher teams={data.teams} />*/}
-          <TeamSwitcher />
-        </SidebarHeader>
-        <SidebarContent>
-          <NavMain items={data.navMain} />
-          <NavProjects projects={data.projects} />
-        </SidebarContent>
-        <SidebarFooter>
-          <NavUser user={userData} />
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        {/*<TeamSwitcher teams={data.teams} />*/}
+        <TeamSwitcher />
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain items={data.navMain} />
+        <NavProjects projects={data.projects} />
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={userData} />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   )
 }

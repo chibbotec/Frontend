@@ -1,0 +1,171 @@
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ResumeFormData, Career as CareerType, Project as ProjectType, Education as EducationType, Certificate as CertificateType } from './components/types';
+import BasicInfo from './components/BasicInfo';
+import TechInfo from './components/TechInfo';
+import Career from './components/Career';
+import Project from './components/Project';
+import Education from './components/Education';
+import Certificate from './components/Certificate';
+import axios from 'axios';
+
+
+// API 기본 URL
+const apiUrl = import.meta.env.VITE_API_URL || '';
+
+
+const ResumeCreate: React.FC = () => {
+    const navigate = useNavigate();
+    const { spaceId } = useParams<{ spaceId: string }>();
+
+    // 기본 정보
+    const [title, setTitle] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [careerType, setCareerType] = useState<'신입' | '경력'>('신입');
+    const [position, setPosition] = useState('');
+    const [techStack, setTechStack] = useState<string[]>([]);
+    const [newTech, setNewTech] = useState('');
+    const [techSummary, setTechSummary] = useState('');
+
+    // 링크
+    const [links, setLinks] = useState<{ type: string; url: string }[]>([
+        { type: 'github', url: '' },
+        { type: 'notion', url: '' },
+        { type: 'blog', url: '' },
+    ]);
+
+    // 경력
+    const [careers, setCareers] = useState<CareerType[]>([]);
+
+    // 프로젝트
+    const [projects, setProjects] = useState<ProjectType[]>([]);
+    const [projectTechInputs, setProjectTechInputs] = useState<string[]>([]);
+
+    // 학력 및 교육 사항
+    const [educations, setEducations] = useState<EducationType[]>([]);
+
+    // 자격증 및 수상경력
+    const [certificates, setCertificates] = useState<CertificateType[]>([]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const formData: ResumeFormData = {
+            title,
+            name,
+            email,
+            phone,
+            careerType,
+            position,
+            techStack,
+            techSummary,
+            links,
+            careers: careers.map(career => ({
+                ...career,
+                startDate: new Date(career.startDate).toISOString().split('T')[0],
+                endDate: new Date(career.endDate).toISOString().split('T')[0]
+            })),
+            projects: projects.map(project => ({
+                ...project,
+                startDate: new Date(project.startDate).toISOString().split('T')[0],
+                endDate: new Date(project.endDate).toISOString().split('T')[0]
+            })),
+            educations: educations.map(education => ({
+                ...education,
+                startDate: new Date(education.startDate).toISOString().split('T')[0],
+                endDate: new Date(education.endDate).toISOString().split('T')[0]
+            })),
+            certificates: certificates.map(certificate => ({
+                ...certificate,
+                date: new Date(certificate.date).toISOString().split('T')[0]
+            }))
+        };
+
+        try {
+            const response = await axios.post(`${apiUrl}/api/v1/resume/${spaceId}/resume`, formData);
+
+            if (response.status === 200 || response.status === 201) {
+                navigate(`/space/${spaceId}/resume/resumes`);
+            }
+        } catch (error) {
+            console.error('이력서 생성 중 오류 발생:', error);
+            // TODO: 에러 처리 UI 추가
+        }
+    };
+
+    return (
+        <div className="p-6">
+            <div className="mb-5 gap-2">
+                <div className="pt-2 gap-0">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <BasicInfo
+                            title={title}
+                            setTitle={setTitle}
+                            name={name}
+                            setName={setName}
+                            email={email}
+                            setEmail={setEmail}
+                            phone={phone}
+                            setPhone={setPhone}
+                            careerType={careerType}
+                            setCareerType={setCareerType}
+                            position={position}
+                            setPosition={setPosition}
+                            links={links}
+                            setLinks={setLinks}
+                        />
+
+                        <TechInfo
+                            techStack={techStack}
+                            setTechStack={setTechStack}
+                            newTech={newTech}
+                            setNewTech={setNewTech}
+                            techSummary={techSummary}
+                            setTechSummary={setTechSummary}
+                        />
+
+                        {careerType === '경력' && (
+                            <Career
+                                careers={careers}
+                                setCareers={setCareers}
+                            />
+                        )}
+
+                        <Project
+                            projects={projects}
+                            setProjects={setProjects}
+                            projectTechInputs={projectTechInputs}
+                            setProjectTechInputs={setProjectTechInputs}
+                        />
+
+                        <Education
+                            educations={educations}
+                            setEducations={setEducations}
+                        />
+
+                        <Certificate
+                            certificates={certificates}
+                            setCertificates={setCertificates}
+                        />
+
+                        <div className="flex justify-end space-x-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => navigate(`/space/${spaceId}/resume/resumes`)}
+                            >
+                                취소
+                            </Button>
+                            <Button type="submit">저장</Button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default ResumeCreate;
