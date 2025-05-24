@@ -92,7 +92,12 @@ const ResumeCreate: React.FC = () => {
         };
 
         try {
-            const response = await axios.post(`${apiUrl}/api/v1/resume/${spaceId}/resume`, formData);
+            const response = await axios.post(`${apiUrl}/api/v1/resume/${spaceId}/resume`,
+                formData
+                , {
+                    withCredentials: true,
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
             if (response.status === 200 || response.status === 201) {
                 navigate(`/space/${spaceId}/resume/resumes`);
