@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { Project as ProjectType } from './types';
 
 interface Portfolio {
   id: string;
@@ -45,6 +46,8 @@ interface PortfolioModalProps {
     githubLink: string;
     deployLink: string;
   }) => void;
+  setTechStack: React.Dispatch<React.SetStateAction<Set<string>>>;
+  existingProjects: ProjectType[];
 }
 
 const PortfolioModal: React.FC<PortfolioModalProps> = ({
@@ -52,8 +55,14 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
   onClose,
   portfolios,
   onAddProject,
+  setTechStack,
+  existingProjects
 }) => {
   const [selectedPortfolios, setSelectedPortfolios] = useState<string[]>([]);
+
+  const isProjectAlreadyAdded = (portfolioTitle: string) => {
+    return existingProjects.some(project => project.name === portfolioTitle);
+  };
 
   const handleCheckboxChange = (portfolioId: string) => {
     setSelectedPortfolios((prev) =>
@@ -61,6 +70,11 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
         ? prev.filter((id) => id !== portfolioId)
         : [...prev, portfolioId]
     );
+  };
+
+  const handleClose = () => {
+    setSelectedPortfolios([]); // Reset checkboxes
+    onClose();
   };
 
   const formatDate = (dateString: string) => {
@@ -79,10 +93,11 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
       );
 
       if (portfolio) {
+        const techStackArray = portfolio.contents.techStack.split(',').map(tech => tech.trim());
         const project = {
           name: portfolio.title,
           description: portfolio.contents.description,
-          techStack: portfolio.contents.techStack.split(',').map(tech => tech.trim()),
+          techStack: techStackArray,
           role: portfolio.contents.roles.join('\n'),
           startDate: portfolio.duration.startDate.split('T')[0],
           endDate: portfolio.duration.endDate.split('T')[0],
@@ -92,46 +107,65 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
           deployLink: ''
         };
         onAddProject(project);
+
+        // Add tech stack to TechInfo
+        setTechStack(prev => {
+          const newSet = new Set(prev);
+          techStackArray.forEach(tech => newSet.add(tech));
+          return newSet;
+        });
       }
     });
-    onClose();
+    handleClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>포트폴리오 불러오기</DialogTitle>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto">
           <div className="space-y-4">
-            {portfolios.publicPortfolios.map((portfolio) => (
-              <div
-                key={portfolio.id}
-                className="flex items-center space-x-4 p-2 hover:bg-gray-50 rounded-md"
-              >
-                <Checkbox
-                  id={portfolio.id}
-                  checked={selectedPortfolios.includes(portfolio.id)}
-                  onCheckedChange={() => handleCheckboxChange(portfolio.id)}
-                />
-                <div className="flex-1">
-                  <label
-                    htmlFor={portfolio.id}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {portfolio.title}
-                  </label>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDateRange(portfolio.duration.startDate, portfolio.duration.endDate)}
-                  </p>
+            {portfolios.publicPortfolios.map((portfolio) => {
+              const isAlreadyAdded = isProjectAlreadyAdded(portfolio.title);
+              return (
+                <div
+                  key={portfolio.id}
+                  className="flex items-center space-x-4 p-2 hover:bg-gray-50 rounded-md"
+                >
+                  <Checkbox
+                    id={portfolio.id}
+                    checked={selectedPortfolios.includes(portfolio.id)}
+                    onCheckedChange={() => handleCheckboxChange(portfolio.id)}
+                    disabled={isAlreadyAdded}
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <label
+                        htmlFor={portfolio.id}
+                        className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isAlreadyAdded ? 'text-blue-600' : ''
+                          }`}
+                      >
+                        {portfolio.title}
+                      </label>
+                      {isAlreadyAdded && (
+                        <span className="text-xs text-muted-foreground bg-gray-100 px-2 py-0.5 rounded">
+                          추가됨
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDateRange(portfolio.duration.startDate, portfolio.duration.endDate)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             취소
           </Button>
           <Button onClick={handleAdd} disabled={selectedPortfolios.length === 0}>

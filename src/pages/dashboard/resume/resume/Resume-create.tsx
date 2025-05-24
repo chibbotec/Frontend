@@ -33,7 +33,7 @@ const ResumeCreate: React.FC = () => {
     const [phone, setPhone] = useState('');
     const [careerType, setCareerType] = useState<'신입' | '경력'>('신입');
     const [position, setPosition] = useState('');
-    const [techStack, setTechStack] = useState<string[]>([]);
+    const [techStack, setTechStack] = useState<Set<string>>(new Set());
     const [newTech, setNewTech] = useState('');
     const [techSummary, setTechSummary] = useState('');
 
@@ -67,7 +67,7 @@ const ResumeCreate: React.FC = () => {
             phone,
             careerType,
             position,
-            techStack,
+            techStack: Array.from(techStack),
             techSummary,
             links,
             careers: careers.map(career => ({
@@ -137,6 +137,9 @@ const ResumeCreate: React.FC = () => {
                             setNewTech={setNewTech}
                             techSummary={techSummary}
                             setTechSummary={setTechSummary}
+                            position={position}
+                            projects={projects}
+                            careers={careers}
                         />
 
                         {careerType === '경력' && (
@@ -151,6 +154,7 @@ const ResumeCreate: React.FC = () => {
                             setProjects={setProjects}
                             projectTechInputs={projectTechInputs}
                             setProjectTechInputs={setProjectTechInputs}
+                            setTechStack={setTechStack}
                         />
 
                         <Education

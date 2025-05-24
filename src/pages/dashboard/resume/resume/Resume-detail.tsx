@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail, Phone, Link as LinkIcon, Github, ExternalLink } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { ResumeFormData } from './components/types';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -34,11 +36,6 @@ const ResumeDetail: React.FC = () => {
     }
   }, [spaceId, id]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -56,231 +53,364 @@ const ResumeDetail: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <Button
-        variant="ghost"
-        className="mb-4"
-        onClick={() => navigate(`/space/${spaceId}/resume/resumes`)}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        목록으로 돌아가기
-      </Button>
+    <div className="p-6">
+      <div className="mb-5 gap-2">
+        <div className="pt-2 gap-0">
+          <div className="space-y-6">
+            <Button
+              variant="ghost"
+              className="mb-4"
+              onClick={() => navigate(`/space/${spaceId}/resume/resumes`)}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              목록으로 돌아가기
+            </Button>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-2xl">{resume.title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
             {/* 기본 정보 */}
-            <div>
-              <h3 className="text-xl font-semibold mb-2">기본 정보</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">이름</p>
-                  <p>{resume.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">이메일</p>
-                  <p className="flex items-center">
-                    <Mail className="h-4 w-4 mr-2" />
-                    {resume.email}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">연락처</p>
-                  <p className="flex items-center">
-                    <Phone className="h-4 w-4 mr-2" />
-                    {resume.phone}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">경력 구분</p>
-                  <p>{resume.careerType}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">희망 포지션</p>
-                  <p>{resume.position}</p>
-                </div>
+            <div className="m-0 gap-1">
+              <div className="m-0 gap-1">
+                <h1 className="border-0 text-[1rem] md:text-[1.5rem] font-extrabold leading-tight text-black px-0 h-[48px] py-2">
+                  {resume.title}
+                </h1>
               </div>
             </div>
-
-            {/* 기술 스택 */}
-            <div>
-              <h3 className="text-xl font-semibold mb-2">기술 스택</h3>
-              <div className="flex flex-wrap gap-2">
-                {resume.techStack.map((tech, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-primary/10 rounded-full text-sm"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-              {resume.techSummary && (
-                <p className="mt-2 text-muted-foreground">{resume.techSummary}</p>
-              )}
-            </div>
-
-            {/* 링크 */}
-            {resume.links.length > 0 && (
-              <div>
-                <h3 className="text-xl font-semibold mb-2">링크</h3>
-                <div className="space-y-2">
-                  {resume.links.map((link, index) => (
-                    <a
-                      key={index}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-primary hover:underline"
-                    >
-                      <LinkIcon className="h-4 w-4 mr-2" />
-                      {link.type}
-                    </a>
-                  ))}
+            <Card className='gap-1'>
+              <CardHeader>
+                <CardTitle>기본 정보</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4 flex flex-col items-start">
+                    <div className="grid grid-cols-3 gap-4 w-full">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">이름</label>
+                        <p className="text-sm">{resume.name}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">지원직무</label>
+                        <p className="text-sm">{resume.position}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">신입/경력</label>
+                        <p className="text-sm">{resume.careerType}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 w-full">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">이메일</label>
+                        <p className="text-sm">{resume.email}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">연락처</label>
+                        <p className="text-sm">{resume.phone}</p>
+                      </div>
+                    </div>
+                  </div>
+                  {resume.links.length > 0 && (
+                    <div>
+                      <div className="mb-1">
+                        <label className="text-sm font-medium">링크</label>
+                      </div>
+                      {resume.links.map((link, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1 w-full">
+                          <p className="text-sm">{link.type}: {link.url}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              </CardContent>
+            </Card>
+
+            {/* 기술 정보 */}
+            <Card className='gap-1'>
+              <CardHeader>
+                <CardTitle>기술 정보</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">기술스택</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {resume.techStack.map((tech, index) => (
+                        <span key={index} className="px-2 py-0.5 text-xs bg-gray-100 rounded">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {resume.techSummary && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">기술역량요약</label>
+                      <p className="text-sm whitespace-pre-wrap">{resume.techSummary}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* 경력 */}
-            {resume.careers.length > 0 && (
-              <div>
-                <h3 className="text-xl font-semibold mb-2">경력</h3>
-                <div className="space-y-4">
-                  {resume.careers.map((career, index) => (
-                    <div key={index} className="border-l-2 border-primary/20 pl-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">{career.company}</p>
-                          <p className="text-sm text-muted-foreground">{career.position}</p>
+            {resume.careerType === '경력' && resume.careers.length > 0 && (
+              <Card className='gap-1 mt-0 py-3'>
+                <CardHeader>
+                  <CardTitle>경력</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {resume.careers.map((career, index) => (
+                      <div key={index} className="bg-white border rounded-md shadow-sm p-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="space-y-4 md:col-span-1">
+                            <div>
+                              <h3 className="text-xl md:text-2xl font-bold">{career.company}</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">입사일</label>
+                                <p className="text-xs">
+                                  {career.startDate ? format(new Date(career.startDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                </p>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">퇴사일</label>
+                                <p className="text-xs">
+                                  {career.isCurrent ? '현재' : career.endDate ? format(new Date(career.endDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-end justify-between gap-2">
+                              <div className="w-1/2">
+                                <label className="text-xs font-medium">직급</label>
+                                <p className="text-xs">{career.position || '-'}</p>
+                              </div>
+                              <div className="w-1/2 text-right text-xs text-gray-500">
+                                {(() => {
+                                  const start = career.startDate ? new Date(career.startDate) : null;
+                                  const end = career.isCurrent || !career.endDate ? new Date() : new Date(career.endDate);
+                                  if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+                                    const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+                                    return (
+                                      <div className="flex flex-col items-end">
+                                        <span>경력 : {months}개월</span>
+                                        <span>{format(start, 'yyyy.MM.dd')} ~ {format(end, 'yyyy.MM.dd')}</span>
+                                      </div>
+                                    );
+                                  }
+                                  return (
+                                    <div className="flex flex-col items-end">
+                                      <span>경력 : -</span>
+                                      <span>-</span>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-4 md:col-span-2 md:border-l md:border-gray-200 md:pl-6">
+                            {career.description && (
+                              <div>
+                                <label className="text-xs font-medium">직무내용</label>
+                                <p className="text-xs whitespace-pre-wrap">{career.description}</p>
+                              </div>
+                            )}
+                            {career.achievement && (
+                              <div>
+                                <label className="text-xs font-medium">주요 성과</label>
+                                <p className="text-xs whitespace-pre-wrap">{career.achievement}</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(career.startDate)} - {career.isCurrent ? '현재' : formatDate(career.endDate)}
-                        </p>
                       </div>
-                      {career.description && (
-                        <p className="mt-2 text-sm">{career.description}</p>
-                      )}
-                      {career.achievement && (
-                        <p className="mt-1 text-sm text-muted-foreground">{career.achievement}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* 프로젝트 */}
             {resume.projects.length > 0 && (
-              <div>
-                <h3 className="text-xl font-semibold mb-2">프로젝트</h3>
-                <div className="space-y-6">
-                  {resume.projects.map((project, index) => (
-                    <div key={index} className="border-l-2 border-primary/20 pl-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">{project.name}</p>
-                          <p className="text-sm text-muted-foreground">{project.role}</p>
+              <Card className='gap-1 mt-0 py-3'>
+                <CardHeader>
+                  <CardTitle>프로젝트</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {resume.projects.map((project, index) => (
+                      <div key={index} className="bg-white border rounded-md shadow-sm p-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="space-y-4 md:col-span-1">
+                            <div>
+                              <h3 className="text-xl md:text-2xl font-bold">{project.name}</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">시작일</label>
+                                <p className="text-xs">
+                                  {project.startDate ? format(new Date(project.startDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                </p>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">종료일</label>
+                                <p className="text-xs">
+                                  {project.endDate ? format(new Date(project.endDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium">역할</label>
+                              <p className="text-xs">{project.role || '-'}</p>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium">팀 구성</label>
+                              <p className="text-xs">{project.memberCount}명 ({project.memberRole})</p>
+                            </div>
+                          </div>
+                          <div className="space-y-4 md:col-span-2 md:border-l md:border-gray-200 md:pl-6">
+                            <div>
+                              <label className="text-xs font-medium">프로젝트 설명</label>
+                              <p className="text-xs whitespace-pre-wrap">{project.description}</p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium">기술 스택</label>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {project.techStack.map((tech, techIndex) => (
+                                  <span key={techIndex} className="px-2 py-0.5 text-xs bg-gray-100 rounded">
+                                    {tech}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            {(project.githubLink || project.deployLink) && (
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">링크</label>
+                                <div className="flex flex-col gap-1">
+                                  {project.githubLink && (
+                                    <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                                      GitHub
+                                    </a>
+                                  )}
+                                  {project.deployLink && (
+                                    <a href={project.deployLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                                      배포 링크
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(project.startDate)} - {formatDate(project.endDate)}
-                        </p>
                       </div>
-                      <p className="mt-2 text-sm">{project.description}</p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {project.techStack.map((tech, techIndex) => (
-                          <span
-                            key={techIndex}
-                            className="px-2 py-1 bg-primary/10 rounded-full text-xs"
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="mt-2 flex gap-4">
-                        {project.githubLink && (
-                          <a
-                            href={project.githubLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center text-sm text-primary hover:underline"
-                          >
-                            <Github className="h-4 w-4 mr-1" />
-                            GitHub
-                          </a>
-                        )}
-                        {project.deployLink && (
-                          <a
-                            href={project.deployLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center text-sm text-primary hover:underline"
-                          >
-                            <ExternalLink className="h-4 w-4 mr-1" />
-                            배포 링크
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* 학력 */}
             {resume.educations.length > 0 && (
-              <div>
-                <h3 className="text-xl font-semibold mb-2">학력</h3>
-                <div className="space-y-4">
-                  {resume.educations.map((education, index) => (
-                    <div key={index} className="border-l-2 border-primary/20 pl-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">{education.school}</p>
-                          <p className="text-sm text-muted-foreground">{education.major}</p>
+              <Card className='gap-1 mt-0 py-3'>
+                <CardHeader>
+                  <CardTitle>학력</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {resume.educations.map((education, index) => (
+                      <div key={index} className="bg-white border rounded-md shadow-sm p-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="space-y-4 md:col-span-1">
+                            <div>
+                              <h3 className="text-xl md:text-2xl font-bold">{education.school}</h3>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">입학일</label>
+                                <p className="text-xs">
+                                  {education.startDate ? format(new Date(education.startDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                </p>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">졸업일</label>
+                                <p className="text-xs">
+                                  {education.endDate ? format(new Date(education.endDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-4 md:col-span-2 md:border-l md:border-gray-200 md:pl-6">
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium">전공</label>
+                              <p className="text-xs">{education.major || '-'}</p>
+                            </div>
+                            {education.degree && (
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">학위</label>
+                                <p className="text-xs">{education.degree}</p>
+                              </div>
+                            )}
+                            {education.note && (
+                              <div className="space-y-2">
+                                <label className="text-xs font-medium">비고</label>
+                                <p className="text-xs">{education.note}</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(education.startDate)} - {formatDate(education.endDate)}
-                        </p>
                       </div>
-                      {education.degree && (
-                        <p className="mt-1 text-sm text-muted-foreground">{education.degree}</p>
-                      )}
-                      {education.note && (
-                        <p className="mt-1 text-sm text-muted-foreground">{education.note}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* 자격증 및 수상경력 */}
             {resume.certificates.length > 0 && (
-              <div>
-                <h3 className="text-xl font-semibold mb-2">자격증 및 수상경력</h3>
-                <div className="space-y-4">
-                  {resume.certificates.map((certificate, index) => (
-                    <div key={index} className="border-l-2 border-primary/20 pl-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">{certificate.name}</p>
-                          <p className="text-sm text-muted-foreground">{certificate.organization}</p>
+              <Card className='gap-1 mt-0 py-3'>
+                <CardHeader>
+                  <CardTitle>자격증 및 수상경력</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {resume.certificates.map((certificate, index) => (
+                      <div key={index} className="bg-white border rounded-md shadow-sm p-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="space-y-4 md:col-span-1">
+                            <div>
+                              <h3 className="text-xl md:text-2xl font-bold">{certificate.name}</h3>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium">취득일</label>
+                              <p className="text-xs">
+                                {certificate.date ? format(new Date(certificate.date), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="space-y-4 md:col-span-2 md:border-l md:border-gray-200 md:pl-6">
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium">발행처</label>
+                              <p className="text-xs">{certificate.organization || '-'}</p>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(certificate.date)}
-                        </p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(`/space/${spaceId}/resume/resumes`)}
+              >
+                목록으로
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

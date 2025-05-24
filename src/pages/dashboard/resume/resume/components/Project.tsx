@@ -19,13 +19,15 @@ interface ProjectProps {
   setProjects: React.Dispatch<React.SetStateAction<ProjectType[]>>;
   projectTechInputs: string[];
   setProjectTechInputs: React.Dispatch<React.SetStateAction<string[]>>;
+  setTechStack: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 const Project: React.FC<ProjectProps> = ({
   projects,
   setProjects,
   projectTechInputs,
-  setProjectTechInputs
+  setProjectTechInputs,
+  setTechStack
 }) => {
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
   const [openStartDatePopovers, setOpenStartDatePopovers] = useState<boolean[]>([]);
@@ -329,9 +331,15 @@ const Project: React.FC<ProjectProps> = ({
                             if (e.key === 'Enter' && projectTechInputs[index].trim()) {
                               e.preventDefault();
                               const newProjects = [...projects];
-                              if (!newProjects[index].techStack.includes(projectTechInputs[index].trim())) {
-                                newProjects[index].techStack = [...newProjects[index].techStack, projectTechInputs[index].trim()];
+                              const techToAdd = projectTechInputs[index].trim();
+                              if (!newProjects[index].techStack.includes(techToAdd)) {
+                                newProjects[index].techStack = [...newProjects[index].techStack, techToAdd];
                                 setProjects(newProjects);
+                                setTechStack(prev => {
+                                  const newSet = new Set(prev);
+                                  newSet.add(techToAdd);
+                                  return newSet;
+                                });
                               }
                               const newInputs = [...projectTechInputs];
                               newInputs[index] = '';
@@ -346,9 +354,15 @@ const Project: React.FC<ProjectProps> = ({
                           onClick={() => {
                             if (projectTechInputs[index].trim()) {
                               const newProjects = [...projects];
-                              if (!newProjects[index].techStack.includes(projectTechInputs[index].trim())) {
-                                newProjects[index].techStack = [...newProjects[index].techStack, projectTechInputs[index].trim()];
+                              const techToAdd = projectTechInputs[index].trim();
+                              if (!newProjects[index].techStack.includes(techToAdd)) {
+                                newProjects[index].techStack = [...newProjects[index].techStack, techToAdd];
                                 setProjects(newProjects);
+                                setTechStack(prev => {
+                                  const newSet = new Set(prev);
+                                  newSet.add(techToAdd);
+                                  return newSet;
+                                });
                               }
                               const newInputs = [...projectTechInputs];
                               newInputs[index] = '';
@@ -384,6 +398,8 @@ const Project: React.FC<ProjectProps> = ({
         isOpen={isPortfolioModalOpen}
         onClose={() => setIsPortfolioModalOpen(false)}
         onAddProject={handleAddProjectFromPortfolio}
+        setTechStack={setTechStack}
+        existingProjects={projects}
         portfolios={{
           publicPortfolios: [
             {
