@@ -14,6 +14,21 @@ import { FaGithub } from 'react-icons/fa';
 import { Project as ProjectType } from './types';
 import PortfolioModal from './Portfolio-modal';
 
+interface Portfolio {
+  id: string;
+  title: string;
+  duration: {
+    startDate: string;
+    endDate: string;
+  };
+  contents: {
+    techStack: string;
+    summary: string;
+    description: string;
+    roles: string[];
+  };
+}
+
 interface ProjectProps {
   projects: ProjectType[];
   setProjects: React.Dispatch<React.SetStateAction<ProjectType[]>>;
@@ -400,28 +415,6 @@ const Project: React.FC<ProjectProps> = ({
         onAddProject={handleAddProjectFromPortfolio}
         setTechStack={setTechStack}
         existingProjects={projects}
-        portfolios={{
-          publicPortfolios: [
-            {
-              id: "682ee0cc4b14a0335ab40457",
-              title: "여기있개",
-              duration: {
-                startDate: "2025-05-22T00:00:00",
-                endDate: "2025-05-23T00:00:00"
-              },
-              contents: {
-                techStack: "Spring Boot, Spring Security, Spring WebFlux, PostgreSQL, PostGIS, Kafka, AWS S3, JPA/Hibernate, Lombok, Jackson, React (클라이언트 연동 예상), Docker, Gradle",
-                summary: "이 프로젝트는 마이크로서비스 기반의 반려동물 실종 및 발견 게시판 시스템으로, REST API, Kafka, S3, WebFlux, Spring Security를 활용하여 확장성과 보안성을 갖춘 서비스를 구현하였습니다.",
-                description: "이 시스템은 반려동물 실종 및 발견 게시글을 효율적으로 관리하는 플랫폼입니다. 사용자 인증과 권한 부여를 위해 Spring Security와 JWT를 사용하며, 게시글 등록, 수정, 삭제, 조회 기능을 REST API로 제공합니다.",
-                roles: [
-                  "Spring Boot와 WebFlux를 사용해서 API Gateway 및 인증 필터 구현하여 서비스 요청 인증 및 라우팅 안정성 확보",
-                  "JWT 토큰 검증 및 재발급 로직 개발하여 인증 보안 강화 및 사용자 세션 관리 효율성 향상"
-                ]
-              }
-            }
-          ],
-          privatePortfolios: []
-        }}
       />
     </Card>
   );

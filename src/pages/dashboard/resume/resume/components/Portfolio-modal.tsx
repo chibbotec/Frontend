@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Project as ProjectType } from './types';
+import { Globe, Lock } from 'lucide-react';
 
 interface Portfolio {
   id: string;
@@ -30,10 +32,6 @@ interface Portfolio {
 interface PortfolioModalProps {
   isOpen: boolean;
   onClose: () => void;
-  portfolios: {
-    publicPortfolios: Portfolio[];
-    privatePortfolios: Portfolio[];
-  };
   onAddProject: (project: {
     name: string;
     description: string;
@@ -50,15 +48,59 @@ interface PortfolioModalProps {
   existingProjects: ProjectType[];
 }
 
+const apiUrl = import.meta.env.VITE_API_URL || '';
+
 const PortfolioModal: React.FC<PortfolioModalProps> = ({
   isOpen,
   onClose,
-  portfolios,
   onAddProject,
   setTechStack,
   existingProjects
 }) => {
   const [selectedPortfolios, setSelectedPortfolios] = useState<string[]>([]);
+  const [portfolios, setPortfolios] = useState<{
+    publicPortfolios: Portfolio[];
+    privatePortfolios: Portfolio[];
+  }>({
+    publicPortfolios: [],
+    privatePortfolios: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPortfolios = async () => {
+      if (!isOpen) return; // 모달이 열려있을 때만 데이터를 가져옵니다
+
+      try {
+        setLoading(true);
+        const spaceId = window.location.pathname.split('/')[2];
+
+        const response = await axios.get(
+          `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
+          {
+            withCredentials: true
+          }
+        );
+
+        if (response.data.publicPortfolios && response.data.privatePortfolios) {
+          setPortfolios({
+            publicPortfolios: response.data.publicPortfolios,
+            privatePortfolios: response.data.privatePortfolios
+          });
+        }
+      } catch (error) {
+        console.error('포트폴리오 목록을 불러오는데 실패했습니다:', error);
+        setPortfolios({
+          publicPortfolios: [],
+          privatePortfolios: []
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPortfolios();
+  }, [isOpen]); // isOpen이 변경될 때마다 데이터를 가져옵니다
 
   const isProjectAlreadyAdded = (portfolioTitle: string) => {
     return existingProjects.some(project => project.name === portfolioTitle);
@@ -127,6 +169,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto">
           <div className="space-y-4">
+            {/* 공개 포트폴리오 */}
             {portfolios.publicPortfolios.map((portfolio) => {
               const isAlreadyAdded = isProjectAlreadyAdded(portfolio.title);
               return (
@@ -142,10 +185,53 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
+                        <Globe className="h-3 w-3" />
+                        공개
+                      </span>
                       <label
                         htmlFor={portfolio.id}
-                        className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isAlreadyAdded ? 'text-blue-600' : ''
-                          }`}
+                        className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isAlreadyAdded ? 'text-blue-600' : ''}`}
+                      >
+                        {portfolio.title}
+                      </label>
+                      {isAlreadyAdded && (
+                        <span className="text-xs text-muted-foreground bg-gray-100 px-2 py-0.5 rounded">
+                          추가됨
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDateRange(portfolio.duration.startDate, portfolio.duration.endDate)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* 개인 포트폴리오 */}
+            {portfolios.privatePortfolios.map((portfolio) => {
+              const isAlreadyAdded = isProjectAlreadyAdded(portfolio.title);
+              return (
+                <div
+                  key={portfolio.id}
+                  className="flex items-center space-x-4 p-2 hover:bg-gray-50 rounded-md"
+                >
+                  <Checkbox
+                    id={portfolio.id}
+                    checked={selectedPortfolios.includes(portfolio.id)}
+                    onCheckedChange={() => handleCheckboxChange(portfolio.id)}
+                    disabled={isAlreadyAdded}
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1 px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">
+                        <Lock className="h-3 w-3" />
+                        개인
+                      </span>
+                      <label
+                        htmlFor={portfolio.id}
+                        className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isAlreadyAdded ? 'text-blue-600' : ''}`}
                       >
                         {portfolio.title}
                       </label>

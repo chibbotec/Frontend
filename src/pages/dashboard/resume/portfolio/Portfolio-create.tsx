@@ -958,6 +958,7 @@ const Portfolio: React.FC = () => {
                               레포를 불러오세요
                             </p>
                             <Button
+                              type="button"
                               onClick={handleOpenRepoDialog}
                               size="sm"
                               className="h-5 text-xs"
@@ -983,6 +984,7 @@ const Portfolio: React.FC = () => {
                         />
                         <div className="flex justify-end">
                           <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             className="h-7 text-xs"
