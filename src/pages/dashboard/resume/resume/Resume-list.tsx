@@ -2,14 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Calendar } from 'lucide-react';
+import axios from 'axios';
 
 interface Resume {
   id: string;
-  spaceId: number;
   title: string;
-  content: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 const ResumeList: React.FC = () => {
@@ -22,26 +20,8 @@ const ResumeList: React.FC = () => {
     const fetchResumes = async () => {
       try {
         setLoading(true);
-        // TODO: API 연동
-        // 임시 데이터
-        setResumes([
-          {
-            id: '1',
-            spaceId: Number(spaceId),
-            title: '샘플 이력서 1',
-            content: '이력서 내용 1',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-          {
-            id: '2',
-            spaceId: Number(spaceId),
-            title: '샘플 이력서 2',
-            content: '이력서 내용 2',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        ]);
+        const response = await axios.get(`/api/v1/resume/${spaceId}/resume`);
+        setResumes(response.data);
       } catch (error) {
         console.error('이력서 목록을 불러오는데 실패했습니다:', error);
         setResumes([]);
@@ -102,17 +82,17 @@ const ResumeList: React.FC = () => {
                 <CardTitle className="text-base line-clamp-1">{resume.title}</CardTitle>
                 <div className="flex items-center text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3 mr-1" />
-                  {formatDate(resume.updatedAt)}
+                  {formatDate(resume.createdAt)}
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground line-clamp-3">
-                  {resume.content}
+                  이력서를 클릭하여 상세 내용을 확인하세요.
                 </p>
               </CardContent>
               <CardFooter className="flex justify-between items-center pt-0">
                 <div className="text-xs text-muted-foreground">
-                  마지막 수정: {formatDate(resume.updatedAt)}
+                  작성일: {formatDate(resume.createdAt)}
                 </div>
               </CardFooter>
             </Card>
