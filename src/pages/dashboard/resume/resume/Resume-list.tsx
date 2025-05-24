@@ -3,16 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Calendar } from 'lucide-react';
 import axios from 'axios';
+import { ResumeSummary } from './components/types';
 
-interface Resume {
-  id: string;
-  title: string;
-  createdAt: string;
-}
+const apiUrl = import.meta.env.VITE_API_URL || '';
 
 const ResumeList: React.FC = () => {
   const navigate = useNavigate();
-  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const { spaceId } = useParams<{ spaceId: string }>();
 
@@ -20,14 +17,8 @@ const ResumeList: React.FC = () => {
     const fetchResumes = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/v1/resume/${spaceId}/resume`);
-        // API 응답 데이터를 Resume[] 형식으로 변환
-        const resumeList: Resume[] = response.data.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          createdAt: item.createdAt
-        }));
-        setResumes(resumeList);
+        const response = await axios.get<ResumeSummary[]>(`${apiUrl}/api/v1/resume/${spaceId}/resume`);
+        setResumes(response.data);
       } catch (error) {
         console.error('이력서 목록을 불러오는데 실패했습니다:', error);
         setResumes([]);

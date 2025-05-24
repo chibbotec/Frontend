@@ -57,4 +57,10 @@ export interface ResumeFormData {
     projects: Project[];
     educations: Education[];
     certificates: Certificate[];
+}
+
+export interface ResumeSummary {
+    id: string;
+    title: string;
+    createdAt: string;
 } 

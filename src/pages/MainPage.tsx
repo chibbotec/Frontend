@@ -48,6 +48,9 @@ const MainPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
+  // 디버깅을 위한 로그 추가
+  console.log('MainPage currentSpace:', currentSpace);
+
   // 기술면접 통계 상태
   const [stats, setStats] = useState({
     totalContestCount: 0,
@@ -133,11 +136,13 @@ const MainPage: React.FC = () => {
                 <div
                   key={portfolio.id}
                   className="min-w-[180px] max-w-[180px] bg-gray-50 rounded-lg p-3 shadow cursor-pointer hover:bg-blue-50 transition flex flex-col"
-                  onClick={() => navigate(`/space/${currentSpace?.id}/portfolio/${portfolio.id}`)}
+                  onClick={() => navigate(`resume/portfolios/${portfolio.id}/detail`)}
                 >
                   <div className="font-semibold text-gray-900 truncate mb-1">{portfolio.title}</div>
                   <div className="text-xs text-gray-500 mb-1">{portfolio.author?.nickname || '익명'}</div>
-                  <div className="text-xs text-gray-400 mb-1">{portfolio.duration?.startDate} ~ {portfolio.duration?.endDate}</div>
+                  <div className="text-xs text-gray-400 mb-1">
+                    {format(new Date(portfolio.duration?.startDate), 'yy-MM-dd')} ~ {format(new Date(portfolio.duration?.endDate), 'yy-MM-dd')}
+                  </div>
                   <div className="text-xs text-gray-600 line-clamp-2">{portfolio.contents?.summary || '요약 없음'}</div>
                 </div>
               ))
@@ -152,7 +157,7 @@ const MainPage: React.FC = () => {
               <span className="text-xs text-gray-500">내 포트폴리오</span>
               <button
                 className="ml-auto flex items-center gap-1 text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-                onClick={() => navigate(`/space/${currentSpace?.id}/create-portfolios/new`)}
+                onClick={() => navigate(`resume/portfolios/new`)}
               >
                 <Plus className="w-4 h-4" /> 포트폴리오 생성
               </button>
@@ -165,11 +170,13 @@ const MainPage: React.FC = () => {
                   <div
                     key={portfolio.id}
                     className="min-w-[180px] max-w-[180px] bg-gray-50 rounded-lg p-3 shadow cursor-pointer hover:bg-blue-50 transition flex flex-col"
-                    onClick={() => navigate(`/space/${currentSpace?.id}/portfolio/${portfolio.id}`)}
+                    onClick={() => navigate(`resume/portfolios/${portfolio.id}/detail`)}
                   >
                     <div className="font-semibold text-gray-900 truncate mb-1">{portfolio.title}</div>
                     <div className="text-xs text-gray-500 mb-1">{portfolio.author?.nickname || '익명'}</div>
-                    <div className="text-xs text-gray-400 mb-1">{portfolio.duration?.startDate} ~ {portfolio.duration?.endDate}</div>
+                    <div className="text-xs text-gray-400 mb-1">
+                      {format(new Date(portfolio.duration?.startDate), 'yy-MM-dd')} ~ {format(new Date(portfolio.duration?.endDate), 'yy-MM-dd')}
+                    </div>
                     <div className="text-xs text-gray-600 line-clamp-2">{portfolio.contents?.summary || '요약 없음'}</div>
                   </div>
                 ))
