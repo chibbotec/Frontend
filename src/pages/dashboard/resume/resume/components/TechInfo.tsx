@@ -17,8 +17,8 @@ interface TechInfoProps {
   setTechStack: React.Dispatch<React.SetStateAction<Set<string>>>;
   newTech: string;
   setNewTech: (value: string) => void;
-  techSummary: string;
-  setTechSummary: (value: string) => void;
+  techSummary: string[];
+  setTechSummary: (value: string[]) => void;
   position: string;
   projects: {
     name: string;
@@ -79,9 +79,8 @@ const TechInfo: React.FC<TechInfoProps> = ({
         const newTechStack = new Set([...techStack, ...response.data.techStack]);
         setTechStack(newTechStack);
 
-        // 기술 요약을 줄바꿈으로 구분된 문자열로 변환
-        const summaryText = response.data.techSummary.join('\n');
-        setTechSummary(summaryText);
+        // 기술 요약 업데이트
+        setTechSummary(response.data.techSummary);
       }
     } catch (error) {
       console.error('AI 요약 생성 중 오류 발생:', error);
@@ -158,11 +157,11 @@ const TechInfo: React.FC<TechInfoProps> = ({
             </div>
           </div>
           <div className="space-y-2">
-            <label htmlFor="techSummary" className="text-sm font-medium">기술역량요약</label>
+            <label htmlFor="techSummary" className="text-sm font-medium">기술 역량 요약</label>
             <Textarea
               id="techSummary"
-              value={techSummary}
-              onChange={(e) => setTechSummary(e.target.value)}
+              value={techSummary.join('\n')}
+              onChange={(e) => setTechSummary(e.target.value.split('\n'))}
               placeholder="기술역량을 요약해주세요"
               required
               className="text-xs resize-none h-40"
