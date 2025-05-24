@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Mail, Phone, Link as LinkIcon, Github, ExternalLink } from 'lucide-react';
 import { ResumeFormData } from './components/types';
 
+const apiUrl = import.meta.env.VITE_API_URL || '';
+
 const ResumeDetail: React.FC = () => {
   const { spaceId, resumeId } = useParams<{ spaceId: string; resumeId: string }>();
   const navigate = useNavigate();
@@ -16,7 +18,7 @@ const ResumeDetail: React.FC = () => {
     const fetchResumeDetail = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/v1/resume/${spaceId}/resume/${resumeId}`, {
+        const response = await axios.get(`${apiUrl}/api/v1/resume/${spaceId}/resume/${resumeId}`, {
           withCredentials: true
         });
         setResume(response.data);

@@ -83,7 +83,7 @@ export function MainPageCalendar({ selectedDate, onChange, markedDates = [], sta
               key={day.toString()}
               onClick={() => onChange(day)}
               className={`
-                h-full w-full flex items-center justify-center relative
+                h-10 w-10 md:h-full md:w-full flex items-center justify-center relative
                 ${isMarked ? 'bg-[#FFB130] text-white' :
                   isSelected ? 'bg-blue-500 text-white' :
                     isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
