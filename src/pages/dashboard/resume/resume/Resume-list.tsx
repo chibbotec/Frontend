@@ -17,7 +17,9 @@ const ResumeList: React.FC = () => {
     const fetchResumes = async () => {
       try {
         setLoading(true);
-        const response = await axios.get<ResumeSummary[]>(`${apiUrl}/api/v1/resume/${spaceId}/resume`);
+        const response = await axios.get<ResumeSummary[]>(`${apiUrl}/api/v1/resume/${spaceId}/resume`, {
+          withCredentials: true
+        });
         setResumes(response.data);
       } catch (error) {
         console.error('이력서 목록을 불러오는데 실패했습니다:', error);
