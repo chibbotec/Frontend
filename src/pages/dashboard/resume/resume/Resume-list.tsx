@@ -21,7 +21,13 @@ const ResumeList: React.FC = () => {
       try {
         setLoading(true);
         const response = await axios.get(`/api/v1/resume/${spaceId}/resume`);
-        setResumes(response.data);
+        // API 응답 데이터를 Resume[] 형식으로 변환
+        const resumeList: Resume[] = response.data.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          createdAt: item.createdAt
+        }));
+        setResumes(resumeList);
       } catch (error) {
         console.error('이력서 목록을 불러오는데 실패했습니다:', error);
         setResumes([]);
@@ -36,6 +42,7 @@ const ResumeList: React.FC = () => {
   }, [spaceId]);
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
   };
