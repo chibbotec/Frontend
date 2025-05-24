@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FaGithub } from 'react-icons/fa';
 import { SiNotion } from 'react-icons/si';
@@ -129,7 +128,14 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
               {links.map((link, index) => (
                 <div key={index} className="flex items-center space-x-2 mt-1 w-full">
                   <div className="w-2/5">
-                    <Select defaultValue={link.type || "github"}>
+                    <Select
+                      defaultValue={link.type || "github"}
+                      onValueChange={(value) => {
+                        const newLinks = [...links];
+                        newLinks[index] = { ...newLinks[index], type: value };
+                        setLinks(newLinks);
+                      }}
+                    >
                       <SelectTrigger className="w-full placeholder:text-sm text-xs">
                         <SelectValue placeholder="종류" />
                       </SelectTrigger>
@@ -156,7 +162,17 @@ const BasicInfo: React.FC<BasicInfoProps> = ({
                     </Select>
                   </div>
                   <div className="w-3/5">
-                    <Input id={`linkUrl-${index}`} placeholder="링크 주소 입력" className="w-full placeholder:text-sm" />
+                    <Input
+                      id={`linkUrl-${index}`}
+                      placeholder="링크 주소 입력"
+                      className="w-full placeholder:text-sm"
+                      value={link.url}
+                      onChange={(e) => {
+                        const newLinks = [...links];
+                        newLinks[index] = { ...newLinks[index], url: e.target.value };
+                        setLinks(newLinks);
+                      }}
+                    />
                   </div>
                 </div>
               ))}

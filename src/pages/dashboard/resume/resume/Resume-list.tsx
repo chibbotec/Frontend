@@ -97,7 +97,9 @@ const ResumeList: React.FC = () => {
               </CardFooter>
             </Card>
           ))}
+
         </div>
+
       )}
 
       {!loading && resumes.length === 0 && (
@@ -105,6 +107,14 @@ const ResumeList: React.FC = () => {
           아직 작성한 이력서가 없습니다.
         </div>
       )}
+      <div className="flex justify-center mt-6">
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          onClick={() => navigate('/space/55/resume/resumes/11/detail')}
+        >
+          채용공고 맞춤 이력서 작성(예정)
+        </button>
+      </div>
     </div>
   );
 };

@@ -22,7 +22,7 @@ export interface Project {
     startDate: string;  // LocalDate 형식 (YYYY-MM-DD)
     endDate: string;    // LocalDate 형식 (YYYY-MM-DD)
     memberCount: number;
-    memberRole: string;
+    memberRole?: string;
     githubLink: string;
     deployLink: string;
 }

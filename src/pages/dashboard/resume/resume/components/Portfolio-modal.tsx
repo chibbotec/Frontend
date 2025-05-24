@@ -138,7 +138,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
         const techStackArray = portfolio.contents.techStack.split(',').map(tech => tech.trim());
         const project = {
           name: portfolio.title,
-          description: portfolio.contents.description,
+          description: portfolio.contents.summary,
           techStack: techStackArray,
           role: portfolio.contents.roles.join('\n'),
           startDate: portfolio.duration.startDate.split('T')[0],
