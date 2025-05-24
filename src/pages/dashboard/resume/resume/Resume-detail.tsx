@@ -9,7 +9,7 @@ import { ResumeFormData } from './components/types';
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
 const ResumeDetail: React.FC = () => {
-  const { spaceId, resumeId } = useParams<{ spaceId: string; resumeId: string }>();
+  const { spaceId, id } = useParams<{ spaceId: string; id: string }>();
   const navigate = useNavigate();
   const [resume, setResume] = useState<ResumeFormData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ const ResumeDetail: React.FC = () => {
     const fetchResumeDetail = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${apiUrl}/api/v1/resume/${spaceId}/resume/${resumeId}`, {
+        const response = await axios.get(`${apiUrl}/api/v1/resume/${spaceId}/resume/${id}`, {
           withCredentials: true
         });
         setResume(response.data);
@@ -29,10 +29,10 @@ const ResumeDetail: React.FC = () => {
       }
     };
 
-    if (spaceId && resumeId) {
+    if (spaceId && id) {
       fetchResumeDetail();
     }
-  }, [spaceId, resumeId]);
+  }, [spaceId, id]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
