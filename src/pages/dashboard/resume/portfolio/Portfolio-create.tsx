@@ -141,6 +141,10 @@ const Portfolio: React.FC = () => {
   const [architecture, setArchitecture] = useState('');
   const [deployment, setDeployment] = useState('');
 
+  // Popover 상태 관리 추가
+  const [openStartDatePopover, setOpenStartDatePopover] = useState(false);
+  const [openEndDatePopover, setOpenEndDatePopover] = useState(false);
+
   // GitHub 연동 관련 상태
   const [isGitHubConnected, setIsGitHubConnected] = useState(false);
   const [selectedRepos, setSelectedRepos] = useState<GitHubRepo[]>([]);
@@ -835,7 +839,7 @@ const Portfolio: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <Label className="w-20 text-xs">기간</Label>
                         <div className="flex-1 grid grid-cols-2 gap-4">
-                          <Popover>
+                          <Popover open={openStartDatePopover} onOpenChange={setOpenStartDatePopover}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
@@ -855,12 +859,13 @@ const Portfolio: React.FC = () => {
                                 selected={startDate ? new Date(startDate) : undefined}
                                 onSelect={(date) => {
                                   setStartDate(date ? formatDate(date) : '');
+                                  setOpenStartDatePopover(false);
                                 }}
                                 locale={ko}
                               />
                             </PopoverContent>
                           </Popover>
-                          <Popover>
+                          <Popover open={openEndDatePopover} onOpenChange={setOpenEndDatePopover}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
@@ -880,6 +885,7 @@ const Portfolio: React.FC = () => {
                                 selected={endDate ? new Date(endDate) : undefined}
                                 onSelect={(date) => {
                                   setEndDate(date ? formatDate(date) : '');
+                                  setOpenEndDatePopover(false);
                                 }}
                                 locale={ko}
                               />

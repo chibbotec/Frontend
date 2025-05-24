@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ interface CertificateProps {
 }
 
 const Certificate: React.FC<CertificateProps> = ({ certificates, setCertificates }) => {
+  const [openDatePopovers, setOpenDatePopovers] = useState<boolean[]>([]);
+
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -24,11 +26,16 @@ const Certificate: React.FC<CertificateProps> = ({ certificates, setCertificates
     return `${year}-${month}-${day}`;
   };
 
+  const handleAddCertificate = () => {
+    setCertificates(prev => [...prev, { type: '자격증', name: '', date: '', organization: '' }]);
+    setOpenDatePopovers(prev => [...prev, false]);
+  };
+
   return (
     <Card className="gap-1 mt-0 py-3">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>자격증 및 수상경력</CardTitle>
-        <Button type="button" size="sm" onClick={() => setCertificates(prev => [...prev, { type: '자격증', name: '', date: '', organization: '' }])}>
+        <Button type="button" size="sm" onClick={handleAddCertificate}>
           추가
         </Button>
       </CardHeader>
@@ -79,7 +86,11 @@ const Certificate: React.FC<CertificateProps> = ({ certificates, setCertificates
                   </div>
                   <div className="space-y-2 md:col-span-1 md:border-l md:border-gray-200 md:pl-6">
                     <Label className="text-xs">취득/수상일</Label>
-                    <Popover>
+                    <Popover open={openDatePopovers[idx]} onOpenChange={(open) => {
+                      const newPopovers = [...openDatePopovers];
+                      newPopovers[idx] = open;
+                      setOpenDatePopovers(newPopovers);
+                    }}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -101,6 +112,9 @@ const Certificate: React.FC<CertificateProps> = ({ certificates, setCertificates
                             const newCerts = [...certificates];
                             newCerts[idx].date = date ? formatDate(date) : '';
                             setCertificates(newCerts);
+                            const newPopovers = [...openDatePopovers];
+                            newPopovers[idx] = false;
+                            setOpenDatePopovers(newPopovers);
                           }}
                           locale={ko}
                         />

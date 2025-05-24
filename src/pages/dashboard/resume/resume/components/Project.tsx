@@ -28,6 +28,8 @@ const Project: React.FC<ProjectProps> = ({
   setProjectTechInputs
 }) => {
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+  const [openStartDatePopovers, setOpenStartDatePopovers] = useState<boolean[]>([]);
+  const [openEndDatePopovers, setOpenEndDatePopovers] = useState<boolean[]>([]);
 
   const handleAddProject = () => {
     setProjects([
@@ -46,6 +48,8 @@ const Project: React.FC<ProjectProps> = ({
       }
     ]);
     setProjectTechInputs([...projectTechInputs, '']);
+    setOpenStartDatePopovers(prev => [...prev, false]);
+    setOpenEndDatePopovers(prev => [...prev, false]);
   };
 
   const formatDate = (date: Date) => {
@@ -120,7 +124,11 @@ const Project: React.FC<ProjectProps> = ({
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div className="space-y-2">
                           <label className="text-xs font-medium">시작일</label>
-                          <Popover>
+                          <Popover open={openStartDatePopovers[index]} onOpenChange={(open) => {
+                            const newPopovers = [...openStartDatePopovers];
+                            newPopovers[index] = open;
+                            setOpenStartDatePopovers(newPopovers);
+                          }}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
@@ -142,6 +150,9 @@ const Project: React.FC<ProjectProps> = ({
                                   const newProjects = [...projects];
                                   newProjects[index].startDate = date ? formatDate(date) : '';
                                   setProjects(newProjects);
+                                  const newPopovers = [...openStartDatePopovers];
+                                  newPopovers[index] = false;
+                                  setOpenStartDatePopovers(newPopovers);
                                 }}
                                 locale={ko}
                               />
@@ -150,7 +161,11 @@ const Project: React.FC<ProjectProps> = ({
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs font-medium">종료일</label>
-                          <Popover>
+                          <Popover open={openEndDatePopovers[index]} onOpenChange={(open) => {
+                            const newPopovers = [...openEndDatePopovers];
+                            newPopovers[index] = open;
+                            setOpenEndDatePopovers(newPopovers);
+                          }}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
@@ -172,6 +187,9 @@ const Project: React.FC<ProjectProps> = ({
                                   const newProjects = [...projects];
                                   newProjects[index].endDate = date ? formatDate(date) : '';
                                   setProjects(newProjects);
+                                  const newPopovers = [...openEndDatePopovers];
+                                  newPopovers[index] = false;
+                                  setOpenEndDatePopovers(newPopovers);
                                 }}
                                 locale={ko}
                               />

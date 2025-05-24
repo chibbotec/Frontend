@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,9 @@ interface EducationProps {
 }
 
 const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
+  const [openStartDatePopovers, setOpenStartDatePopovers] = useState<boolean[]>([]);
+  const [openEndDatePopovers, setOpenEndDatePopovers] = useState<boolean[]>([]);
+
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -24,11 +27,17 @@ const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
     return `${year}-${month}-${day}`;
   };
 
+  const handleAddEducation = () => {
+    setEducations(prev => [...prev, { school: '', major: '', startDate: '', endDate: '', degree: '', note: '' }]);
+    setOpenStartDatePopovers(prev => [...prev, false]);
+    setOpenEndDatePopovers(prev => [...prev, false]);
+  };
+
   return (
     <Card className="gap-1 mt-0 py-3">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>학력 및 교육 사항</CardTitle>
-        <Button type="button" size="sm" onClick={() => setEducations(prev => [...prev, { school: '', major: '', startDate: '', endDate: '', degree: '', note: '' }])}>
+        <Button type="button" size="sm" onClick={handleAddEducation}>
           추가
         </Button>
       </CardHeader>
@@ -81,7 +90,11 @@ const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
                   <div className="space-y-2 md:col-span-1 md:border-l md:border-gray-200 md:pl-6">
                     <div className="space-y-2">
                       <Label className="text-xs">시작일</Label>
-                      <Popover>
+                      <Popover open={openStartDatePopovers[idx]} onOpenChange={(open) => {
+                        const newPopovers = [...openStartDatePopovers];
+                        newPopovers[idx] = open;
+                        setOpenStartDatePopovers(newPopovers);
+                      }}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -103,6 +116,9 @@ const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
                               const newEdus = [...educations];
                               newEdus[idx].startDate = date ? formatDate(date) : '';
                               setEducations(newEdus);
+                              const newPopovers = [...openStartDatePopovers];
+                              newPopovers[idx] = false;
+                              setOpenStartDatePopovers(newPopovers);
                             }}
                             locale={ko}
                           />
@@ -111,7 +127,11 @@ const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs">종료일</Label>
-                      <Popover>
+                      <Popover open={openEndDatePopovers[idx]} onOpenChange={(open) => {
+                        const newPopovers = [...openEndDatePopovers];
+                        newPopovers[idx] = open;
+                        setOpenEndDatePopovers(newPopovers);
+                      }}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -133,6 +153,9 @@ const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
                               const newEdus = [...educations];
                               newEdus[idx].endDate = date ? formatDate(date) : '';
                               setEducations(newEdus);
+                              const newPopovers = [...openEndDatePopovers];
+                              newPopovers[idx] = false;
+                              setOpenEndDatePopovers(newPopovers);
                             }}
                             locale={ko}
                           />
