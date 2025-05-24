@@ -9,7 +9,7 @@ import { useParams } from 'react-router-dom';
 
 interface ResumeSummaryResponse {
   techStack: string[];
-  roles: string[];
+  techSummary: string[];
 }
 
 interface TechInfoProps {
@@ -79,8 +79,8 @@ const TechInfo: React.FC<TechInfoProps> = ({
         const newTechStack = new Set([...techStack, ...response.data.techStack]);
         setTechStack(newTechStack);
 
-        // 역할 요약을 줄바꿈으로 구분된 문자열로 변환
-        const summaryText = response.data.roles.join('\n');
+        // 기술 요약을 줄바꿈으로 구분된 문자열로 변환
+        const summaryText = response.data.techSummary.join('\n');
         setTechSummary(summaryText);
       }
     } catch (error) {
