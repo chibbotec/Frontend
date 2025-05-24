@@ -74,13 +74,17 @@ const TechInfo: React.FC<TechInfoProps> = ({
         }
       );
 
+      console.log('API 응답:', response.data); // API 응답 확인
+
       if (response.status === 200) {
         // 기술 스택 업데이트
         const newTechStack = new Set([...techStack, ...response.data.techStack]);
         setTechStack(newTechStack);
 
         // 기술 요약 업데이트
+        console.log('기술 요약 업데이트 전:', techSummary);
         setTechSummary(response.data.techSummary);
+        console.log('기술 요약 업데이트 후:', response.data.techSummary);
       }
     } catch (error) {
       console.error('AI 요약 생성 중 오류 발생:', error);
