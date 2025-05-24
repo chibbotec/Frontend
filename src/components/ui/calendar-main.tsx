@@ -16,7 +16,7 @@ import {
 import { ko } from 'date-fns/locale'
 import { useState } from 'react'
 
-interface MainCalendarProps {
+interface MainPageCalendarProps {
   selectedDate: Date | null
   onChange: (date: Date) => void
   markedDates?: Date[]
@@ -24,7 +24,7 @@ interface MainCalendarProps {
   endDate?: Date | null
 }
 
-export function MainCalendar({ selectedDate, onChange, markedDates = [], startDate, endDate }: MainCalendarProps) {
+export function MainPageCalendar({ selectedDate, onChange, markedDates = [], startDate, endDate }: MainPageCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   const monthStart = startOfMonth(currentMonth)

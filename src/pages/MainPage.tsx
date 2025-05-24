@@ -4,7 +4,7 @@ import { useSpace } from '@/context/SpaceContext';
 import { format } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { MainCalendar } from '@/components/ui/calendar-main';
+import { MainPageCalendar } from '@/components/ui/calendar-main';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -185,7 +185,7 @@ const MainPage: React.FC = () => {
           <h2 className="text-m font-semibold mb-3">일정관리</h2>
           <div className="flex-1 flex flex-col">
             <div className="flex-1 min-h-[350px]">
-              <MainCalendar
+              <MainPageCalendar
                 selectedDate={selectedDate}
                 onChange={(date) => setSelectedDate(date)}
               />
