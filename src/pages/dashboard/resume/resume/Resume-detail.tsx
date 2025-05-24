@@ -216,7 +216,7 @@ const ResumeDetail: React.FC = () => {
                             {career.achievement && (
                               <div>
                                 <label className="text-xs font-medium">주요 성과</label>
-                                <p className="text-xs whitespace-pre-wrap">{career.achievement}</p>
+                                <p className="text-xs whitespace-pre-wrap">• {career.achievement}</p>
                               </div>
                             )}
                           </div>
@@ -283,9 +283,12 @@ const ResumeDetail: React.FC = () => {
                             </div>
                             <div>
                               <label className="text-xs font-medium">주요역할 및 성과</label>
-                              <p className="text-xs whitespace-pre-wrap">{project.role}</p>
+                              <ul className="text-xs list-disc pl-4 space-y-1">
+                                {project.role.split('\n').map((line, index) => (
+                                  <li key={index}>{line}</li>
+                                ))}
+                              </ul>
                             </div>
-
                             {(project.githubLink || project.deployLink) && (
                               <div className="space-y-2">
                                 <label className="text-xs font-medium">링크</label>
