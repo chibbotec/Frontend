@@ -35,7 +35,7 @@ const ResumeCreate: React.FC = () => {
     const [position, setPosition] = useState('');
     const [techStack, setTechStack] = useState<Set<string>>(new Set());
     const [newTech, setNewTech] = useState('');
-    const [techSummary, setTechSummary] = useState('');
+    const [techSummary, setTechSummary] = useState<string[]>([]);
 
     // 링크
     const [links, setLinks] = useState<{ type: string; url: string }[]>([
@@ -68,7 +68,7 @@ const ResumeCreate: React.FC = () => {
             careerType,
             position,
             techStack: Array.from(techStack),
-            techSummary,
+            techSummary: techSummary.join('\n'),
             links,
             careers: careers.map(career => ({
                 ...career,
