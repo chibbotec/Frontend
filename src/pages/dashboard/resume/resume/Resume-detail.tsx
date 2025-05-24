@@ -259,7 +259,7 @@ const ResumeDetail: React.FC = () => {
                             </div>
                             <div className="space-y-2">
                               <label className="text-xs font-medium">역할</label>
-                              <p className="text-xs">{project.role || '-'}</p>
+                              <p className="text-xs">{project.memberRole || '-'}</p>
                             </div>
                             <div className="space-y-2">
                               <label className="text-xs font-medium">팀 구성</label>
@@ -281,6 +281,11 @@ const ResumeDetail: React.FC = () => {
                                 ))}
                               </div>
                             </div>
+                            <div>
+                              <label className="text-xs font-medium">주요역할 및 성과</label>
+                              <p className="text-xs whitespace-pre-wrap">{project.role}</p>
+                            </div>
+
                             {(project.githubLink || project.deployLink) && (
                               <div className="space-y-2">
                                 <label className="text-xs font-medium">링크</label>
