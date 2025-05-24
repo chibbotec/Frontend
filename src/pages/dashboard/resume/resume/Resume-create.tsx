@@ -19,6 +19,13 @@ const ResumeCreate: React.FC = () => {
     const navigate = useNavigate();
     const { spaceId } = useParams<{ spaceId: string }>();
 
+    const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     // 기본 정보
     const [title, setTitle] = useState('');
     const [name, setName] = useState('');
@@ -65,22 +72,22 @@ const ResumeCreate: React.FC = () => {
             links,
             careers: careers.map(career => ({
                 ...career,
-                startDate: new Date(career.startDate).toISOString().split('T')[0],
-                endDate: new Date(career.endDate).toISOString().split('T')[0]
+                startDate: career.startDate ? formatDate(new Date(career.startDate)) : '',
+                endDate: career.endDate ? formatDate(new Date(career.endDate)) : ''
             })),
             projects: projects.map(project => ({
                 ...project,
-                startDate: new Date(project.startDate).toISOString().split('T')[0],
-                endDate: new Date(project.endDate).toISOString().split('T')[0]
+                startDate: project.startDate ? formatDate(new Date(project.startDate)) : '',
+                endDate: project.endDate ? formatDate(new Date(project.endDate)) : ''
             })),
             educations: educations.map(education => ({
                 ...education,
-                startDate: new Date(education.startDate).toISOString().split('T')[0],
-                endDate: new Date(education.endDate).toISOString().split('T')[0]
+                startDate: education.startDate ? formatDate(new Date(education.startDate)) : '',
+                endDate: education.endDate ? formatDate(new Date(education.endDate)) : ''
             })),
             certificates: certificates.map(certificate => ({
                 ...certificate,
-                date: new Date(certificate.date).toISOString().split('T')[0]
+                date: certificate.date ? formatDate(new Date(certificate.date)) : ''
             }))
         };
 

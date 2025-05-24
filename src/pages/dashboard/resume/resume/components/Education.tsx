@@ -17,6 +17,13 @@ interface EducationProps {
 }
 
 const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <Card className="gap-1 mt-0 py-3">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -94,7 +101,7 @@ const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
                             selected={edu.startDate ? new Date(edu.startDate) : undefined}
                             onSelect={(date) => {
                               const newEdus = [...educations];
-                              newEdus[idx].startDate = date ? date.toISOString().split('T')[0] : '';
+                              newEdus[idx].startDate = date ? formatDate(date) : '';
                               setEducations(newEdus);
                             }}
                             locale={ko}
@@ -124,7 +131,7 @@ const Education: React.FC<EducationProps> = ({ educations, setEducations }) => {
                             selected={edu.endDate ? new Date(edu.endDate) : undefined}
                             onSelect={(date) => {
                               const newEdus = [...educations];
-                              newEdus[idx].endDate = date ? date.toISOString().split('T')[0] : '';
+                              newEdus[idx].endDate = date ? formatDate(date) : '';
                               setEducations(newEdus);
                             }}
                             locale={ko}

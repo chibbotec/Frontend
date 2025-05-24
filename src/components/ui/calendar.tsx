@@ -12,19 +12,34 @@ import {
   startOfMonth,
   startOfWeek,
   subMonths,
+  Locale
 } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { useState } from 'react'
 
 interface CalendarProps {
-  selectedDate: Date | null
-  onChange: (date: Date) => void
+  selected?: Date | null
+  onChange?: (date: Date) => void
+  onSelect?: (date: Date | undefined) => void
+  onClose?: () => void
   markedDates?: Date[]
   startDate?: Date | null
   endDate?: Date | null
+  mode?: 'single' | 'range'
+  locale?: Locale
 }
 
-export function Calendar({ selectedDate, onChange, markedDates = [], startDate, endDate }: CalendarProps) {
+export function Calendar({
+  selected,
+  onChange,
+  onSelect,
+  onClose,
+  markedDates = [],
+  startDate,
+  endDate,
+  mode = 'single',
+  locale = ko
+}: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   const monthStart = startOfMonth(currentMonth)
@@ -46,50 +61,62 @@ export function Calendar({ selectedDate, onChange, markedDates = [], startDate, 
     return date >= startDate && date <= endDate && !isSameDay(date, startDate) && !isSameDay(date, endDate)
   }
 
+  const handleDateClick = (date: Date) => {
+    if (onChange) {
+      onChange(date)
+    }
+    if (onSelect) {
+      onSelect(date)
+    }
+    if (onClose) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="w-full">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-medium text-gray-900">
-          {format(currentMonth, 'yyyy년 MM월', { locale: ko })}
+    <div className="w-full max-w-[280px] p-2">
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-sm font-medium text-gray-900">
+          {format(currentMonth, 'yyyy년 MM월', { locale })}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <button
             onClick={goToPreviousMonth}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <ChevronLeftIcon className="w-5 h-5 text-gray-900" />
+            <ChevronLeftIcon className="w-4 h-4 text-gray-600" />
           </button>
-          <button onClick={goToNextMonth} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-            <ChevronRightIcon className="w-5 h-5 text-gray-900" />
+          <button onClick={goToNextMonth} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
+            <ChevronRightIcon className="w-4 h-4 text-gray-600" />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 md:gap-1">
+      <div className="grid grid-cols-7 gap-0.5">
         {weekDays.map((day) => (
-          <div key={day} className="h-8 flex items-center justify-center text-xs md:text-sm font-medium text-gray-900">
+          <div key={day} className="h-6 flex items-center justify-center text-xs font-medium text-gray-600">
             {day}
           </div>
         ))}
 
         {days.map((day: Date, dayIdx: number) => {
           const isCurrentMonth = isSameMonth(day, currentMonth)
-          const isSelected = selectedDate && isSameDay(day, selectedDate)
+          const isSelected = selected && isSameDay(day, selected)
           const isMarked = isMarkedDate(day)
           const isInRange = isDateInRange(day)
 
           return (
             <button
               key={day.toString()}
-              onClick={() => onChange(day)}
+              onClick={() => handleDateClick(day)}
               className={`
-                min-w-8 min-h-8 h-8 w-8 md:h-10 md:w-10 flex flex-col items-center justify-center relative
+                min-w-6 min-h-6 h-6 w-6 flex items-center justify-center relative text-xs
                 ${isMarked ? 'bg-[#FFB130] text-white' :
                   isSelected ? 'bg-blue-500 text-white' :
                     isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
                 ${isInRange ? 'bg-[#FFB130]/30' : ''}
-                hover:bg-blue-100
-                rounded-lg transition-colors
+                hover:bg-blue-50
+                rounded-md transition-colors
               `}
             >
               <span className={isMarked ? 'font-bold' : ''}>{format(day, 'd')}</span>

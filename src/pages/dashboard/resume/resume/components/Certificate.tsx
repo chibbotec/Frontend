@@ -17,6 +17,13 @@ interface CertificateProps {
 }
 
 const Certificate: React.FC<CertificateProps> = ({ certificates, setCertificates }) => {
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <Card className="gap-1 mt-0 py-3">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -92,7 +99,7 @@ const Certificate: React.FC<CertificateProps> = ({ certificates, setCertificates
                           selected={cert.date ? new Date(cert.date) : undefined}
                           onSelect={(date) => {
                             const newCerts = [...certificates];
-                            newCerts[idx].date = date ? date.toISOString().split('T')[0] : '';
+                            newCerts[idx].date = date ? formatDate(date) : '';
                             setCertificates(newCerts);
                           }}
                           locale={ko}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,11 +17,23 @@ interface CareerProps {
 }
 
 const Career: React.FC<CareerProps> = ({ careers, setCareers }) => {
+  const [openStartDatePopovers, setOpenStartDatePopovers] = useState<boolean[]>([]);
+  const [openEndDatePopovers, setOpenEndDatePopovers] = useState<boolean[]>([]);
+
   const handleAddCareer = () => {
     setCareers([
       ...careers,
       { period: '', company: '', position: '', isCurrent: false, startDate: '', endDate: '', description: '', achievement: '' }
     ]);
+    setOpenStartDatePopovers([...openStartDatePopovers, false]);
+    setOpenEndDatePopovers([...openEndDatePopovers, false]);
+  };
+
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   return (
@@ -47,6 +59,10 @@ const Career: React.FC<CareerProps> = ({ careers, setCareers }) => {
                   onClick={() => {
                     const newCareers = careers.filter((_, i) => i !== index);
                     setCareers(newCareers);
+                    const newStartDatePopovers = openStartDatePopovers.filter((_, i) => i !== index);
+                    const newEndDatePopovers = openEndDatePopovers.filter((_, i) => i !== index);
+                    setOpenStartDatePopovers(newStartDatePopovers);
+                    setOpenEndDatePopovers(newEndDatePopovers);
                   }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
@@ -71,7 +87,11 @@ const Career: React.FC<CareerProps> = ({ careers, setCareers }) => {
                         <div className="flex items-center">
                           <label className="text-xs font-medium">입사일</label>
                         </div>
-                        <Popover>
+                        <Popover open={openStartDatePopovers[index]} onOpenChange={(open) => {
+                          const newPopovers = [...openStartDatePopovers];
+                          newPopovers[index] = open;
+                          setOpenStartDatePopovers(newPopovers);
+                        }}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
@@ -91,8 +111,11 @@ const Career: React.FC<CareerProps> = ({ careers, setCareers }) => {
                               selected={career.startDate ? new Date(career.startDate) : undefined}
                               onSelect={(date) => {
                                 const newCareers = [...careers];
-                                newCareers[index].startDate = date ? date.toISOString().split('T')[0] : '';
+                                newCareers[index].startDate = date ? formatDate(date) : '';
                                 setCareers(newCareers);
+                                const newPopovers = [...openStartDatePopovers];
+                                newPopovers[index] = false;
+                                setOpenStartDatePopovers(newPopovers);
                               }}
                               locale={ko}
                             />
@@ -118,7 +141,11 @@ const Career: React.FC<CareerProps> = ({ careers, setCareers }) => {
                             <Label htmlFor={`isCurrent-${index}`} className="text-xs">재직중</Label>
                           </div>
                         </div>
-                        <Popover>
+                        <Popover open={openEndDatePopovers[index]} onOpenChange={(open) => {
+                          const newPopovers = [...openEndDatePopovers];
+                          newPopovers[index] = open;
+                          setOpenEndDatePopovers(newPopovers);
+                        }}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
@@ -139,8 +166,11 @@ const Career: React.FC<CareerProps> = ({ careers, setCareers }) => {
                               selected={career.endDate ? new Date(career.endDate) : undefined}
                               onSelect={(date) => {
                                 const newCareers = [...careers];
-                                newCareers[index].endDate = date ? date.toISOString().split('T')[0] : '';
+                                newCareers[index].endDate = date ? formatDate(date) : '';
                                 setCareers(newCareers);
+                                const newPopovers = [...openEndDatePopovers];
+                                newPopovers[index] = false;
+                                setOpenEndDatePopovers(newPopovers);
                               }}
                               locale={ko}
                             />

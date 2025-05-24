@@ -190,6 +190,13 @@ const Portfolio: React.FC = () => {
   const [githubLink, setGithubLink] = useState<string>('');
   const [deployLink, setDeployLink] = useState<string>('');
 
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // AI 요약 요청 함수
   const handleAISummary = async () => {
     try {
@@ -520,8 +527,8 @@ const Portfolio: React.FC = () => {
         }
         setSummary(portfolio.contents?.summary || '');
         setDescription(portfolio.contents?.description || '');
-        setStartDate(portfolio.duration?.startDate ? new Date(portfolio.duration.startDate).toISOString().split('T')[0] : '');
-        setEndDate(portfolio.duration?.endDate ? new Date(portfolio.duration.endDate).toISOString().split('T')[0] : '');
+        setStartDate(portfolio.duration?.startDate ? formatDate(new Date(portfolio.duration.startDate)) : '');
+        setEndDate(portfolio.duration?.endDate ? formatDate(new Date(portfolio.duration.endDate)) : '');
         setPublicAccess(portfolio.publicAccess || false);
 
         // GitHub 저장소 정보가 있으면 설정
@@ -592,8 +599,8 @@ const Portfolio: React.FC = () => {
           nickname: user.nickname
         },
         duration: {
-          startDate: startDate ? new Date(startDate).toISOString() : '',
-          endDate: endDate ? new Date(endDate).toISOString() : ''
+          startDate: startDate ? formatDate(new Date(startDate)) : '',
+          endDate: endDate ? formatDate(new Date(endDate)) : ''
         },
         contents: {
           techStack: techStack.join(', '),
@@ -847,7 +854,7 @@ const Portfolio: React.FC = () => {
                                 mode="single"
                                 selected={startDate ? new Date(startDate) : undefined}
                                 onSelect={(date) => {
-                                  setStartDate(date ? date.toISOString().split('T')[0] : '');
+                                  setStartDate(date ? formatDate(date) : '');
                                 }}
                                 locale={ko}
                               />
@@ -872,7 +879,7 @@ const Portfolio: React.FC = () => {
                                 mode="single"
                                 selected={endDate ? new Date(endDate) : undefined}
                                 onSelect={(date) => {
-                                  setEndDate(date ? date.toISOString().split('T')[0] : '');
+                                  setEndDate(date ? formatDate(date) : '');
                                 }}
                                 locale={ko}
                               />

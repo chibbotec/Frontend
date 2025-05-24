@@ -16,7 +16,7 @@ import {
 import { ko } from 'date-fns/locale'
 import { useState } from 'react'
 
-interface CalendarProps {
+interface MainCalendarProps {
   selectedDate: Date | null
   onChange: (date: Date) => void
   markedDates?: Date[]
@@ -24,7 +24,7 @@ interface CalendarProps {
   endDate?: Date | null
 }
 
-export function Calendar({ selectedDate, onChange, markedDates = [], startDate, endDate }: CalendarProps) {
+export function MainCalendar({ selectedDate, onChange, markedDates = [], startDate, endDate }: MainCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   const monthStart = startOfMonth(currentMonth)
@@ -47,8 +47,8 @@ export function Calendar({ selectedDate, onChange, markedDates = [], startDate, 
   }
 
   return (
-    <div className="w-full">
-      <div className="flex justify-between items-center">
+    <div className="w-full h-full flex flex-col">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium text-gray-900">
           {format(currentMonth, 'yyyy년 MM월', { locale: ko })}
         </h2>
@@ -65,9 +65,9 @@ export function Calendar({ selectedDate, onChange, markedDates = [], startDate, 
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-0.5 md:gap-1">
+      <div className="grid grid-cols-7 gap-1 flex-1">
         {weekDays.map((day) => (
-          <div key={day} className="h-8 flex items-center justify-center text-xs md:text-sm font-medium text-gray-900">
+          <div key={day} className="h-10 flex items-center justify-center text-sm font-medium text-gray-900">
             {day}
           </div>
         ))}
@@ -83,7 +83,7 @@ export function Calendar({ selectedDate, onChange, markedDates = [], startDate, 
               key={day.toString()}
               onClick={() => onChange(day)}
               className={`
-                min-w-8 min-h-8 h-8 w-8 md:h-10 md:w-10 flex flex-col items-center justify-center relative
+                h-full w-full flex items-center justify-center relative
                 ${isMarked ? 'bg-[#FFB130] text-white' :
                   isSelected ? 'bg-blue-500 text-white' :
                     isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
