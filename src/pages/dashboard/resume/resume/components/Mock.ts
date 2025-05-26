@@ -83,7 +83,7 @@ const mockData = {
           "startDate": "2025-05-01",
           "endDate": "2025-05-03",
           "memberCount": 1,
-          "memberRole": "PO",
+          "memberRoles": "PO",
           "githubLink": "test.com",
           "deployLink": "test.com"
       },
@@ -123,6 +123,12 @@ const mockData = {
           "name": "정보처리기사",
           "date": "2025-05-01",
           "organization": "한국산업인력공단"
+      }
+  ],
+  "coverLetters": [
+      {
+          "title": "멋쟁이사자처럼",
+          "content": "백엔드 스쿨 플러스"
       }
   ]
 };

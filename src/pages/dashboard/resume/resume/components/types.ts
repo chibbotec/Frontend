@@ -22,7 +22,7 @@ export interface Project {
     startDate: string;  // LocalDate 형식 (YYYY-MM-DD)
     endDate: string;    // LocalDate 형식 (YYYY-MM-DD)
     memberCount: number;
-    memberRole?: string;
+    memberRoles?: string;
     githubLink: string;
     deployLink: string;
 }
@@ -43,6 +43,11 @@ export interface Certificate {
     organization: string;
 }
 
+export interface CoverLetter {
+    title: string;
+    content: string;
+}
+
 export interface ResumeFormData {
     title: string;
     name: string;
@@ -57,6 +62,7 @@ export interface ResumeFormData {
     projects: Project[];
     educations: Education[];
     certificates: Certificate[];
+    coverLetters: CoverLetter[];
 }
 
 export interface ResumeSummary {

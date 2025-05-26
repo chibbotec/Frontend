@@ -8,6 +8,7 @@ import Career from './components/Career';
 import Project from './components/Project';
 import Education from './components/Education';
 import Certificate from './components/Certificate';
+import CoverLetter from './components/Coverletter';
 import axios from 'axios';
 
 
@@ -57,6 +58,9 @@ const ResumeCreate: React.FC = () => {
     // 자격증 및 수상경력
     const [certificates, setCertificates] = useState<CertificateType[]>([]);
 
+    // 자기소개서
+    const [coverLetters, setCoverLetters] = useState<{ title: string; content: string }[]>([]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -88,7 +92,8 @@ const ResumeCreate: React.FC = () => {
             certificates: certificates.map(certificate => ({
                 ...certificate,
                 date: certificate.date ? formatDate(new Date(certificate.date)) : ''
-            }))
+            })),
+            coverLetters
         };
 
         try {
@@ -165,6 +170,11 @@ const ResumeCreate: React.FC = () => {
                         <Certificate
                             certificates={certificates}
                             setCertificates={setCertificates}
+                        />
+
+                        <CoverLetter
+                            coverLetters={coverLetters}
+                            setCoverLetters={setCoverLetters}
                         />
 
                         <div className="flex justify-end space-x-2">

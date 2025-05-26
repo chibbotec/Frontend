@@ -57,10 +57,10 @@ const PortfolioList: React.FC = () => {
 
         // 쿠키 기반 인증 사용
         const response = await axios.get(
-            `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
-            {
-              withCredentials: true // 쿠키 기반 인증
-            }
+          `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
+          {
+            withCredentials: true // 쿠키 기반 인증
+          }
         );
 
         console.log('API 응답:', response.data);
@@ -111,116 +111,126 @@ const PortfolioList: React.FC = () => {
   // 포트폴리오 카드 렌더링 함수 (신규 생성 버튼 포함)
   const renderPortfoliosWithCreateButton = (portfolios: Portfolio[], isPublic: boolean) => {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-          {/* 새 포트폴리오 생성 버튼 - 개인 포트폴리오 섹션에만 표시 */}
-          {!isPublic && (
-              <div
-                  className="h-[280px] border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-blue-50 transition-colors"
-                  onClick={handleCreatePortfolio}
-              >
-                <div className="flex flex-col items-center text-blue-500">
-                  <Plus className="h-10 w-10 mb-2" />
-                  <span className="text-sm font-medium">신규 포트폴리오 작성</span>
-                </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+        {/* 새 포트폴리오 생성 버튼 - 개인 포트폴리오 섹션에만 표시 */}
+        {!isPublic && (
+          <div
+            className="h-[280px] border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-blue-50 transition-colors"
+            onClick={handleCreatePortfolio}
+          >
+            <div className="flex flex-col items-center text-blue-500">
+              <Plus className="h-10 w-10 mb-2" />
+              <span className="text-sm font-medium">신규 포트폴리오 작성</span>
+            </div>
+          </div>
+        )}
+
+        {/* 포트폴리오 목록 */}
+        {portfolios.map((portfolio) => (
+          <Card
+            key={portfolio.id}
+            className="h-[280px] cursor-pointer hover:shadow-md hover:border-primary/50 transition-all overflow-hidden"
+            onClick={() => handlePortfolioClick(portfolio.id)}
+          >
+            {portfolio.thumbnailUrl && (
+              <div className="h-24 overflow-hidden">
+                <img
+                  src={portfolio.thumbnailUrl}
+                  alt={portfolio.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-          )}
+            )}
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base line-clamp-1">{portfolio.title}</CardTitle>
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3 mr-1" />
+                {formatDateRange(portfolio.duration?.startDate, portfolio.duration?.endDate)}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm font-medium mb-1">기술 스택</p>
+              <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{portfolio.contents?.techStack || '미설정'}</p>
 
-          {/* 포트폴리오 목록 */}
-          {portfolios.map((portfolio) => (
-              <Card
-                  key={portfolio.id}
-                  className="h-[280px] cursor-pointer hover:shadow-md hover:border-primary/50 transition-all overflow-hidden"
-                  onClick={() => handlePortfolioClick(portfolio.id)}
-              >
-                {portfolio.thumbnailUrl && (
-                    <div className="h-24 overflow-hidden">
-                      <img
-                          src={portfolio.thumbnailUrl}
-                          alt={portfolio.title}
-                          className="w-full h-full object-cover"
-                      />
-                    </div>
+              <p className="text-sm font-medium mb-1">요약</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">{portfolio.contents?.summary || '요약 정보가 없습니다.'}</p>
+            </CardContent>
+            <CardFooter className="flex justify-between items-center pt-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{portfolio.author?.nickname || '익명'}</span>
+                {portfolio.publicAccess ? (
+                  <Globe className="h-4 w-4 text-blue-500" />
+                ) : (
+                  <Lock className="h-4 w-4 text-amber-500" />
                 )}
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base line-clamp-1">{portfolio.title}</CardTitle>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {formatDateRange(portfolio.duration?.startDate, portfolio.duration?.endDate)}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm font-medium mb-1">기술 스택</p>
-                  <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{portfolio.contents?.techStack || '미설정'}</p>
-
-                  <p className="text-sm font-medium mb-1">요약</p>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{portfolio.contents?.summary || '요약 정보가 없습니다.'}</p>
-                </CardContent>
-                <CardFooter className="flex justify-between items-center pt-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{portfolio.author?.nickname || '익명'}</span>
-                    {portfolio.publicAccess ? (
-                        <Globe className="h-4 w-4 text-blue-500" />
-                    ) : (
-                        <Lock className="h-4 w-4 text-amber-500" />
-                    )}
-                  </div>
-                </CardFooter>
-              </Card>
-          ))}
-        </div>
+              </div>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
     );
   };
 
   return (
-      <div className="p-6">
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold mb-4">포트폴리오</h2>
-        </div>
-
-        <div className="mb-8">
-          <div className="flex items-center mb-2">
-            <Globe className="h-4 w-4 mr-2 text-blue-500" />
-            <h3 className="text-lg font-medium">공개 포트폴리오</h3>
-          </div>
-          <Separator className="mb-4" />
-
-          {loading ? (
-              <div className="flex justify-center items-center h-24">
-                <p>로딩 중...</p>
-              </div>
-          ) : publicPortfolios.length > 0 ? (
-              renderPortfoliosWithCreateButton(publicPortfolios, true)
-          ) : (
-              <div className="flex justify-center items-center h-24 text-muted-foreground">
-                아직 공개된 포트폴리오가 없습니다.
-              </div>
-          )}
-        </div>
-
-        <div className="mt-8">
-          <div className="flex items-center mb-2">
-            <Lock className="h-4 w-4 mr-2 text-amber-500" />
-            <h3 className="text-lg font-medium">내 포트폴리오</h3>
-          </div>
-          <Separator className="mb-4" />
-
-          {loading ? (
-              <div className="flex justify-center items-center h-24">
-                <p>로딩 중...</p>
-              </div>
-          ) : (
-              <div>
-                {renderPortfoliosWithCreateButton(privatePortfolios, false)}
-                {privatePortfolios.length === 0 && (
-                    <div className="flex justify-center items-center h-24 text-muted-foreground mt-4">
-                      아직 작성한 포트폴리오가 없습니다.
-                    </div>
-                )}
-              </div>
-          )}
-        </div>
+    <div className="p-6">
+      {/* <div className="flex justify-center mt-6">
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          onClick={() => navigate('/space/55/resume/portfolios/11/detail')}
+        >
+          포트폴리오 이동하기
+        </button>
+      </div> */}
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold mb-4">포트폴리오</h2>
       </div>
+
+      <div className="mb-8">
+        <div className="flex items-center mb-2">
+          <Globe className="h-4 w-4 mr-2 text-blue-500" />
+          <h3 className="text-lg font-medium">공개 포트폴리오</h3>
+        </div>
+        <Separator className="mb-4" />
+
+        {loading ? (
+          <div className="flex justify-center items-center h-24">
+            <p>로딩 중...</p>
+          </div>
+        ) : publicPortfolios.length > 0 ? (
+          renderPortfoliosWithCreateButton(publicPortfolios, true)
+        ) : (
+          <div className="flex justify-center items-center h-24 text-muted-foreground">
+            아직 공개된 포트폴리오가 없습니다.
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8">
+        <div className="flex items-center mb-2">
+          <Lock className="h-4 w-4 mr-2 text-amber-500" />
+          <h3 className="text-lg font-medium">내 포트폴리오</h3>
+        </div>
+        <Separator className="mb-4" />
+
+        {loading ? (
+          <div className="flex justify-center items-center h-24">
+            <p>로딩 중...</p>
+          </div>
+        ) : (
+          <div>
+            {renderPortfoliosWithCreateButton(privatePortfolios, false)}
+            {privatePortfolios.length === 0 && (
+              <div className="flex justify-center items-center h-24 text-muted-foreground mt-4">
+                아직 작성한 포트폴리오가 없습니다.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+
   );
+
 };
 
 export default PortfolioList;

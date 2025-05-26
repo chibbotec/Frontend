@@ -40,7 +40,7 @@ interface PortfolioModalProps {
     startDate: string;
     endDate: string;
     memberCount: number;
-    memberRole: string;
+    memberRoles: string;
     githubLink: string;
     deployLink: string;
   }) => void;
@@ -144,7 +144,7 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
           startDate: portfolio.duration.startDate.split('T')[0],
           endDate: portfolio.duration.endDate.split('T')[0],
           memberCount: 1, // 기본값
-          memberRole: 'Fullstack', // 기본값
+          memberRoles: 'Fullstack', // 기본값
           githubLink: '',
           deployLink: ''
         };

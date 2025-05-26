@@ -59,7 +59,7 @@ const Project: React.FC<ProjectProps> = ({
         startDate: '',
         endDate: '',
         memberCount: 0,
-        memberRole: '',
+        memberRoles: '',
         githubLink: '',
         deployLink: ''
       }
@@ -84,7 +84,7 @@ const Project: React.FC<ProjectProps> = ({
     startDate: string;
     endDate: string;
     memberCount: number;
-    memberRole: string;
+    memberRoles: string;
     githubLink: string;
     deployLink: string;
   }) => {
@@ -243,10 +243,10 @@ const Project: React.FC<ProjectProps> = ({
                         <div>
                           <Label htmlFor={`memberRole-${index}`} className="text-xs">역할</Label>
                           <Select
-                            value={project.memberRole || ''}
+                            value={project.memberRoles || ''}
                             onValueChange={value => {
                               const newProjects = [...projects];
-                              newProjects[index].memberRole = value;
+                              newProjects[index].memberRoles = value;
                               setProjects(newProjects);
                             }}
                           >

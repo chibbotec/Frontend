@@ -38,18 +38,8 @@ const ResumeDetail: React.FC = () => {
           top: 0;
           width: 100%;
         }
-        #pdf-content .card {
-          page-break-inside: avoid !important;
-          break-inside: avoid !important;
-          margin-bottom: 1rem !important;
-        }
         @page {
-          margin: 1cm;  /* 상하좌우 여백을 1cm로 설정 */
-          /* 또는 각 방향별로 다르게 설정할 수 있습니다 */
-          /* margin-top: 1cm; */
-          /* margin-right: 1.5cm; */
-          /* margin-bottom: 1cm; */
-          /* margin-left: 1.5cm; */
+          margin: 1cm;
         }
         /* 인쇄 시 반응형 레이아웃 유지 */
         @media print {
@@ -118,21 +108,20 @@ const ResumeDetail: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-2 md:p-6">
       <div className="mb-5 gap-2">
         <div className="pt-2 gap-0">
           <div className="space-y-6">
-            <div className="flex justify-between">
+            <div className="flex justify-between mb-4">
               <Button
                 variant="ghost"
-                className="mb-4"
                 onClick={() => navigate(`/space/${spaceId}/resume/resumes`)}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                목록으로 돌아가기
+                목록으로
               </Button>
               <Button
-                className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
+                className="px-4 py-2 bg-blue-500 text-white rounded"
                 onClick={handlePrint}
               >
                 <Printer className="mr-2 h-4 w-4" />
@@ -149,23 +138,23 @@ const ResumeDetail: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <Card className='gap-2'>
+              <Card className='gap-2 break-inside-avoid'>
                 <CardHeader>
                   <CardTitle className='text-2xl font-bold'>기본 정보</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                     <div className="space-y-4 flex flex-col items-start">
                       <div className="flex w-full gap-4">
                         <div className="flex items-end gap-2 w-1/3">
-                          <p className="text-xl md:text-2xl font-bold">{resume.name}</p>
+                          <p className="text-md md:text-2xl font-bold">{resume.name}</p>
                           <p className="text-m">({resume.careerType})</p>
                         </div>
                         <div className="space-y-2 w-2/3">
                           <p className="md:text-xl font-bold">{resume.position}</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 w-full">
+                      <div className="grid md:grid-cols-2 md:gap-4 w-full">
                         <div className="flex items-center gap-2">
                           <Mail className="w-5 h-5 text-gray-700" />
                           <p className="md:text-lg">{resume.email}</p>
@@ -202,7 +191,7 @@ const ResumeDetail: React.FC = () => {
               </Card>
 
               {/* 기술 정보 */}
-              <Card className='gap-2'>
+              <Card className='gap-2 break-inside-avoid'>
                 <CardHeader>
                   <CardTitle className='text-2xl font-bold'>기술 정보</CardTitle>
                 </CardHeader>
@@ -230,14 +219,14 @@ const ResumeDetail: React.FC = () => {
 
               {/* 경력 */}
               {resume.careerType === '경력' && resume.careers.length > 0 && (
-                <Card className='gap-2'>
+                <Card className='gap-2 break-inside-avoid'>
                   <CardHeader>
                     <CardTitle className='text-2xl font-bold'>경력</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {resume.careers.map((career, index) => (
-                        <div key={index} className="bg-white border rounded-md shadow-sm p-4 mb-4 print-avoid-break">
+                        <div key={index} className="bg-white border rounded-md shadow-sm p-4 mb-4">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-4 md:col-span-1">
                               <h3 className="text-lg md:text-xl font-bold">{career.company}</h3>
@@ -250,34 +239,24 @@ const ResumeDetail: React.FC = () => {
                                   {career.isCurrent ? '재직 중' : career.endDate ? format(new Date(career.endDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
                                 </p>
                               </div>
-                              <div className="text-right text-xs text-gray-500">
-                                {(() => {
-                                  const start = career.startDate ? new Date(career.startDate) : null;
-                                  const end = career.isCurrent || !career.endDate ? new Date() : new Date(career.endDate);
-                                  if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
-                                    const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-                                    return (
-                                      <div className="flex flex-col items-end">
-                                        <span>경력 : {months}개월</span>
-                                      </div>
-                                    );
-                                  }
-                                  return (
-                                    <div className="flex flex-col items-end">
-                                      <span>경력 : -</span>
-                                      <span>-</span>
-                                    </div>
-                                  );
-                                })()}
+                              <div className="items-center gap-1 flex justify-between">
+                                <div className="flex items-center gap-1">
+                                  <Briefcase className="w-5 h-5 text-gray-700" />
+                                  <label className="text-sm md:text-md font-medium">역할:</label>
+                                  <p className="text-sm md:text-md font-medium">{career.position || '-'}</p>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {(() => {
+                                    const start = career.startDate ? new Date(career.startDate) : null;
+                                    const end = career.isCurrent || !career.endDate ? new Date() : new Date(career.endDate);
+                                    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+                                      const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+                                      return <span>경력 : {months}개월</span>;
+                                    }
+                                    return <span>경력 : -</span>;
+                                  })()}
+                                </div>
                               </div>
-
-                              <div className="items-center gap-1 flex">
-                                <Briefcase className="w-5 h-5 text-gray-700" />
-                                <label className="text-sm md:text-md font-medium">역할:</label>
-                                <p className="text-sm md:text-md font-medium">{career.position || '-'}</p>
-                              </div>
-
-
                             </div>
                             <div className="space-y-4 md:col-span-2 md:border-l md:border-gray-200 md:pl-6">
                               {career.description && (
@@ -289,7 +268,11 @@ const ResumeDetail: React.FC = () => {
                               {career.achievement && (
                                 <div>
                                   <label className="text-sm md:text-md font-bold">주요 성과</label>
-                                  <p className="text-xs md:text-sm whitespace-pre-wrap mt-1">• {career.achievement}</p>
+                                  <ul className="list-disc pl-4 space-y-1 mt-1">
+                                    {career.achievement.split('\n').map((line, idx) => (
+                                      <li key={idx} className="text-xs md:text-sm">{line}</li>
+                                    ))}
+                                  </ul>
                                 </div>
                               )}
                             </div>
@@ -303,14 +286,14 @@ const ResumeDetail: React.FC = () => {
 
               {/* 프로젝트 */}
               {resume.projects.length > 0 && (
-                <Card className='gap-2'>
+                <Card className='gap-2 break-inside-avoid'>
                   <CardHeader>
                     <CardTitle className='text-2xl font-bold'>프로젝트 경험</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className='p-3 md:p-4'>
                     <div className="space-y-4">
                       {resume.projects.map((project, index) => (
-                        <div key={index} className="bg-white border rounded-md shadow-sm p-4 mb-4">
+                        <div key={index} className="bg-white border rounded-md shadow-sm p-3 md:p-4 mb-4">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-4 md:col-span-1">
                               <div>
@@ -336,7 +319,7 @@ const ResumeDetail: React.FC = () => {
                                 <div className="items-center gap-1 flex">
                                   <UserCog className="w-5 h-5" strokeWidth={3} />
                                   <label className="text-sm md:text-md font-medium">역할: </label>
-                                  <p className="text-sm md:text-md font-medium">{project.memberRole || '-'}</p>
+                                  <p className="text-sm md:text-md font-medium">{project.memberRoles || '-'}</p>
                                 </div>
                               </div>
 
@@ -414,34 +397,34 @@ const ResumeDetail: React.FC = () => {
 
               {/* 학력 */}
               {resume.educations.length > 0 && (
-                <Card className='gap-2'>
+                <Card className='gap-2 break-inside-avoid'>
                   <CardHeader>
                     <CardTitle className='text-2xl font-bold'>학력 및 교육이력</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
-                      <table className="min-w-full bg-white rounded-lg shadow-sm overflow-hidden">
+                      <table className="w-full bg-white rounded-lg shadow-sm overflow-hidden">
                         <thead>
                           <tr className="bg-gray-50">
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/5">교육기관명</th>
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/4">기간</th>
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/4">전공</th>
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/6">수료여부</th>
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/4">비고</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">교육기관</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">기간</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">전공</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">수료여부</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">비고</th>
                           </tr>
                         </thead>
                         <tbody>
                           {resume.educations.map((education, index) => (
                             <tr key={index} className="even:bg-gray-50 hover:bg-blue-50 transition">
-                              <td className="px-4 py-2 border-b text-center w-1/5">{education.school}</td>
-                              <td className="px-4 py-2 border-b text-center w-1/6">
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{education.school}</td>
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">
                                 {education.startDate ? format(new Date(education.startDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
                                 <span> ~ </span>
                                 {education.endDate ? format(new Date(education.endDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
                               </td>
-                              <td className="px-4 py-2 border-b text-center w-1/4">{education.major || '-'}</td>
-                              <td className="px-4 py-2 border-b text-center w-1/6">{education.degree || '-'}</td>
-                              <td className="px-4 py-2 border-b text-center w-1/4">{education.note || '-'}</td>
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{education.major || '-'}</td>
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{education.degree || '-'}</td>
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{education.note || '-'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -453,34 +436,55 @@ const ResumeDetail: React.FC = () => {
 
               {/* 자격증 및 수상경력 */}
               {resume.certificates.length > 0 && (
-                <Card className='gap-2'>
+                <Card className='gap-2 break-inside-avoid'>
                   <CardHeader>
                     <CardTitle className='text-2xl font-bold'>자격증 및 수상경력</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
-                      <table className="min-w-full bg-white rounded-lg shadow-sm overflow-hidden">
+                      <table className="w-full bg-white rounded-lg shadow-sm overflow-hidden">
                         <thead>
                           <tr className="bg-gray-50">
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/5">구분</th>
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/5">취득일</th>
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/3">자격명/수상경력</th>
-                            <th className="px-4 py-3 font-bold border-b text-gray-700 text-center w-1/3">주관기관</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">구분</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">취득일</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">자격명/수상경력</th>
+                            <th className="px-2 md:px-4 py-3 font-bold border-b text-gray-700 text-center text-xs md:text-sm">주관기관</th>
                           </tr>
                         </thead>
                         <tbody>
                           {resume.certificates.map((certificate, index) => (
                             <tr key={index} className="even:bg-gray-50 hover:bg-blue-50 transition">
-                              <td className="px-4 py-2 border-b text-center w-1/5">{certificate.type}</td>
-                              <td className="px-4 py-2 border-b text-center w-1/5">
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{certificate.type}</td>
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">
                                 {certificate.date ? format(new Date(certificate.date), 'yyyy.MM.dd', { locale: ko }) : '-'}
                               </td>
-                              <td className="px-4 py-2 border-b text-center w-1/3">{certificate.name || '-'}</td>
-                              <td className="px-4 py-2 border-b text-center w-1/3">{certificate.organization || '-'}</td>
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{certificate.name || '-'}</td>
+                              <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{certificate.organization || '-'}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* 자기소개서 */}
+              {resume.coverLetters.length > 0 && (
+                <Card className='gap-2 break-inside-avoid'>
+                  <CardHeader>
+                    <CardTitle className='text-2xl font-bold'>자기소개서</CardTitle>
+                  </CardHeader>
+                  <CardContent className='p-3 md:p-4'>
+                    <div className="space-y-6">
+                      {resume.coverLetters.map((coverLetter, index) => (
+                        <div key={index} className="bg-white border rounded-md shadow-sm p-4">
+                          <h3 className="text-lg font-bold mb-4">{coverLetter.title}</h3>
+                          <div className="whitespace-pre-wrap text-sm">
+                            {coverLetter.content}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
