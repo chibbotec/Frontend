@@ -125,7 +125,7 @@ const mockData = {
           "organization": "한국산업인력공단"
       }
   ],
-  "coverLetters": [
+  "coverletters": [
       {
           "title": "멋쟁이사자처럼",
           "content": "백엔드 스쿨 플러스"

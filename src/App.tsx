@@ -13,6 +13,7 @@ import PortfolioDetail from "@/pages/dashboard/resume/portfolio/PortfolioDetail.
 import ResumeList from "@/pages/dashboard/resume/resume/Resume-list.tsx";
 import Resume from "@/pages/dashboard/resume/resume/Resume-create.tsx";
 import ResumeDetail from "@/pages/dashboard/resume/resume/Resume-detail.tsx";
+import DescriptionList from "@/pages/dashboard/resume/schedule-job/Description-list.tsx";
 // import ResumeShare from "@/pages/dashboard/resume/Resume-share";
 // import Schedule from "@/pages/dashboard/resume/Schedule";
 
@@ -73,7 +74,7 @@ function AppRoutes() {
               <Route path="portfolios" element={<PortfolioList />} />
               <Route path="portfolios/new" element={<Portfolio />} />
               <Route path="portfolios/:id/detail" element={<PortfolioDetail />} />
-              {/* <Route path="schedule" element={<Schedule />} /> */}
+              <Route path="schedule" element={<DescriptionList />} />
             </Route>
 
             {/* 기술 면접 섹션 */}

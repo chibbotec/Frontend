@@ -27,6 +27,10 @@ interface Portfolio {
     description: string;
     roles: string[];
   };
+  memberCount?: number;
+  memberRoles?: string;
+  githubLink?: string;
+  deployLink?: string;
 }
 
 interface PortfolioModalProps {
@@ -143,10 +147,10 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
           role: portfolio.contents.roles.join('\n'),
           startDate: portfolio.duration.startDate.split('T')[0],
           endDate: portfolio.duration.endDate.split('T')[0],
-          memberCount: 1, // 기본값
-          memberRoles: 'Fullstack', // 기본값
-          githubLink: '',
-          deployLink: ''
+          memberCount: portfolio.memberCount || 1,
+          memberRoles: portfolio.memberRoles || 'Fullstack',
+          githubLink: portfolio.githubLink || '',
+          deployLink: portfolio.deployLink || ''
         };
         onAddProject(project);
 

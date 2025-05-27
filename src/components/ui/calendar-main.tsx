@@ -83,16 +83,18 @@ export function MainPageCalendar({ selectedDate, onChange, markedDates = [], sta
               key={day.toString()}
               onClick={() => onChange(day)}
               className={`
-                h-10 w-10 md:h-full md:w-full flex items-center justify-center relative
-                ${isMarked ? 'bg-[#FFB130] text-white' :
-                  isSelected ? 'bg-blue-500 text-white' :
-                    isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
+                h-10 w-10 md:h-full md:w-full flex flex-col items-center justify-center relative
+                ${isSelected ? 'bg-blue-500 text-white' :
+                  isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
                 ${isInRange ? 'bg-[#FFB130]/30' : ''}
                 hover:bg-blue-100
                 rounded-lg transition-colors
               `}
             >
               <span className={isMarked ? 'font-bold' : ''}>{format(day, 'd')}</span>
+              {isMarked && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+              )}
             </button>
           )
         })}

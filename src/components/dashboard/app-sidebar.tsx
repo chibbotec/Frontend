@@ -48,7 +48,7 @@ const data = {
           url: "/resume/portfolios",
         },
         {
-          title: "일정관리",
+          title: "일정/채용공고",
           url: "/resume/schedule",
         },
       ],
