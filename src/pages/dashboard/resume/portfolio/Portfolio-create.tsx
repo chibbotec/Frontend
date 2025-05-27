@@ -183,6 +183,9 @@ const Portfolio: React.FC = () => {
     message: ''
   });
 
+  // 커밋 정보 포함 체크박스 상태 추가
+  const [includeCommitInfo, setIncludeCommitInfo] = useState(true);
+
   // 주요 역할 상태 추가
   const [roles, setRoles] = useState<string[]>([]);
 
@@ -229,17 +232,21 @@ const Portfolio: React.FC = () => {
         message: 'Commit 정보 수집중입니다.'
       });
 
-      // Commit 정보 수집 요청
-      const commitResponse = await axios.post<CommitSummaryResponse>(
-        `${apiUrl}/api/v1/resume/${spaceId}/github/users/${user?.id}/repositories/commit/summary`,
-        {
-          repoNames: selectedRepos.map(repo => repo.name)
-        },
-        {
-          withCredentials: true,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+      let commitFiles: CommitFileInfo[] = [];
+      if (includeCommitInfo) {
+        // Commit 정보 수집 요청
+        const commitResponse = await axios.post<CommitSummaryResponse>(
+          `${apiUrl}/api/v1/resume/${spaceId}/github/users/${user?.id}/repositories/commit/summary`,
+          {
+            repoNames: selectedRepos.map(repo => repo.name)
+          },
+          {
+            withCredentials: true,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+        commitFiles = commitResponse.data.commitFiles;
+      }
 
       // 2단계: AI 포트폴리오 생성 시작
       setAiStatus({
@@ -253,7 +260,7 @@ const Portfolio: React.FC = () => {
         `${apiUrl}/api/v1/ai/${spaceId}/resume/${user?.id}/create-portfolio`,
         {
           repositories: selectedRepos.map(repo => `${spaceId}_${user?.id}_${repo.name.replace(/\//g, '-')}`),
-          commitFiles: commitResponse.data.commitFiles
+          commitFiles: commitFiles
         },
         {
           withCredentials: true,
@@ -983,6 +990,15 @@ const Portfolio: React.FC = () => {
                           className={`h-1.5 ${knowledgePercent > 90 ? "[&>div]:bg-red-500" : knowledgePercent > 80 ? "[&>div]:bg-amber-500" : ""}`}
                         />
                         <div className="flex justify-end">
+                          <div className="flex items-center space-x-2 ml-2">
+                            <Switch
+                              id="includeCommitInfo"
+                              checked={includeCommitInfo}
+                              onCheckedChange={setIncludeCommitInfo}
+                              className="h-3 w-6"
+                            />
+                            <Label htmlFor="includeCommitInfo" className="text-xs">커밋 정보 포함</Label>
+                          </div>
                           <Button
                             type="button"
                             variant="outline"
@@ -997,6 +1013,7 @@ const Portfolio: React.FC = () => {
                             </svg>
                             AI 요약
                           </Button>
+
                         </div>
                       </div>
                     )}
