@@ -149,25 +149,25 @@ const ResumeDetail: React.FC = () => {
     document.head.removeChild(style);
   };
   useEffect(() => {
-    const fetchResumes = async () => {
+    const fetchResume = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${apiUrl}/api/v1/resume/${spaceId}/resume`, {
+        const response = await axios.get(`${apiUrl}/api/v1/resume/${spaceId}/resume/${id}`, {
           withCredentials: true
         });
         setResume(response.data);
       } catch (error) {
-        console.error('이력서 목록을 불러오는데 실패했습니다:', error);
-        setResume([]);
+        console.error('이력서를 불러오는데 실패했습니다:', error);
+        setResume(null);
       } finally {
         setLoading(false);
       }
     };
 
-    if (spaceId) {
-      fetchResumes();
+    if (spaceId && id) {
+      fetchResume();
     }
-  }, [spaceId]);
+  }, [spaceId, id]);
 
   // useEffect(() => {
   //   setResume(mockData as any);
@@ -193,7 +193,7 @@ const ResumeDetail: React.FC = () => {
     if (resume?.certificates && resume.certificates.length > 0) {
       newSections.push({ id: 'certificates', title: '자격증 및 수상경력', visible: true });
     }
-    if (resume?.coverletters && resume.coverletters.length > 0) {
+    if (resume?.coverLetters && resume.coverLetters.length > 0) {
       newSections.push({ id: 'coverletters', title: '자기소개서', visible: true });
     }
 
@@ -587,7 +587,7 @@ const ResumeDetail: React.FC = () => {
                       }
                       return null;
                     case 'coverletters':
-                      if (resume.coverletters?.length > 0) {
+                      if (resume.coverLetters?.length > 0) {
                         return (
                           <Card className='gap-2 break-inside-avoid' id="coverletters">
                             <CardHeader>
@@ -595,7 +595,7 @@ const ResumeDetail: React.FC = () => {
                             </CardHeader>
                             <CardContent className='p-3 md:p-4'>
                               <div className="space-y-6">
-                                {resume.coverletters.map((coverLetter, index) => (
+                                {resume.coverLetters.map((coverLetter, index) => (
                                   <div key={index} className="bg-white border rounded-md shadow-sm p-4">
                                     <h3 className="text-lg font-bold mb-4">{coverLetter.title}</h3>
                                     <div className="whitespace-pre-wrap text-sm">
