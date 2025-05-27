@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Plus, Calendar } from 'lucide-react';
 import axios from 'axios';
 import { ResumeSummary } from './components/types';
+import { ResumeCustomModal } from './components/Resume-custom-modal';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -12,23 +13,24 @@ const ResumeList: React.FC = () => {
   const [resumes, setResumes] = useState<ResumeSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const { spaceId } = useParams<{ spaceId: string }>();
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+
+  const fetchResumes = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get<ResumeSummary[]>(`${apiUrl}/api/v1/resume/${spaceId}/resume`, {
+        withCredentials: true
+      });
+      setResumes(response.data);
+    } catch (error) {
+      console.error('이력서 목록을 불러오는데 실패했습니다:', error);
+      setResumes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchResumes = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get<ResumeSummary[]>(`${apiUrl}/api/v1/resume/${spaceId}/resume`, {
-          withCredentials: true
-        });
-        setResumes(response.data);
-      } catch (error) {
-        console.error('이력서 목록을 불러오는데 실패했습니다:', error);
-        setResumes([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (spaceId) {
       fetchResumes();
     }
@@ -110,11 +112,24 @@ const ResumeList: React.FC = () => {
       <div className="flex justify-center mt-6">
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          onClick={() => navigate('/space/55/resume/resumes/11/detail')}
+          onClick={() => setIsCustomModalOpen(true)}
         >
-          채용공고 맞춤 이력서 작성(예정)
+          채용공고 맞춤 이력서 작성
         </button>
       </div>
+
+      <ResumeCustomModal
+        isOpen={isCustomModalOpen}
+        onClose={() => setIsCustomModalOpen(false)}
+        spaceId={spaceId || ''}
+        onCreated={() => {
+          setIsCustomModalOpen(false);
+          // Refresh the resume list
+          if (spaceId) {
+            fetchResumes();
+          }
+        }}
+      />
     </div>
   );
 };

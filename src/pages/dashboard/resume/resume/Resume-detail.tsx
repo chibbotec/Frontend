@@ -7,7 +7,7 @@ import { ArrowLeft, GripVertical } from 'lucide-react';
 import { ResumeFormData } from './components/types';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import mockData from './components/Mock';
+// import mockData from './components/Mock';
 import { Mail, Phone, Users, Calendar, UserCog, Globe, Briefcase, Printer } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
 import { SiNotion } from 'react-icons/si';
@@ -148,11 +148,31 @@ const ResumeDetail: React.FC = () => {
     window.print();
     document.head.removeChild(style);
   };
-
   useEffect(() => {
-    setResume(mockData as any);
-    setLoading(false);
-  }, []);
+    const fetchResumes = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${apiUrl}/api/v1/resume/${spaceId}/resume`, {
+          withCredentials: true
+        });
+        setResume(response.data);
+      } catch (error) {
+        console.error('이력서 목록을 불러오는데 실패했습니다:', error);
+        setResume([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (spaceId) {
+      fetchResumes();
+    }
+  }, [spaceId]);
+
+  // useEffect(() => {
+  //   setResume(mockData as any);
+  //   setLoading(false);
+  // }, []);
 
   useEffect(() => {
     const newSections = [
