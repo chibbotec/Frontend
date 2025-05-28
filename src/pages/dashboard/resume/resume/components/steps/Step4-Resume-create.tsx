@@ -36,6 +36,7 @@ interface Step4ResumeCreateProps {
     selectedIds: string[];
   };
   spaceId: string;
+  onComplete: (result: any) => void;
 }
 
 type GenerationStatus = 'processing' | 'completed' | 'failed' | 'skipped';
@@ -63,7 +64,8 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
   step1Data,
   step2Data,
   step3Data,
-  spaceId
+  spaceId,
+  onComplete
 }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -72,18 +74,24 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
   const [userId, setUserId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
 
+  const getStepMessage = (step: string): string => {
+    const messages: Record<string, string> = {
+      start: '이력서와 지원공고를 분석중입니다.',
+      tech_stack: '지원자의 역량을 작성중입니다.',
+      cover_letter: '자기소개서를 작성중입니다.'
+    };
+    return messages[step] || '이력서 생성 중...';
+  };
+
   // 컴포넌트 마운트 시 자동으로 이력서 생성 시작
   useEffect(() => {
     const startResumeCreation = async () => {
       try {
-        // 랜덤 user_id 생성
         const generatedUserId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
         setUserId(generatedUserId);
 
-        // 이력서 생성 요청
         await handleCreateResume(generatedUserId);
 
-        // 생성 요청이 성공한 후에만 폴링 시작
         const pollInterval = setInterval(async () => {
           try {
             const response = await axios.get<GenerationResponse>(
@@ -97,18 +105,16 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
               throw new Error(error);
             }
 
-            if (progressInfo) {
-              const progressMessage = progressInfo.message || `현재 단계: ${current_step} (${Math.round(elapsed_time || 0)}초 경과)`;
-              setProgress(progressMessage);
+            if (current_step) {
+              setProgress(getStepMessage(current_step));
+            } else if (progressInfo?.message) {
+              setProgress(progressInfo.message);
             }
 
             if (status === 'completed') {
               clearInterval(pollInterval);
               setLoading(false);
-              // 성공 시 Resume-create 페이지로 이동
-              const queryParams = new URLSearchParams();
-              queryParams.set('data', JSON.stringify(result));
-              navigate(`/space/${spaceId}/resume/create-new?${queryParams.toString()}`);
+              onComplete(result);
             } else if (status === 'failed') {
               clearInterval(pollInterval);
               setLoading(false);
@@ -141,7 +147,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
     };
 
     startResumeCreation();
-  }, [spaceId, navigate]);
+  }, [spaceId, onComplete]);
 
   const handleCreateResume = async (generatedUserId: string) => {
     try {

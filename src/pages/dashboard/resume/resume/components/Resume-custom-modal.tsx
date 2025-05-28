@@ -125,14 +125,11 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     });
   };
 
-  const handleNextButtonClick = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      // 마지막 스텝에서는 모달을 닫고 이력서 생성 페이지로 이동
-      onClose();
-      navigate(`/space/${spaceId}/resume/create-new`);
-    }
+  const handleResumeComplete = (result: any) => {
+    onClose();
+    const queryParams = new URLSearchParams();
+    queryParams.set('data', JSON.stringify(result));
+    navigate(`/space/${spaceId}/resume/create-new?${queryParams.toString()}`);
   };
 
   const renderStepContent = () => {
@@ -167,6 +164,7 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
             step2Data={step2State}
             step3Data={step3State}
             spaceId={spaceId}
+            onComplete={handleResumeComplete}
           />
         );
       default:
@@ -224,7 +222,13 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
                 )}
                 <Button
                   type="button"
-                  onClick={handleNextButtonClick}
+                  onClick={() => {
+                    if (currentStep < steps.length) {
+                      setCurrentStep(currentStep + 1);
+                    } else {
+                      handleResumeComplete({});
+                    }
+                  }}
                   className="w-full sm:w-auto"
                 >
                   {currentStep === steps.length ? "이력서 생성" : "다음"}
