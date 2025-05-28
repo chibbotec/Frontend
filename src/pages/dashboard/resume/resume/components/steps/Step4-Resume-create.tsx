@@ -73,6 +73,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
   const [progress, setProgress] = useState<string>('이력서 생성을 시작합니다...');
   const [userId, setUserId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const getStepMessage = (step: string): string => {
     const messages: Record<string, string> = {
@@ -85,10 +86,13 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
   // 컴포넌트 마운트 시 자동으로 이력서 생성 시작
   useEffect(() => {
+    if (isInitialized) return;
+
     const startResumeCreation = async () => {
       try {
         const generatedUserId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
         setUserId(generatedUserId);
+        setIsInitialized(true);
 
         await handleCreateResume(generatedUserId);
 
@@ -147,7 +151,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
     };
 
     startResumeCreation();
-  }, [spaceId, onComplete]);
+  }, [spaceId]);
 
   const handleCreateResume = async (generatedUserId: string) => {
     try {
