@@ -69,14 +69,14 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
       try {
         // Fetch resumes
         const resumesResponse = await axios.get(
-          `${apiUrl}/api/v1/resume/${spaceId}/resumes`,
+          `${apiUrl}/api/v1/resume/${spaceId}/resume`,
           { withCredentials: true }
         );
         setResumes(resumesResponse.data);
 
         // Fetch portfolios
         const portfoliosResponse = await axios.get(
-          `${apiUrl}/api/v1/resume/${spaceId}/portfolios`,
+          `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
           { withCredentials: true }
         );
         setPortfolios(portfoliosResponse.data);

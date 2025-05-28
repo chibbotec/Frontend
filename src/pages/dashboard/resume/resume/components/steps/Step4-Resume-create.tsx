@@ -38,15 +38,25 @@ interface Step4ResumeCreateProps {
   spaceId: string;
 }
 
-type GenerationStatus = 'SUCCESS' | 'FAILED' | 'SKIPPED' | 'IN_PROGRESS';
+type GenerationStatus = 'processing' | 'completed' | 'failed' | 'skipped';
+
+interface ProgressInfo {
+  success: number;
+  failed: number;
+  current_step: string;
+  message?: string;
+  start_time: number;
+  result?: any;
+}
 
 interface GenerationResponse {
   status: GenerationStatus;
-  metadata?: {
-    progress?: string;
-    message?: string;
-    [key: string]: any;
-  };
+  message?: string;
+  progress?: ProgressInfo;
+  current_step?: string;
+  elapsed_time?: number;
+  result?: any;
+  error?: string;
 }
 
 export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
@@ -59,7 +69,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string>('이력서 생성을 시작하려면 버튼을 클릭하세요.');
-  const [generationId, setGenerationId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
 
   // 폴링 로직
@@ -67,32 +77,37 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
     let pollInterval: NodeJS.Timeout;
 
     const pollGenerationStatus = async () => {
-      if (!generationId) return;
+      if (!userId) return;
 
       try {
         const response = await axios.get<GenerationResponse>(
-          `${apiUrl}/api/v1/resume/${spaceId}/generate/${generationId}/status`,
+          `${apiUrl}/api/v1/resume/${spaceId}/resume/${userId}/custom-resume-status`,
           { withCredentials: true }
         );
 
-        const { status, metadata } = response.data;
+        const { status, message, progress: progressInfo, current_step, elapsed_time, result, error } = response.data;
 
-        if (metadata?.progress) {
-          setProgress(metadata.progress);
+        if (error) {
+          throw new Error(error);
         }
 
-        if (status === 'SUCCESS') {
+        if (progressInfo) {
+          const progressMessage = progressInfo.message || `현재 단계: ${current_step} (${Math.round(elapsed_time || 0)}초 경과)`;
+          setProgress(progressMessage);
+        }
+
+        if (status === 'completed') {
           clearInterval(pollInterval);
           setLoading(false);
           // 성공 시 Resume-create 페이지로 이동
           const queryParams = new URLSearchParams();
-          queryParams.set('data', JSON.stringify(metadata));
+          queryParams.set('data', JSON.stringify(result));
           navigate(`/space/${spaceId}/resume/create-new?${queryParams.toString()}`);
-        } else if (status === 'FAILED') {
+        } else if (status === 'failed') {
           clearInterval(pollInterval);
           setLoading(false);
-          setError(metadata?.message || '이력서 생성 중 오류가 발생했습니다.');
-        } else if (status === 'SKIPPED') {
+          setError(message || '이력서 생성 중 오류가 발생했습니다.');
+        } else if (status === 'skipped') {
           clearInterval(pollInterval);
           setLoading(false);
           setError('이력서 생성이 건너뛰어졌습니다.');
@@ -101,11 +116,15 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         console.error('상태 확인 중 오류 발생:', err);
         clearInterval(pollInterval);
         setLoading(false);
-        setError('상태 확인 중 오류가 발생했습니다.');
+        if (axios.isAxiosError(err) && err.response?.status === 404) {
+          setError('이력서 생성 요청을 찾을 수 없습니다.');
+        } else {
+          setError('상태 확인 중 오류가 발생했습니다.');
+        }
       }
     };
 
-    if (generationId) {
+    if (userId) {
       // 2초마다 상태 확인
       pollInterval = setInterval(pollGenerationStatus, 2000);
       // 초기 상태 확인
@@ -117,7 +136,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         clearInterval(pollInterval);
       }
     };
-  }, [generationId, spaceId, navigate]);
+  }, [userId, spaceId, navigate]);
 
   const handleCreateResume = async () => {
     try {
@@ -131,7 +150,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
       // 선택된 이력서/포트폴리오 상세 정보 가져오기
       if (step3Data.selectedResumeType === 'resume') {
         const resumeResponse = await axios.get(
-          `${apiUrl}/api/v1/resume/${spaceId}/resume/${step3Data.selectedIds[0]}`,
+          `${apiUrl}/api/v1/resume/${spaceId}/resume/${step3Data.selectedIds}`,
           { withCredentials: true }
         );
         selectedResume.push(resumeResponse.data);
@@ -148,9 +167,12 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
       setProgress('AI 이력서 생성 중...');
 
+      // 임의의 user_id 생성 (예: timestamp + random number)
+      const generatedUserId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
       // AI 이력서 생성 요청
       const response = await axios.post(
-        `${apiUrl}/api/v1/resume/${spaceId}/generate`,
+        `${apiUrl}/api/v1/resume/${spaceId}/resume/${generatedUserId}/custom-resume`,
         {
           jobDescription: step1Data.isManualInput ? step1Data.manualData : { url: step1Data.url },
           additionalInfo: step2Data.additionalInfo,
@@ -161,7 +183,12 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         { withCredentials: true }
       );
 
-      setGenerationId(response.data.generationId);
+      if (response.status === 202 && response.data.user_id) {
+        setUserId(response.data.user_id);
+        setProgress('이력서 생성이 시작되었습니다...');
+      } else {
+        throw new Error('이력서 생성 요청이 실패했습니다.');
+      }
 
     } catch (err) {
       console.error('이력서 생성 요청 중 오류가 발생했습니다:', err);
