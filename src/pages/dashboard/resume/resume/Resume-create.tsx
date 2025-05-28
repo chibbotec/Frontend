@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ResumeFormData, Career as CareerType, Project as ProjectType, Education as EducationType, Certificate as CertificateType } from './components/types';
 import BasicInfo from './components/BasicInfo';
@@ -19,6 +19,7 @@ const apiUrl = import.meta.env.VITE_API_URL || '';
 const ResumeCreate: React.FC = () => {
     const navigate = useNavigate();
     const { spaceId } = useParams<{ spaceId: string }>();
+    const [searchParams] = useSearchParams();
 
     const formatDate = (date: Date) => {
         const year = date.getFullYear();
@@ -60,6 +61,37 @@ const ResumeCreate: React.FC = () => {
 
     // 자기소개서
     const [coverLetters, setCoverLetters] = useState<{ title: string; content: string }[]>([]);
+
+    useEffect(() => {
+        // URL에서 AI가 생성한 이력서 데이터 가져오기
+        const aiGeneratedData = searchParams.get('data');
+        if (aiGeneratedData) {
+            try {
+                const data = JSON.parse(aiGeneratedData);
+                // AI가 생성한 데이터로 상태 업데이트
+                setTitle(data.title || '');
+                setName(data.name || '');
+                setEmail(data.email || '');
+                setPhone(data.phone || '');
+                setCareerType(data.careerType || '신입');
+                setPosition(data.position || '');
+                setTechStack(new Set(data.techStack || []));
+                setTechSummary(data.techSummary ? data.techSummary.split('\n') : []);
+                setLinks(data.links || [
+                    { type: 'github', url: '' },
+                    { type: 'notion', url: '' },
+                    { type: 'blog', url: '' },
+                ]);
+                setCareers(data.careers || []);
+                setProjects(data.projects || []);
+                setEducations(data.educations || []);
+                setCertificates(data.certificates || []);
+                setCoverLetters(data.coverletters || []);
+            } catch (error) {
+                console.error('AI 생성 데이터 파싱 중 오류 발생:', error);
+            }
+        }
+    }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

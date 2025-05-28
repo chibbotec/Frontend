@@ -9,6 +9,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
+import { Step1JDInput } from './steps/Step1-JD-input';
+import { Step2CultureInput } from './steps/Step2-Culture-input';
+import { Step3ResumeSelect } from './steps/Step3-Resume-select';
+import { Step4ResumeCreate } from './steps/Step4-Resume-create';
 
 interface ResumeCustomModalProps {
   isOpen: boolean;
@@ -17,9 +21,23 @@ interface ResumeCustomModalProps {
   onCreated?: () => void;
 }
 
+interface Step1State {
+  url: string;
+  isManualInput: boolean;
+  manualData: {
+    company: string;
+    position: string;
+    mainTasks: string[];
+    requirements: string[];
+    career: string;
+    resumeRequirements: string[];
+    recruitmentProcess: string[];
+  };
+}
+
 const steps = [
   { id: 1, title: "공고 등록 및 분석", description: "채용 공고를 등록하고 분석합니다" },
-  { id: 2, title: "회사 컬쳐 등록", description: "회사의 문화와 가치를 등록합니다" },
+  { id: 2, title: "추가 정보 등록", description: "채용에 필요한 추가정보를 등록합니다" },
   { id: 3, title: "이력서 선택", description: "생성할 이력서를 선택합니다" },
   { id: 4, title: "이력서 생성", description: "이력서를 생성합니다" },
 ];
@@ -32,28 +50,50 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [step1State, setStep1State] = useState({ url: '', isManualInput: false });
+  const [step1State, setStep1State] = useState<Step1State>({
+    url: '',
+    isManualInput: false,
+    manualData: {
+      company: '',
+      position: '',
+      mainTasks: [],
+      requirements: [],
+      career: '',
+      resumeRequirements: [],
+      recruitmentProcess: []
+    }
+  });
   const [step2State, setStep2State] = useState({
-    culture: '',
-    values: [] as string[],
-    workEnvironment: '',
+    additionalInfo: [''],
   });
   const [step3State, setStep3State] = useState({
-    selectedResumeType: '',
+    selectedResumeType: 'resume' as 'resume' | 'portfolio',
+    selectedIds: [] as string[],
   });
 
   // 모달이 닫힐 때만 상태 초기화
   useEffect(() => {
     if (!isOpen) {
       setCurrentStep(1);
-      setStep1State({ url: '', isManualInput: false });
+      setStep1State({
+        url: '',
+        isManualInput: false,
+        manualData: {
+          company: '',
+          position: '',
+          mainTasks: [],
+          requirements: [],
+          career: '',
+          resumeRequirements: [],
+          recruitmentProcess: []
+        }
+      });
       setStep2State({
-        culture: '',
-        values: [],
-        workEnvironment: '',
+        additionalInfo: [''],
       });
       setStep3State({
-        selectedResumeType: '',
+        selectedResumeType: 'resume',
+        selectedIds: [],
       });
     }
   }, [isOpen]);
@@ -62,8 +102,13 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     setCurrentStep(step);
   };
 
-  const handleStep1StateChange = (url: string, isManualInput: boolean) => {
-    setStep1State({ url, isManualInput });
+  const handleStep1StateChange = (url: string, isManualInput: boolean, manualData?: Step1State['manualData']) => {
+    setStep1State(prev => ({
+      ...prev,
+      url,
+      isManualInput,
+      manualData: manualData || prev.manualData
+    }));
   };
 
   const handleStep2StateChange = (field: string, value: string | string[]) => {
@@ -73,9 +118,10 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     }));
   };
 
-  const handleStep3StateChange = (resumeType: string) => {
+  const handleStep3StateChange = (data: { type: 'resume' | 'portfolio', ids: string[] }) => {
     setStep3State({
-      selectedResumeType: resumeType
+      selectedResumeType: data.type,
+      selectedIds: data.ids
     });
   };
 
@@ -83,8 +129,6 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else {
-      // 마지막 단계에서는 이력서 생성 페이지로 이동
-      navigate(`/dashboard/resume/create-new`);
       onClose();
     }
   };
@@ -93,31 +137,35 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     switch (currentStep) {
       case 1:
         return (
-          <div>
-            {/* Step 1: 공고 등록 및 분석 컴포넌트 */}
-            <p>공고 등록 및 분석 컴포넌트가 들어갈 자리</p>
-          </div>
+          <Step1JDInput
+            onStateChange={handleStep1StateChange}
+            initialState={step1State}
+            spaceId={spaceId}
+          />
         );
       case 2:
         return (
-          <div>
-            {/* Step 2: 회사 컬쳐 등록 컴포넌트 */}
-            <p>회사 컬쳐 등록 컴포넌트가 들어갈 자리</p>
-          </div>
+          <Step2CultureInput
+            onStateChange={handleStep2StateChange}
+            initialState={step2State}
+          />
         );
       case 3:
         return (
-          <div>
-            {/* Step 3: 이력서 선택 컴포넌트 */}
-            <p>이력서 선택 컴포넌트가 들어갈 자리</p>
-          </div>
+          <Step3ResumeSelect
+            onStateChange={handleStep3StateChange}
+            initialState={step3State}
+            spaceId={spaceId}
+          />
         );
       case 4:
         return (
-          <div>
-            {/* Step 4: 이력서 생성 컴포넌트 */}
-            <p>이력서 생성 컴포넌트가 들어갈 자리</p>
-          </div>
+          <Step4ResumeCreate
+            step1Data={step1State}
+            step2Data={step2State}
+            step3Data={step3State}
+            spaceId={spaceId}
+          />
         );
       default:
         return null;
