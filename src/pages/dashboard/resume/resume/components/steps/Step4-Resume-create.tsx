@@ -68,9 +68,14 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<string>('이력서 생성을 시작하려면 버튼을 클릭하세요.');
+  const [progress, setProgress] = useState<string>('이력서 생성을 시작합니다...');
   const [userId, setUserId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
+
+  // 컴포넌트 마운트 시 자동으로 이력서 생성 시작
+  useEffect(() => {
+    handleCreateResume();
+  }, []);
 
   // 폴링 로직
   useEffect(() => {
@@ -81,7 +86,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
       try {
         const response = await axios.get<GenerationResponse>(
-          `${apiUrl}/api/v1/resume/${spaceId}/resume/${userId}/custom-resume-status`,
+          `${apiUrl}/api/v1/ai/${spaceId}/resume/${userId}/custom-resume-status`,
           { withCredentials: true }
         );
 
@@ -167,12 +172,9 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
       setProgress('AI 이력서 생성 중...');
 
-      // 임의의 user_id 생성 (예: timestamp + random number)
-      const generatedUserId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-
       // AI 이력서 생성 요청
       const response = await axios.post(
-        `${apiUrl}/api/v1/resume/${spaceId}/resume/${generatedUserId}/custom-resume`,
+        `${apiUrl}/api/v1/ai/${spaceId}/resume/custom-resume`,
         {
           jobDescription: step1Data.isManualInput ? step1Data.manualData : { url: step1Data.url },
           additionalInfo: step2Data.additionalInfo,
@@ -223,15 +225,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
               <p className="text-sm text-gray-600">{progress}</p>
             </>
           ) : (
-            <>
-              <p className="text-sm text-gray-600 mb-4">{progress}</p>
-              <Button
-                onClick={handleCreateResume}
-                className="bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                이력서 생성하기
-              </Button>
-            </>
+            <p className="text-sm text-gray-600">{progress}</p>
           )}
         </div>
       </CardContent>

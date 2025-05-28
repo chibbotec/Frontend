@@ -129,7 +129,9 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else {
+      // 마지막 스텝에서는 모달을 닫고 이력서 생성 페이지로 이동
       onClose();
+      navigate(`/space/${spaceId}/resume/create-new`);
     }
   };
 
