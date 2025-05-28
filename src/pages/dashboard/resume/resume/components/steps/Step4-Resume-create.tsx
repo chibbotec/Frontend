@@ -149,7 +149,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
       setError(null);
       setProgress('이력서 생성 요청 중...');
 
-      let selectedResume = [];
+      let selectedResume = null;
       let selectedPortfolio = [];
 
       // 선택된 이력서/포트폴리오 상세 정보 가져오기
@@ -158,7 +158,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
           `${apiUrl}/api/v1/resume/${spaceId}/resume/${step3Data.selectedIds}`,
           { withCredentials: true }
         );
-        selectedResume.push(resumeResponse.data);
+        selectedResume = resumeResponse.data;  // 단일 객체로 저장
       } else {
         const portfolioPromises = step3Data.selectedIds.map(id =>
           axios.get(
@@ -178,7 +178,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         {
           jobDescription: step1Data.isManualInput ? step1Data.manualData : { url: step1Data.url },
           additionalInfo: step2Data.additionalInfo,
-          selectedResume: selectedResume,
+          selectedResume: selectedResume,  // 단일 객체로 전송
           selectedPortfolio: selectedPortfolio,
           type: step3Data.selectedResumeType
         },
