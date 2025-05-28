@@ -74,7 +74,10 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
   // 컴포넌트 마운트 시 자동으로 이력서 생성 시작
   useEffect(() => {
-    handleCreateResume();
+    // 랜덤 user_id 생성
+    const generatedUserId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    setUserId(generatedUserId);
+    handleCreateResume(generatedUserId);
   }, []);
 
   // 폴링 로직
@@ -143,7 +146,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
     };
   }, [userId, spaceId, navigate]);
 
-  const handleCreateResume = async () => {
+  const handleCreateResume = async (generatedUserId: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -174,7 +177,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
       // AI 이력서 생성 요청
       const response = await axios.post(
-        `${apiUrl}/api/v1/ai/${spaceId}/resume/custom-resume`,
+        `${apiUrl}/api/v1/ai/${spaceId}/resume/${generatedUserId}/custom-resume`,
         {
           jobDescription: step1Data.isManualInput ? step1Data.manualData : { url: step1Data.url },
           additionalInfo: step2Data.additionalInfo,
@@ -185,8 +188,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         { withCredentials: true }
       );
 
-      if (response.status === 202 && response.data.user_id) {
-        setUserId(response.data.user_id);
+      if (response.status === 202) {
         setProgress('이력서 생성이 시작되었습니다...');
       } else {
         throw new Error('이력서 생성 요청이 실패했습니다.');
