@@ -74,77 +74,74 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
   // 컴포넌트 마운트 시 자동으로 이력서 생성 시작
   useEffect(() => {
-    // 랜덤 user_id 생성
-    const generatedUserId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    setUserId(generatedUserId);
-    handleCreateResume(generatedUserId);
-  }, []);
-
-  // 폴링 로직
-  useEffect(() => {
-    let pollInterval: NodeJS.Timeout;
-
-    const pollGenerationStatus = async () => {
-      if (!userId) return;
-
+    const startResumeCreation = async () => {
       try {
-        const response = await axios.get<GenerationResponse>(
-          `${apiUrl}/api/v1/ai/${spaceId}/resume/${userId}/custom-resume-status`,
-          { withCredentials: true }
-        );
+        // 랜덤 user_id 생성
+        const generatedUserId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        setUserId(generatedUserId);
 
-        const { status, message, progress: progressInfo, current_step, elapsed_time, result, error } = response.data;
+        // 이력서 생성 요청
+        await handleCreateResume(generatedUserId);
 
-        if (error) {
-          throw new Error(error);
-        }
+        // 생성 요청이 성공한 후에만 폴링 시작
+        const pollInterval = setInterval(async () => {
+          try {
+            const response = await axios.get<GenerationResponse>(
+              `${apiUrl}/api/v1/ai/${spaceId}/resume/${generatedUserId}/custom-resume-status`,
+              { withCredentials: true }
+            );
 
-        if (progressInfo) {
-          const progressMessage = progressInfo.message || `현재 단계: ${current_step} (${Math.round(elapsed_time || 0)}초 경과)`;
-          setProgress(progressMessage);
-        }
+            const { status, message, progress: progressInfo, current_step, elapsed_time, result, error } = response.data;
 
-        if (status === 'completed') {
+            if (error) {
+              throw new Error(error);
+            }
+
+            if (progressInfo) {
+              const progressMessage = progressInfo.message || `현재 단계: ${current_step} (${Math.round(elapsed_time || 0)}초 경과)`;
+              setProgress(progressMessage);
+            }
+
+            if (status === 'completed') {
+              clearInterval(pollInterval);
+              setLoading(false);
+              // 성공 시 Resume-create 페이지로 이동
+              const queryParams = new URLSearchParams();
+              queryParams.set('data', JSON.stringify(result));
+              navigate(`/space/${spaceId}/resume/create-new?${queryParams.toString()}`);
+            } else if (status === 'failed') {
+              clearInterval(pollInterval);
+              setLoading(false);
+              setError(message || '이력서 생성 중 오류가 발생했습니다.');
+            } else if (status === 'skipped') {
+              clearInterval(pollInterval);
+              setLoading(false);
+              setError('이력서 생성이 건너뛰어졌습니다.');
+            }
+          } catch (err) {
+            console.error('상태 확인 중 오류 발생:', err);
+            clearInterval(pollInterval);
+            setLoading(false);
+            if (axios.isAxiosError(err) && err.response?.status === 404) {
+              setError('이력서 생성 요청을 찾을 수 없습니다.');
+            } else {
+              setError('상태 확인 중 오류가 발생했습니다.');
+            }
+          }
+        }, 2000);
+
+        return () => {
           clearInterval(pollInterval);
-          setLoading(false);
-          // 성공 시 Resume-create 페이지로 이동
-          const queryParams = new URLSearchParams();
-          queryParams.set('data', JSON.stringify(result));
-          navigate(`/space/${spaceId}/resume/create-new?${queryParams.toString()}`);
-        } else if (status === 'failed') {
-          clearInterval(pollInterval);
-          setLoading(false);
-          setError(message || '이력서 생성 중 오류가 발생했습니다.');
-        } else if (status === 'skipped') {
-          clearInterval(pollInterval);
-          setLoading(false);
-          setError('이력서 생성이 건너뛰어졌습니다.');
-        }
+        };
       } catch (err) {
-        console.error('상태 확인 중 오류 발생:', err);
-        clearInterval(pollInterval);
+        console.error('이력서 생성 시작 중 오류 발생:', err);
+        setError('이력서 생성 시작 중 오류가 발생했습니다.');
         setLoading(false);
-        if (axios.isAxiosError(err) && err.response?.status === 404) {
-          setError('이력서 생성 요청을 찾을 수 없습니다.');
-        } else {
-          setError('상태 확인 중 오류가 발생했습니다.');
-        }
       }
     };
 
-    if (userId) {
-      // 2초마다 상태 확인
-      pollInterval = setInterval(pollGenerationStatus, 2000);
-      // 초기 상태 확인
-      pollGenerationStatus();
-    }
-
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
-    };
-  }, [userId, spaceId, navigate]);
+    startResumeCreation();
+  }, [spaceId, navigate]);
 
   const handleCreateResume = async (generatedUserId: string) => {
     try {
@@ -198,6 +195,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
       console.error('이력서 생성 요청 중 오류가 발생했습니다:', err);
       setError('이력서 생성 요청 중 오류가 발생했습니다.');
       setLoading(false);
+      throw err; // 상위에서 처리할 수 있도록 에러를 다시 던짐
     }
   };
 
