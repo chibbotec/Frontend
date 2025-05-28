@@ -68,25 +68,46 @@ const ResumeCreate: React.FC = () => {
         if (aiGeneratedData) {
             try {
                 const data = JSON.parse(aiGeneratedData);
-                // AI가 생성한 데이터로 상태 업데이트
-                setTitle(data.title || '');
-                setName(data.name || '');
-                setEmail(data.email || '');
-                setPhone(data.phone || '');
-                setCareerType(data.careerType || '신입');
-                setPosition(data.position || '');
-                setTechStack(new Set(data.techStack || []));
-                setTechSummary(data.techSummary ? data.techSummary.split('\n') : []);
-                setLinks(data.links || [
+                const result = data.result;
+
+                // 기본 정보 설정
+                setTitle('AI 생성 이력서');
+                setPosition(result.position || '');
+                setCareerType('경력');  // AI가 생성한 데이터는 경력자 기준
+
+                // 기술 스택 설정
+                if (result.tech_stack) {
+                    setTechStack(new Set(result.tech_stack.tech_stack || []));
+                    setTechSummary(result.tech_stack.tech_summary || []);
+                }
+
+                // 자기소개서 설정
+                if (result.cover_letter) {
+                    setCoverLetters(result.cover_letter.coverLetter.map((item: any) => ({
+                        title: item.title,
+                        content: item.content
+                    })));
+                }
+
+                // 기본 링크 설정
+                setLinks([
                     { type: 'github', url: '' },
                     { type: 'notion', url: '' },
                     { type: 'blog', url: '' },
                 ]);
-                setCareers(data.careers || []);
-                setProjects(data.projects || []);
-                setEducations(data.educations || []);
-                setCertificates(data.certificates || []);
-                setCoverLetters(data.coverletters || []);
+
+                // 기본 경력 정보 설정 (빈 배열로 시작)
+                setCareers([]);
+
+                // 기본 프로젝트 정보 설정 (빈 배열로 시작)
+                setProjects([]);
+
+                // 기본 학력 정보 설정 (빈 배열로 시작)
+                setEducations([]);
+
+                // 기본 자격증 정보 설정 (빈 배열로 시작)
+                setCertificates([]);
+
             } catch (error) {
                 console.error('AI 생성 데이터 파싱 중 오류 발생:', error);
             }
