@@ -70,6 +70,7 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     selectedResumeType: 'resume' as 'resume' | 'portfolio',
     selectedIds: [] as string[],
   });
+  const [resumeResult, setResumeResult] = useState<any>(null);
 
   // 모달이 닫힐 때만 상태 초기화
   useEffect(() => {
@@ -126,10 +127,18 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
   };
 
   const handleResumeComplete = (result: any) => {
-    onClose();
-    const queryParams = new URLSearchParams();
-    queryParams.set('data', JSON.stringify(result));
-    navigate(`/space/${spaceId}/resume/create-new?${queryParams.toString()}`);
+    setResumeResult(result);
+  };
+
+  const handleNextButtonClick = () => {
+    if (currentStep < steps.length) {
+      setCurrentStep(currentStep + 1);
+    } else if (resumeResult) {
+      onClose();
+      const queryParams = new URLSearchParams();
+      queryParams.set('data', JSON.stringify(resumeResult));
+      navigate(`/space/${spaceId}/resume/resumes/new?${queryParams.toString()}`);
+    }
   };
 
   const renderStepContent = () => {
@@ -222,16 +231,11 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
                 )}
                 <Button
                   type="button"
-                  onClick={() => {
-                    if (currentStep < steps.length) {
-                      setCurrentStep(currentStep + 1);
-                    } else {
-                      handleResumeComplete({});
-                    }
-                  }}
+                  onClick={handleNextButtonClick}
                   className="w-full sm:w-auto"
+                  disabled={currentStep === steps.length && !resumeResult}
                 >
-                  {currentStep === steps.length ? "이력서 생성" : "다음"}
+                  {currentStep === steps.length ? "이력서 생성 완료" : "다음"}
                 </Button>
               </DialogFooter>
             </div>
