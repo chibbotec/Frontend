@@ -158,7 +158,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
       let selectedResume = null;
       let selectedPortfolio = [];
 
-      // 선택된 이력서/포트폴리오 상세 정보 가져오기
+      // 선택된 이력서/포트폴리오 상세 정보 가져오기test
       if (step3Data.selectedResumeType === 'resume') {
         const resumeResponse = await axios.get(
           `${apiUrl}/api/v1/resume/${spaceId}/resume/${step3Data.selectedIds}`,
