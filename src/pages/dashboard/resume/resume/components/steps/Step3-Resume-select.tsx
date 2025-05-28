@@ -23,23 +23,43 @@ interface ResumeSummary {
   id: string;
   title: string;
   createdAt: string;
+  updatedAt: string | null;
 }
 
 interface Portfolio {
   id: string;
+  spaceId: number;
   title: string;
   author: {
+    id: number;
     nickname: string;
   };
   duration: {
     startDate: string;
     endDate: string;
   };
+  githubLink: string;
+  deployLink: string;
+  memberCount: number;
+  memberRoles: string[] | null;
   contents: {
     techStack: string;
     summary: string;
+    description: string;
+    roles: string[];
+    features: {
+      [key: string]: string[];
+    };
+    architecture: {
+      communication: string;
+      deployment: string;
+    };
   };
-  publicAccess: boolean;
+}
+
+interface PortfolioResponse {
+  publicPortfolios: Portfolio[];
+  privatePortfolios: Portfolio[];
 }
 
 interface Step3ResumeSelectProps {
@@ -68,18 +88,23 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
       setLoading(true);
       try {
         // Fetch resumes
-        const resumesResponse = await axios.get(
+        const resumesResponse = await axios.get<ResumeSummary[]>(
           `${apiUrl}/api/v1/resume/${spaceId}/resume`,
           { withCredentials: true }
         );
         setResumes(resumesResponse.data);
 
         // Fetch portfolios
-        const portfoliosResponse = await axios.get(
+        const portfoliosResponse = await axios.get<PortfolioResponse>(
           `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
           { withCredentials: true }
         );
-        setPortfolios(portfoliosResponse.data);
+        // Combine public and private portfolios
+        const allPortfolios = [
+          ...portfoliosResponse.data.publicPortfolios,
+          ...portfoliosResponse.data.privatePortfolios
+        ];
+        setPortfolios(allPortfolios);
 
         setError(null);
       } catch (err) {
