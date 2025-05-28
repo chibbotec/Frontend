@@ -126,8 +126,20 @@ export const Step1JDInput: React.FC<Step1JDInputProps> = ({
       );
 
       const result = response.data.analysis;
-      setManualInput(result);
-      onStateChange(url, true, result);
+      // 누락된 필드에 대한 기본값 설정
+      const completeResult = {
+        ...result,
+        recruitmentProcess: result.recruitmentProcess || [],
+        resumeRequirements: result.resumeRequirements || [],
+        mainTasks: result.mainTasks || [],
+        requirements: result.requirements || [],
+        career: result.career || '경력 미상',
+        company: result.company || '',
+        position: result.position || ''
+      };
+
+      setManualInput(completeResult);
+      onStateChange(url, true, completeResult);
       setActiveTab('manual');
       setLoading(false);
     } catch (err: any) {
