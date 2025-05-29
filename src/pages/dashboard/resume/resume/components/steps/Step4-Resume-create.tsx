@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { mockResumeData } from '../AI_mock';
+// import { mockResumeData } from '../AI_mock';
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -219,7 +219,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         setLoading(true);
         setProgress('이력서 생성 중...');
 
-        // 2초 후에 mock 데이터로 완료 처리
+        // // 2초 후에 mock 데이터로 완료 처리
         // setTimeout(() => {
         //   setLoading(false);
         //   setIsCompleted(true);

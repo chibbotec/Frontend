@@ -70,7 +70,8 @@ const ResumeDetail: React.FC = () => {
     career: true,
     projects: true,
     education: true,
-    certificates: true
+    certificates: true,
+    coverletters: true
   });
   const [sections, setSections] = useState([
     { id: 'basic-info', title: '기본 정보', visible: true },
@@ -414,7 +415,7 @@ const ResumeDetail: React.FC = () => {
 
                                         <div className="items-start gap-1 flex">
                                           <Calendar className="w-4 h-4" />
-                                          <p className="text-sm md:text-md font-bold">
+                                          <p className="text-sm md:text-sm font-bold">
                                             {project.startDate ? format(new Date(project.startDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
                                             <span> ~ </span>
                                             {project.endDate ? format(new Date(project.endDate), 'yyyy.MM.dd', { locale: ko }) : '현재'}
@@ -425,13 +426,13 @@ const ResumeDetail: React.FC = () => {
                                         <div className='grid grid-cols-2 gap-1'>
                                           <div className="items-center gap-1 flex">
                                             <Users className="w-5 h-5" strokeWidth={3} />
-                                            <label className="text-sm md:text-md font-medium">총 팀원: </label>
-                                            <p className="text-sm md:text-md font-medium">{project.memberCount ? `${project.memberCount}명` : '-'}</p>
+                                            <label className="text-sm md:text-sm font-medium">총 팀원: </label>
+                                            <p className="text-sm md:text-sm font-medium">{project.memberCount ? `${project.memberCount}명` : '-'}</p>
                                           </div>
                                           <div className="items-center gap-1 flex">
                                             <UserCog className="w-5 h-5" strokeWidth={3} />
-                                            <label className="text-sm md:text-md font-medium">역할: </label>
-                                            <p className="text-sm md:text-md font-medium">{project.memberRoles || '-'}</p>
+                                            <label className="text-sm md:text-sm font-medium">역할: </label>
+                                            <p className="text-sm md:text-sm font-medium">{project.memberRoles || '-'}</p>
                                           </div>
                                         </div>
 
@@ -587,7 +588,7 @@ const ResumeDetail: React.FC = () => {
                       }
                       return null;
                     case 'coverletters':
-                      if (resume.coverLetters?.length > 0) {
+                      if (resume.coverLetters?.length > 0 && sectionVisibility.coverletters) {
                         return (
                           <Card className='gap-2 break-inside-avoid' id="coverletters">
                             <CardHeader>

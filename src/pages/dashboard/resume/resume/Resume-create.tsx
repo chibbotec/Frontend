@@ -179,6 +179,7 @@ const ResumeCreate: React.FC = () => {
             })),
             projects: projects.map(project => ({
                 ...project,
+                role: Array.isArray(project.role) ? project.role.join('\n') : project.role,
                 startDate: project.startDate ? formatDate(new Date(project.startDate)) : '',
                 endDate: project.endDate ? formatDate(new Date(project.endDate)) : ''
             })),
