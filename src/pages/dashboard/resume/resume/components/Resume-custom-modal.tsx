@@ -185,11 +185,11 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
   const handleNextButtonClick = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
-    } else if (resumeResult) {
+    } else if (resumeResult?.result) {
       onClose();
 
       const queryParams = new URLSearchParams();
-      queryParams.set('data', JSON.stringify(resumeResult));
+      queryParams.set('data', JSON.stringify(resumeResult.result));
       queryParams.set('portfolios', JSON.stringify(step3State.selectedPortfolios));
       queryParams.set('careers', JSON.stringify(step3State.careers));
 
