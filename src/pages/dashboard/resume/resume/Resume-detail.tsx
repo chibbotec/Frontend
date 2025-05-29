@@ -194,7 +194,7 @@ const ResumeDetail: React.FC = () => {
     if (resume?.certificates && resume.certificates.length > 0) {
       newSections.push({ id: 'certificates', title: '자격증 및 수상경력', visible: true });
     }
-    if (resume?.coverLetters && resume.coverLetters.length > 0) {
+    if (resume?.coverletters && resume.coverletters.length > 0) {
       newSections.push({ id: 'coverletters', title: '자기소개서', visible: true });
     }
 
@@ -247,7 +247,7 @@ const ResumeDetail: React.FC = () => {
                   switch (section.id) {
                     case 'basic-info':
                       return (
-                        <Card key={section.id} className='gap-2 break-inside-avoid' id={section.id}>
+                        <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id={section.id}>
                           <CardHeader>
                             <CardTitle className='text-2xl font-bold'>기본 정보</CardTitle>
                           </CardHeader>
@@ -301,7 +301,7 @@ const ResumeDetail: React.FC = () => {
                       );
                     case 'tech-info':
                       return (
-                        <Card key={section.id} className='gap-2 break-inside-avoid' id={section.id}>
+                        <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id={section.id}>
                           <CardHeader>
                             <CardTitle className='text-2xl font-bold'>기술 역량</CardTitle>
                           </CardHeader>
@@ -330,7 +330,7 @@ const ResumeDetail: React.FC = () => {
                     case 'career':
                       if (resume.careerType === '경력' && resume.careers.length > 0 && sectionVisibility.career) {
                         return (
-                          <Card className='gap-2 break-inside-avoid' id="career">
+                          <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id="career">
                             <CardHeader>
                               <CardTitle className='text-2xl font-bold'>경력</CardTitle>
                             </CardHeader>
@@ -399,7 +399,7 @@ const ResumeDetail: React.FC = () => {
                     case 'projects':
                       if (resume.projects.length > 0 && sectionVisibility.projects) {
                         return (
-                          <Card className='gap-2 break-inside-avoid' id="projects">
+                          <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id="projects">
                             <CardHeader>
                               <CardTitle className='text-2xl font-bold'>프로젝트 경험</CardTitle>
                             </CardHeader>
@@ -423,14 +423,14 @@ const ResumeDetail: React.FC = () => {
                                         </div>
 
 
-                                        <div className='grid grid-cols-2 gap-1'>
+                                        <div className="flex items-center gap-4">
                                           <div className="items-center gap-1 flex">
-                                            <Users className="w-5 h-5" strokeWidth={3} />
-                                            <label className="text-sm md:text-sm font-medium">총 팀원: </label>
+                                            <Users className="w-4 h-4" strokeWidth={3} />
+                                            <label className="text-sm md:text-sm font-medium">팀원: </label>
                                             <p className="text-sm md:text-sm font-medium">{project.memberCount ? `${project.memberCount}명` : '-'}</p>
                                           </div>
-                                          <div className="items-center gap-1 flex">
-                                            <UserCog className="w-5 h-5" strokeWidth={3} />
+                                          <div className="items-center gap-1 flex flex-1">
+                                            <UserCog className="w-4 h-4" strokeWidth={3} />
                                             <label className="text-sm md:text-sm font-medium">역할: </label>
                                             <p className="text-sm md:text-sm font-medium">{project.memberRoles || '-'}</p>
                                           </div>
@@ -494,7 +494,7 @@ const ResumeDetail: React.FC = () => {
                                         <div>
                                           <label className="text-lg md:text-xl font-bold ">주요역할 및 성과</label>
                                           <ul className="text-xs md:text-sm list-disc pl-4 space-y-1 mt-1">
-                                            {project.role.split('\n').map((line, idx) => (
+                                            {project.role.map((line: string, idx: number) => (
                                               <li key={idx}>{line}</li>
                                             ))}
                                           </ul>
@@ -512,7 +512,7 @@ const ResumeDetail: React.FC = () => {
                     case 'education':
                       if (resume.educations.length > 0 && sectionVisibility.education) {
                         return (
-                          <Card className='gap-2 break-inside-avoid' id="education">
+                          <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id="education">
                             <CardHeader>
                               <CardTitle className='text-2xl font-bold'>학력 및 교육이력</CardTitle>
                             </CardHeader>
@@ -553,7 +553,7 @@ const ResumeDetail: React.FC = () => {
                     case 'certificates':
                       if (resume.certificates.length > 0 && sectionVisibility.certificates) {
                         return (
-                          <Card className='gap-2 break-inside-avoid' id="certificates">
+                          <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id="certificates">
                             <CardHeader>
                               <CardTitle className='text-2xl font-bold'>자격증 및 수상경력</CardTitle>
                             </CardHeader>
@@ -588,15 +588,15 @@ const ResumeDetail: React.FC = () => {
                       }
                       return null;
                     case 'coverletters':
-                      if (resume.coverLetters?.length > 0 && sectionVisibility.coverletters) {
+                      if (resume.coverletters?.length > 0 && sectionVisibility.coverletters) {
                         return (
-                          <Card className='gap-2 break-inside-avoid' id="coverletters">
+                          <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id="coverletters">
                             <CardHeader>
                               <CardTitle className='text-2xl font-bold'>자기소개서</CardTitle>
                             </CardHeader>
                             <CardContent className='p-3 md:p-4'>
                               <div className="space-y-6">
-                                {resume.coverLetters.map((coverLetter, index) => (
+                                {resume.coverletters.map((coverLetter, index) => (
                                   <div key={index} className="bg-white border rounded-md shadow-sm p-4">
                                     <h3 className="text-lg font-bold mb-4">{coverLetter.title}</h3>
                                     <div className="whitespace-pre-wrap text-sm">

@@ -13,6 +13,7 @@ import { CalendarIcon, Globe } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
 import { Project as ProjectType } from './types';
 import PortfolioModal from './Portfolio-modal';
+import BulletTextarea from './BulletTextarea';
 
 interface Portfolio {
   id: string;
@@ -55,7 +56,7 @@ const Project: React.FC<ProjectProps> = ({
         name: '',
         description: '',
         techStack: [],
-        role: '',
+        role: [],
         startDate: '',
         endDate: '',
         memberCount: 0,
@@ -88,7 +89,10 @@ const Project: React.FC<ProjectProps> = ({
     githubLink: string;
     deployLink: string;
   }) => {
-    setProjects([...projects, projectData]);
+    setProjects([...projects, {
+      ...projectData,
+      role: projectData.role.split('\n').filter(line => line.trim() !== '')
+    }]);
     setProjectTechInputs([...projectTechInputs, '']);
   };
 
@@ -391,15 +395,17 @@ const Project: React.FC<ProjectProps> = ({
                     </div>
                     <div>
                       <label className="text-xs font-medium mb-1 block">주요역할 및 성과</label>
-                      <Textarea
-                        value={project.role}
-                        onChange={e => {
+                      <BulletTextarea
+                        value={project.role.map(line => line.startsWith('• ') ? line : '• ' + line).join('\n')}
+                        onChange={val => {
                           const newProjects = [...projects];
-                          newProjects[index].role = e.target.value;
+                          newProjects[index].role = val.split('\n')
+                            .filter(line => line.trim() !== '')
+                            .map(line => line.replace(/^•\s*/, ''));
                           setProjects(newProjects);
                         }}
-                        placeholder="프로젝트 주요역할 및 성과"
-                        className="text-xs h-32 resize-none"
+                        placeholder="프로젝트 주요역할 및 성과 (Enter로 bullet 추가)"
+                        className="text-xs h-32 resize-none w-full rounded-md border"
                       />
                     </div>
                   </div>

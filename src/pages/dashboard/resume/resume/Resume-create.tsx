@@ -179,7 +179,7 @@ const ResumeCreate: React.FC = () => {
             })),
             projects: projects.map(project => ({
                 ...project,
-                role: Array.isArray(project.role) ? project.role.join('\n') : project.role,
+                role: project.role,
                 startDate: project.startDate ? formatDate(new Date(project.startDate)) : '',
                 endDate: project.endDate ? formatDate(new Date(project.endDate)) : ''
             })),
@@ -192,7 +192,7 @@ const ResumeCreate: React.FC = () => {
                 ...certificate,
                 date: certificate.date ? formatDate(new Date(certificate.date)) : ''
             })),
-            coverLetters
+            coverletters: coverLetters
         };
 
         try {

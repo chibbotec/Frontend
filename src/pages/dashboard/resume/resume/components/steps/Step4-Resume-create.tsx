@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// import { mockResumeData } from '../AI_mock';
+import { mockResumeData } from '../AI_mock';
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -219,66 +219,66 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         setLoading(true);
         setProgress('이력서 생성 중...');
 
-        // // 2초 후에 mock 데이터로 완료 처리
-        // setTimeout(() => {
-        //   setLoading(false);
-        //   setIsCompleted(true);
-        //   setResultData(mockResumeData.result);
-        //   onComplete(mockResumeData);
-        // }, 2000);
-
-        // 실제 API 호출 로직 주석 처리
-        await handleCreateResume(generatedUserId);
-
-        const pollInterval = setInterval(async () => {
-          try {
-            const response = await axios.get<GenerationResponse>(
-              `${apiUrl}/api/v1/ai/${spaceId}/resume/${generatedUserId}/custom-resume-status`,
-              { withCredentials: true }
-            );
-
-            const { status, message, progress: progressInfo, current_step, elapsed_time, result, error } = response.data;
-
-            if (error) {
-              throw new Error(error);
-            }
-
-            if (current_step) {
-              setProgress(getStepMessage(current_step, progressInfo?.message));
-            } else if (progressInfo?.message) {
-              setProgress(progressInfo.message);
-            }
-
-            if (status === 'completed') {
-              clearInterval(pollInterval);
-              setLoading(false);
-              setIsCompleted(true);
-              setResultData(result);
-              onComplete({ result });
-            } else if (status === 'failed') {
-              clearInterval(pollInterval);
-              setLoading(false);
-              setError(message || '이력서 생성 중 오류가 발생했습니다.');
-            } else if (status === 'skipped') {
-              clearInterval(pollInterval);
-              setLoading(false);
-              setError('이력서 생성이 건너뛰어졌습니다.');
-            }
-          } catch (err) {
-            console.error('상태 확인 중 오류 발생:', err);
-            clearInterval(pollInterval);
-            setLoading(false);
-            if (axios.isAxiosError(err) && err.response?.status === 404) {
-              setError('이력서 생성 요청을 찾을 수 없습니다.');
-            } else {
-              setError('상태 확인 중 오류가 발생했습니다.');
-            }
-          }
+        // 2초 후에 mock 데이터로 완료 처리
+        setTimeout(() => {
+          setLoading(false);
+          setIsCompleted(true);
+          setResultData(mockResumeData.result);
+          onComplete(mockResumeData);
         }, 2000);
 
-        return () => {
-          clearInterval(pollInterval);
-        };
+        // // 실제 API 호출 로직 주석 처리
+        // await handleCreateResume(generatedUserId);
+
+        // const pollInterval = setInterval(async () => {
+        //   try {
+        //     const response = await axios.get<GenerationResponse>(
+        //       `${apiUrl}/api/v1/ai/${spaceId}/resume/${generatedUserId}/custom-resume-status`,
+        //       { withCredentials: true }
+        //     );
+
+        //     const { status, message, progress: progressInfo, current_step, elapsed_time, result, error } = response.data;
+
+        //     if (error) {
+        //       throw new Error(error);
+        //     }
+
+        //     if (current_step) {
+        //       setProgress(getStepMessage(current_step, progressInfo?.message));
+        //     } else if (progressInfo?.message) {
+        //       setProgress(progressInfo.message);
+        //     }
+
+        //     if (status === 'completed') {
+        //       clearInterval(pollInterval);
+        //       setLoading(false);
+        //       setIsCompleted(true);
+        //       setResultData(result);
+        //       onComplete({ result });
+        //     } else if (status === 'failed') {
+        //       clearInterval(pollInterval);
+        //       setLoading(false);
+        //       setError(message || '이력서 생성 중 오류가 발생했습니다.');
+        //     } else if (status === 'skipped') {
+        //       clearInterval(pollInterval);
+        //       setLoading(false);
+        //       setError('이력서 생성이 건너뛰어졌습니다.');
+        //     }
+        //   } catch (err) {
+        //     console.error('상태 확인 중 오류 발생:', err);
+        //     clearInterval(pollInterval);
+        //     setLoading(false);
+        //     if (axios.isAxiosError(err) && err.response?.status === 404) {
+        //       setError('이력서 생성 요청을 찾을 수 없습니다.');
+        //     } else {
+        //       setError('상태 확인 중 오류가 발생했습니다.');
+        //     }
+        //   }
+        // }, 2000);
+
+        // return () => {
+        //   clearInterval(pollInterval);
+        // };
       } catch (err) {
         console.error('이력서 생성 시작 중 오류 발생:', err);
         setError('이력서 생성 시작 중 오류가 발생했습니다.');

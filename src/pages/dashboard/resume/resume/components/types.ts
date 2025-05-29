@@ -18,7 +18,7 @@ export interface Project {
     name: string;
     description: string;
     techStack: string[];
-    role: string;
+    role: string[];
     startDate: string;  // LocalDate 형식 (YYYY-MM-DD)
     endDate: string;    // LocalDate 형식 (YYYY-MM-DD)
     memberCount: number;
@@ -62,7 +62,7 @@ export interface ResumeFormData {
     projects: Project[];
     educations: Education[];
     certificates: Certificate[];
-    coverLetters: CoverLetter[];
+    coverletters: CoverLetter[];
 }
 
 export interface ResumeSummary {

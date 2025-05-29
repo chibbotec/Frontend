@@ -23,7 +23,7 @@ interface TechInfoProps {
   projects: {
     name: string;
     techStack: string[];
-    role: string;
+    role: string[];
   }[];
   careers: {
     position: string;
