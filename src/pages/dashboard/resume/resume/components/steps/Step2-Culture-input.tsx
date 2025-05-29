@@ -22,9 +22,7 @@ export const Step2CultureInput: React.FC<Step2CultureInputProps> = ({
   onStateChange,
   initialState
 }) => {
-  const [additionalInfo, setAdditionalInfo] = useState<string[]>(
-    initialState.additionalInfo.length > 0 ? initialState.additionalInfo : ['']
-  );
+  const [additionalInfo, setAdditionalInfo] = useState<string[]>([]);
 
   const handleInfoChange = (index: number, value: string) => {
     const newInfo = [...additionalInfo];
@@ -42,11 +40,9 @@ export const Step2CultureInput: React.FC<Step2CultureInputProps> = ({
   };
 
   const handleRemoveInfo = (index: number) => {
-    if (additionalInfo.length > 1) {
-      const newInfo = additionalInfo.filter((_, i) => i !== index);
-      setAdditionalInfo(newInfo);
-      onStateChange('additionalInfo', newInfo);
-    }
+    const newInfo = additionalInfo.filter((_, i) => i !== index);
+    setAdditionalInfo(newInfo);
+    onStateChange('additionalInfo', newInfo);
   };
 
   return (
@@ -58,15 +54,19 @@ export const Step2CultureInput: React.FC<Step2CultureInputProps> = ({
       </CardHeader>
       <CardContent className="space-y-4 md:max-h-[400px] overflow-y-auto pr-2">
         <div className="space-y-3">
-          {additionalInfo.map((info, index) => (
-            <div key={index} className="flex gap-2">
-              <Textarea
-                placeholder="추가 정보를 입력해주세요."
-                value={info}
-                onChange={(e) => handleInfoChange(index, e.target.value)}
-                className="h-[100px] resize-none"
-              />
-              {additionalInfo.length > 1 && (
+          {additionalInfo.length === 0 ? (
+            <div className="text-center text-muted-foreground py-4">
+              추가 정보를 입력해주세요
+            </div>
+          ) : (
+            additionalInfo.map((info, index) => (
+              <div key={index} className="flex gap-2">
+                <Textarea
+                  placeholder="추가 정보를 입력해주세요."
+                  value={info}
+                  onChange={(e) => handleInfoChange(index, e.target.value)}
+                  className="h-[100px] resize-none"
+                />
                 <Button
                   type="button"
                   variant="ghost"
@@ -76,9 +76,9 @@ export const Step2CultureInput: React.FC<Step2CultureInputProps> = ({
                 >
                   <X size={14} />
                 </Button>
-              )}
-            </div>
-          ))}
+              </div>
+            ))
+          )}
         </div>
         {additionalInfo.length < 5 && (
           <Button

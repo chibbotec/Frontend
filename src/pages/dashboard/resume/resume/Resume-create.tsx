@@ -65,7 +65,10 @@ const ResumeCreate: React.FC = () => {
     useEffect(() => {
         // URL에서 AI가 생성한 이력서 데이터 가져오기
         const aiGeneratedData = searchParams.get('data');
-        if (aiGeneratedData) {
+        const resumeType = searchParams.get('type') || 'resume';
+
+        // AI 생성 데이터가 있을 때만 파싱
+        if (aiGeneratedData && aiGeneratedData !== 'undefined') {
             try {
                 const data = JSON.parse(aiGeneratedData);
                 const result = data.result;
@@ -73,7 +76,24 @@ const ResumeCreate: React.FC = () => {
                 // 기본 정보 설정
                 setTitle('AI 생성 이력서');
                 setPosition(result.position || '');
-                setCareerType('경력');  // AI가 생성한 데이터는 경력자 기준
+
+                // 경력 정보가 있으면 '경력'으로 설정
+                if (result.career && result.career.careers && result.career.careers.length > 0) {
+                    setCareerType('경력');
+                    // 경력 정보 설정
+                    const formattedCareers = result.career.careers.map((career: any) => ({
+                        company: career.company,
+                        position: career.position,
+                        isCurrent: career.isCurrent,
+                        startDate: career.startDate,
+                        endDate: career.endDate,
+                        description: career.description,
+                        achievement: career.achievement
+                    }));
+                    setCareers(formattedCareers);
+                } else {
+                    setCareerType('신입');
+                }
 
                 // 기술 스택 설정
                 if (result.tech_stack) {
@@ -96,11 +116,22 @@ const ResumeCreate: React.FC = () => {
                     { type: 'blog', url: '' },
                 ]);
 
-                // 기본 경력 정보 설정 (빈 배열로 시작)
-                setCareers([]);
-
-                // 기본 프로젝트 정보 설정 (빈 배열로 시작)
-                setProjects([]);
+                // 프로젝트 정보 설정
+                if (result.portfolio && result.portfolio.portfolios) {
+                    const formattedProjects = result.portfolio.portfolios.map((portfolio: any) => ({
+                        name: portfolio.name,
+                        description: portfolio.description,
+                        techStack: portfolio.techStack,
+                        role: portfolio.role,
+                        startDate: portfolio.startDate,
+                        endDate: portfolio.endDate,
+                        memberCount: portfolio.memberCount,
+                        memberRoles: portfolio.memberRoles,
+                        githubLink: portfolio.githubLink,
+                        deployLink: portfolio.deployLink
+                    }));
+                    setProjects(formattedProjects);
+                }
 
                 // 기본 학력 정보 설정 (빈 배열로 시작)
                 setEducations([]);
@@ -111,6 +142,23 @@ const ResumeCreate: React.FC = () => {
             } catch (error) {
                 console.error('AI 생성 데이터 파싱 중 오류 발생:', error);
             }
+        } else {
+            // 일반 생성 시 기본값 설정
+            setTitle('새 이력서');
+            setPosition('');
+            setCareerType('신입');
+            setTechStack(new Set());
+            setTechSummary([]);
+            setCoverLetters([]);
+            setLinks([
+                { type: 'github', url: '' },
+                { type: 'notion', url: '' },
+                { type: 'blog', url: '' },
+            ]);
+            setProjects([]);
+            setCareers([]);
+            setEducations([]);
+            setCertificates([]);
         }
     }, [searchParams]);
 

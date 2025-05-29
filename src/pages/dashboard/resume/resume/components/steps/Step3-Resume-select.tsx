@@ -14,17 +14,15 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-import { Calendar, Globe, Lock, Loader2 } from "lucide-react";
+import { Calendar, Globe, Lock, Loader2, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
-
-interface ResumeSummary {
-  id: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string | null;
-}
 
 interface Portfolio {
   id: string;
@@ -57,15 +55,26 @@ interface Portfolio {
   };
 }
 
+interface Career {
+  company: string;
+  position: string;
+  isCurrent: boolean;
+  startDate: string;
+  endDate: string;
+  description: string;
+  achievement: string;
+}
+
 interface PortfolioResponse {
   publicPortfolios: Portfolio[];
   privatePortfolios: Portfolio[];
 }
 
 interface Step3ResumeSelectProps {
-  onStateChange: (data: { type: 'resume' | 'portfolio', ids: string[] }) => void;
+  onStateChange: (data: { type: 'portfolio' | 'career', ids: string[], portfolios?: Portfolio[], careers: Career[] }) => void;
   initialState: {
-    selectedResumeType: string;
+    selectedPortfolios: Portfolio[];
+    careers: Career[];
   };
   spaceId: string;
 }
@@ -75,10 +84,9 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
   initialState,
   spaceId
 }) => {
-  const [activeTab, setActiveTab] = useState<'select' | 'create'>('select');
-  const [selectedResumeId, setSelectedResumeId] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'portfolio' | 'career'>('portfolio');
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([]);
-  const [resumes, setResumes] = useState<ResumeSummary[]>([]);
+  const [careers, setCareers] = useState<Career[]>(initialState.careers || []);
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,13 +95,6 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch resumes
-        const resumesResponse = await axios.get<ResumeSummary[]>(
-          `${apiUrl}/api/v1/resume/${spaceId}/resume`,
-          { withCredentials: true }
-        );
-        setResumes(resumesResponse.data);
-
         // Fetch portfolios
         const portfoliosResponse = await axios.get<PortfolioResponse>(
           `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
@@ -104,7 +105,21 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
           ...portfoliosResponse.data.publicPortfolios,
           ...portfoliosResponse.data.privatePortfolios
         ];
-        setPortfolios(allPortfolios);
+        // 중복 제거
+        const uniquePortfolios = Array.from(
+          new Map(allPortfolios.map(portfolio => [portfolio.id, portfolio])).values()
+        );
+        setPortfolios(uniquePortfolios);
+
+        // Initialize careers from initialState only on mount
+        if (initialState.careers && initialState.careers.length > 0) {
+          setCareers(initialState.careers);
+          onStateChange({
+            type: 'career',
+            ids: initialState.careers.map(career => career.company),
+            careers: initialState.careers
+          });
+        }
 
         setError(null);
       } catch (err) {
@@ -130,18 +145,101 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
     return `${start} ~ ${end}`;
   };
 
-  const handleResumeSelect = (resumeId: string) => {
-    setSelectedResumeId(resumeId);
-    onStateChange({ type: 'resume', ids: [resumeId] });
+  const validateAndFormatDate = (value: string, type: 'year' | 'month' | 'day'): string => {
+    // 숫자만 허용
+    const cleaned = value.replace(/[^\d]/g, '');
+
+    if (type === 'year') {
+      // 년도는 2자리까지만
+      return cleaned.slice(0, 2);
+    } else if (type === 'month') {
+      // 월은 1-12까지만
+      const num = parseInt(cleaned);
+      if (num > 12) return '12';
+      if (num < 1) return '01';
+      return num.toString().padStart(2, '0');
+    } else {
+      // 일은 1-31까지만
+      const num = parseInt(cleaned);
+      if (num > 31) return '31';
+      if (num < 1) return '01';
+      return num.toString().padStart(2, '0');
+    }
   };
 
-  const handlePortfolioSelect = (portfolioId: string) => {
+  const handleDateChange = (index: number, field: 'startDate' | 'endDate', type: 'year' | 'month' | 'day', value: string) => {
+    const formattedValue = validateAndFormatDate(value, type);
+    const currentDate = field === 'startDate' ? careers[index].startDate : careers[index].endDate;
+    const [year = '', month = '', day = ''] = currentDate.split('.');
+
+    let newDate = '';
+    if (type === 'year') {
+      newDate = `${formattedValue}.${month}.${day}`;
+    } else if (type === 'month') {
+      newDate = `${year}.${formattedValue}.${day}`;
+    } else {
+      newDate = `${year}.${month}.${formattedValue}`;
+    }
+
+    handleCareerChange(index, field, newDate);
+  };
+
+  const handlePortfolioSelect = (portfolio: Portfolio) => {
     setSelectedPortfolioIds(prev => {
-      const newIds = prev.includes(portfolioId)
-        ? prev.filter(id => id !== portfolioId)
-        : [...prev, portfolioId];
-      onStateChange({ type: 'portfolio', ids: newIds });
+      const newIds = prev.includes(portfolio.id)
+        ? prev.filter(id => id !== portfolio.id)
+        : [...prev, portfolio.id];
+
+      const selectedPortfolios = portfolios.filter(p => newIds.includes(p.id));
+      onStateChange({
+        type: 'portfolio',
+        ids: newIds,
+        portfolios: selectedPortfolios,
+        careers: careers  // 현재 경력 정보도 함께 전달
+      });
       return newIds;
+    });
+  };
+
+  const handleAddCareer = () => {
+    const newCareer: Career = {
+      company: '',
+      position: '',
+      isCurrent: false,
+      startDate: '',
+      endDate: '',
+      description: '',
+      achievement: ''
+    };
+    setCareers([...careers, newCareer]);
+    onStateChange({
+      type: 'career',
+      ids: [...careers, newCareer].map((_, index) => `career_${index}`),
+      careers: [...careers, newCareer]
+    });
+  };
+
+  const handleCareerChange = (index: number, field: keyof Career, value: string | boolean) => {
+    const newCareers = [...careers];
+    newCareers[index] = {
+      ...newCareers[index],
+      [field]: value
+    };
+    setCareers(newCareers);
+    onStateChange({
+      type: 'career',
+      ids: newCareers.map((_, index) => `career_${index}`),
+      careers: newCareers
+    });
+  };
+
+  const handleRemoveCareer = (index: number) => {
+    const newCareers = careers.filter((_, i) => i !== index);
+    setCareers(newCareers);
+    onStateChange({
+      type: 'career',
+      ids: newCareers.map((_, index) => `career_${index}`),
+      careers: newCareers
     });
   };
 
@@ -164,47 +262,15 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'select' | 'create')} className="w-full">
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'portfolio' | 'career')} className="w-full">
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="select">기존 이력서 선택</TabsTrigger>
-        <TabsTrigger value="create">새 이력서 만들기</TabsTrigger>
+        <TabsTrigger value="portfolio">포트폴리오</TabsTrigger>
+        <TabsTrigger value="career">경력</TabsTrigger>
       </TabsList>
-      <TabsContent value="select">
+      <TabsContent value="portfolio">
         <Card>
           <CardHeader>
-            <CardTitle>기존 이력서 선택</CardTitle>
-            <CardDescription>
-              기존에 작성한 이력서를 선택해주세요.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {resumes.map((resume) => (
-                <Card
-                  key={resume.id}
-                  className={`h-[80px] cursor-pointer transition-all px-2 flex items-center justify-center ${selectedResumeId === resume.id
-                    ? 'bg-blue-100 shadow-md'
-                    : 'hover:shadow-md hover:border-primary/50'
-                    }`}
-                  onClick={() => handleResumeSelect(resume.id)}
-                >
-                  <div className="flex flex-col items-center justify-center w-full">
-                    <div className="text-sm font-medium text-center w-full">{resume.title}</div>
-                    <div className="flex justify-center items-center text-[10px] text-muted-foreground gap-1 mt-1">
-                      <Calendar className="h-2 w-2 mr-0.5" />
-                      {formatDate(resume.createdAt)}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-      <TabsContent value="create">
-        <Card>
-          <CardHeader>
-            <CardTitle>새 이력서 만들기</CardTitle>
+            <CardTitle>포트폴리오 선택</CardTitle>
             <CardDescription>
               기존 포트폴리오를 선택해주세요.
             </CardDescription>
@@ -218,7 +284,7 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
                     ? 'bg-blue-100 shadow-md'
                     : 'hover:shadow-md hover:border-primary/50'
                     }`}
-                  onClick={() => handlePortfolioSelect(portfolio.id)}
+                  onClick={() => handlePortfolioSelect(portfolio)}
                 >
                   <div className="flex flex-col items-center justify-center w-full">
                     <div className="text-sm font-medium text-center w-full">{portfolio.title}</div>
@@ -230,6 +296,151 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
                 </Card>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="career">
+        <Card className='gap-1'>
+          <CardHeader>
+            <CardTitle>경력 입력</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {careers.map((career, index) => (
+              <Card key={index} className="p-3 gap-1 h-50 overflow-y-auto">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-sm font-semibold">경력 {index + 1}</h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveCareer(index)}
+                    className="h-6 w-6"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor={`company-${index}`} className="text-xs">회사명</Label>
+                    <Input
+                      id={`company-${index}`}
+                      value={career.company}
+                      onChange={(e) => handleCareerChange(index, 'company', e.target.value)}
+                      placeholder="회사명"
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`position-${index}`} className="text-xs">직급</Label>
+                    <Input
+                      id={`position-${index}`}
+                      value={career.position}
+                      onChange={(e) => handleCareerChange(index, 'position', e.target.value)}
+                      placeholder="직급"
+                      className="h-7 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`startDate-${index}`} className="text-xs">시작일</Label>
+                    <div className="flex gap-1">
+                      <Input
+                        id={`startDate-year-${index}`}
+                        value={career.startDate.split('.')[0] || ''}
+                        onChange={(e) => handleDateChange(index, 'startDate', 'year', e.target.value)}
+                        placeholder="YY"
+                        className="h-7 text-xs w-12"
+                      />
+                      <Input
+                        id={`startDate-month-${index}`}
+                        value={career.startDate.split('.')[1] || ''}
+                        onChange={(e) => handleDateChange(index, 'startDate', 'month', e.target.value)}
+                        placeholder="MM"
+                        className="h-7 text-xs w-12"
+                      />
+                      <Input
+                        id={`startDate-day-${index}`}
+                        value={career.startDate.split('.')[2] || ''}
+                        onChange={(e) => handleDateChange(index, 'startDate', 'day', e.target.value)}
+                        placeholder="DD"
+                        className="h-7 text-xs w-12"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor={`endDate-${index}`} className="text-xs">종료일</Label>
+                    <div className="flex gap-1">
+                      <Input
+                        id={`endDate-year-${index}`}
+                        value={career.endDate.split('.')[0] || ''}
+                        onChange={(e) => handleDateChange(index, 'endDate', 'year', e.target.value)}
+                        placeholder="YY"
+                        disabled={career.isCurrent}
+                        className="h-7 text-xs w-12"
+                      />
+                      <Input
+                        id={`endDate-month-${index}`}
+                        value={career.endDate.split('.')[1] || ''}
+                        onChange={(e) => handleDateChange(index, 'endDate', 'month', e.target.value)}
+                        placeholder="MM"
+                        disabled={career.isCurrent}
+                        className="h-7 text-xs w-12"
+                      />
+                      <Input
+                        id={`endDate-day-${index}`}
+                        value={career.endDate.split('.')[2] || ''}
+                        onChange={(e) => handleDateChange(index, 'endDate', 'day', e.target.value)}
+                        placeholder="DD"
+                        disabled={career.isCurrent}
+                        className="h-7 text-xs w-12"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`isCurrent-${index}`}
+                      defaultChecked={career.isCurrent}
+                      onCheckedChange={(checked) => {
+                        handleCareerChange(index, 'isCurrent', checked as boolean);
+                        if (checked) {
+                          handleCareerChange(index, 'endDate', '');
+                        }
+                      }}
+                    />
+                    <Label htmlFor={`isCurrent-${index}`} className="text-sm">재직중</Label>
+                  </div>
+                </div>
+                <div className="mt-2 space-y-1">
+                  <Label htmlFor={`description-${index}`} className="text-xs">주요 업무</Label>
+                  <Textarea
+                    id={`description-${index}`}
+                    value={career.description}
+                    onChange={(e) => handleCareerChange(index, 'description', e.target.value)}
+                    placeholder="주요 업무"
+                    className="h-16 text-xs resize-none"
+                  />
+                </div>
+                <div className="mt-2 space-y-1">
+                  <Label htmlFor={`achievement-${index}`} className="text-xs">주요 성과</Label>
+                  <Textarea
+                    id={`achievement-${index}`}
+                    value={career.achievement}
+                    onChange={(e) => handleCareerChange(index, 'achievement', e.target.value)}
+                    placeholder="주요 성과"
+                    className="h-16 text-xs resize-none"
+                  />
+                </div>
+              </Card>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-8 text-xs"
+              onClick={handleAddCareer}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              경력 추가
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>

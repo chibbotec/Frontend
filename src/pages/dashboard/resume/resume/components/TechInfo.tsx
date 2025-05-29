@@ -162,6 +162,15 @@ const TechInfo: React.FC<TechInfoProps> = ({
           </div>
           <div className="space-y-2">
             <label htmlFor="techSummary" className="text-sm font-medium">기술 역량 요약</label>
+            {techSummary.length > 0 && (
+              <div className="space-y-2 mb-4">
+                {techSummary.map((summary, index) => (
+                  <div key={index} className="text-sm text-gray-600">
+                    • {summary}
+                  </div>
+                ))}
+              </div>
+            )}
             <Textarea
               id="techSummary"
               value={techSummary.join('\n')}

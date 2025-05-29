@@ -13,6 +13,10 @@ import { Step1JDInput } from './steps/Step1-JD-input';
 import { Step2CultureInput } from './steps/Step2-Culture-input';
 import { Step3ResumeSelect } from './steps/Step3-Resume-select';
 import { Step4ResumeCreate } from './steps/Step4-Resume-create';
+import axios from 'axios';
+
+// API 기본 URL
+const apiUrl = import.meta.env.VITE_API_URL || '';
 
 interface ResumeCustomModalProps {
   isOpen: boolean;
@@ -32,6 +36,47 @@ interface Step1State {
     career: string;
     resumeRequirements: string[];
     recruitmentProcess: string[];
+  };
+}
+
+interface Career {
+  company: string;
+  position: string;
+  isCurrent: boolean;
+  startDate: string;
+  endDate: string;
+  description: string;
+  achievement: string;
+}
+
+interface Portfolio {
+  id: string;
+  spaceId: number;
+  title: string;
+  author: {
+    id: number;
+    nickname: string;
+  };
+  duration: {
+    startDate: string;
+    endDate: string;
+  };
+  githubLink: string;
+  deployLink: string;
+  memberCount: number;
+  memberRoles: string[] | null;
+  contents: {
+    techStack: string;
+    summary: string;
+    description: string;
+    roles: string[];
+    features: {
+      [key: string]: string[];
+    };
+    architecture: {
+      communication: string;
+      deployment: string;
+    };
   };
 }
 
@@ -67,8 +112,8 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     additionalInfo: [''],
   });
   const [step3State, setStep3State] = useState({
-    selectedResumeType: 'resume' as 'resume' | 'portfolio',
-    selectedIds: [] as string[],
+    selectedPortfolios: [] as Portfolio[],
+    careers: [] as Career[]
   });
   const [resumeResult, setResumeResult] = useState<any>(null);
 
@@ -93,8 +138,8 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
         additionalInfo: [''],
       });
       setStep3State({
-        selectedResumeType: 'resume',
-        selectedIds: [],
+        selectedPortfolios: [],
+        careers: []
       });
     }
   }, [isOpen]);
@@ -119,24 +164,35 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     }));
   };
 
-  const handleStep3StateChange = (data: { type: 'resume' | 'portfolio', ids: string[] }) => {
-    setStep3State({
-      selectedResumeType: data.type,
-      selectedIds: data.ids
-    });
+  const handleStep3StateChange = (data: { type: 'portfolio' | 'career', ids: string[], portfolios?: Portfolio[], careers: Career[] }) => {
+    if (data.type === 'portfolio' && data.portfolios) {
+      setStep3State(prev => ({
+        ...prev,
+        selectedPortfolios: data.portfolios || []
+      }));
+    } else if (data.type === 'career') {
+      setStep3State(prev => ({
+        ...prev,
+        careers: data.careers
+      }));
+    }
   };
 
   const handleResumeComplete = (result: any) => {
     setResumeResult(result);
   };
 
-  const handleNextButtonClick = () => {
+  const handleNextButtonClick = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     } else if (resumeResult) {
       onClose();
+
       const queryParams = new URLSearchParams();
       queryParams.set('data', JSON.stringify(resumeResult));
+      queryParams.set('portfolios', JSON.stringify(step3State.selectedPortfolios));
+      queryParams.set('careers', JSON.stringify(step3State.careers));
+
       navigate(`/space/${spaceId}/resume/resumes/new?${queryParams.toString()}`);
     }
   };
