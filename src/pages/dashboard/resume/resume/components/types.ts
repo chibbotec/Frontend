@@ -62,7 +62,7 @@ export interface ResumeFormData {
     projects: Project[];
     educations: Education[];
     certificates: Certificate[];
-    coverletters: CoverLetter[];
+    coverLetters: CoverLetter[];
 }
 
 export interface ResumeSummary {

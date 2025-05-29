@@ -192,7 +192,7 @@ const ResumeCreate: React.FC = () => {
                 ...certificate,
                 date: certificate.date ? formatDate(new Date(certificate.date)) : ''
             })),
-            coverletters: coverLetters
+            coverLetters: coverLetters
         };
 
         try {
