@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { mockResumeData } from '../AI_mock';
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -215,6 +216,18 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         setUserId(generatedUserId);
         setIsInitialized(true);
 
+        setLoading(true);
+        setProgress('이력서 생성 중...');
+
+        // 2초 후에 mock 데이터로 완료 처리
+        // setTimeout(() => {
+        //   setLoading(false);
+        //   setIsCompleted(true);
+        //   setResultData(mockResumeData.result);
+        //   onComplete(mockResumeData);
+        // }, 2000);
+
+        // 실제 API 호출 로직 주석 처리
         await handleCreateResume(generatedUserId);
 
         const pollInterval = setInterval(async () => {
@@ -241,7 +254,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
               setLoading(false);
               setIsCompleted(true);
               setResultData(result);
-              onComplete(result);
+              onComplete({ result });
             } else if (status === 'failed') {
               clearInterval(pollInterval);
               setLoading(false);
@@ -313,23 +326,23 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
     if (!resultData) return null;
 
     return (
-      <div className="space-y-4">
-        <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
-          <p className="font-medium">이력서 생성이 완료되었습니다!</p>
-          <p className="text-sm mt-1">{resultData.message}</p>
+      <div className="space-y-3 text-sm">
+        <div className="bg-green-50 border border-green-200 text-green-600 px-3 py-2 rounded-md">
+          <p className="font-medium text-sm">이력서 생성이 완료되었습니다!</p>
+          <p className="text-xs mt-0.5">{resultData.message}</p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div>
-            <h3 className="font-semibold mb-2">지원 포지션</h3>
-            <p>{resultData.position}</p>
+            <h3 className="font-medium text-sm mb-1">지원 포지션</h3>
+            <p className="text-xs text-gray-600">{resultData.position}</p>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2">지원자와 부합하는 기술 스택</h3>
-            <div className="flex flex-wrap gap-2">
+            <h3 className="font-medium text-sm mb-1">지원자의 기술 스택</h3>
+            <div className="flex flex-wrap gap-1">
               {resultData.tech_stack.tech_stack.map((tech: string, index: number) => (
-                <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm">
+                <span key={index} className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xs">
                   {tech}
                 </span>
               ))}
@@ -337,32 +350,36 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
           </div>
 
           <div>
-            <h3 className="font-semibold mb-2">포트폴리오</h3>
+            <h3 className="font-medium text-sm mb-1">지원자의 포트폴리오</h3>
             {resultData.portfolio.portfolios.map((portfolio: any, index: number) => (
-              <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex justify-between items-start mb-2">
+              <div key={index} className="mb-2 p-2 bg-gray-50 rounded text-xs">
+                <div className="flex justify-between items-start">
                   <h4 className="font-medium">{portfolio.name}</h4>
                 </div>
+                <p className="text-gray-600 mt-1 line-clamp-2">{portfolio.description}</p>
               </div>
             ))}
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-2">경력</h3>
-            {resultData.career.careers.map((career: any, index: number) => (
-              <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium">{career.company}</h4>
+          {resultData.career && (
+            <div>
+              <h3 className="font-medium text-sm mb-1">경력</h3>
+              {resultData.career.careers.map((career: any, index: number) => (
+                <div key={index} className="mb-2 p-2 bg-gray-50 rounded text-xs">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-medium">{career.company}</h4>
+                  </div>
+                  <p className="text-gray-600 mt-1">{career.position}</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <div>
-            <h3 className="font-semibold mb-2">자기소개서 항목</h3>
-            <ul className="list-disc list-inside space-y-1">
+            <h3 className="font-medium text-sm mb-1">자기소개서 항목</h3>
+            <ul className="list-disc list-inside space-y-0.5 text-xs">
               {resultData.cover_letter.coverLetter.map((item: any, index: number) => (
-                <li key={index} className="text-gray-700">{item.title}</li>
+                <li key={index} className="text-gray-600">{item.title}</li>
               ))}
             </ul>
           </div>
@@ -386,11 +403,11 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
       <Card>
         <CardHeader>
           <CardTitle>AI 이력서 생성 완료</CardTitle>
-          <CardDescription>
+          <CardDescription >
             AI가 생성한 이력서 정보를 확인하세요.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className='max-h-[400px] overflow-y-auto'>
           {renderResultSummary()}
         </CardContent>
       </Card>

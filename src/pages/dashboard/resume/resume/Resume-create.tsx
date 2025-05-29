@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ResumeFormData, Career as CareerType, Project as ProjectType, Education as EducationType, Certificate as CertificateType } from './components/types';
@@ -62,88 +62,85 @@ const ResumeCreate: React.FC = () => {
     // 자기소개서
     const [coverLetters, setCoverLetters] = useState<{ title: string; content: string }[]>([]);
 
+    const hasLoadedProjects = useRef(false);
+
     useEffect(() => {
+        if (hasLoadedProjects.current) return;
+        hasLoadedProjects.current = true;
         // URL에서 AI가 생성한 이력서 데이터 가져오기
         const aiGeneratedData = searchParams.get('data');
-        const resumeType = searchParams.get('type') || 'resume';
+        const portfoliosData = searchParams.get('portfolios');
+        const careersData = searchParams.get('careers');
 
         // AI 생성 데이터가 있을 때만 파싱
         if (aiGeneratedData && aiGeneratedData !== 'undefined') {
             try {
                 const data = JSON.parse(aiGeneratedData);
-                const result = data.result;
+                console.log('Parsed AI data:', data); // 디버깅용 로그
 
-                // 기본 정보 설정
                 setTitle('AI 생성 이력서');
-                setPosition(result.position || '');
+                setPosition(data.position || '');
 
-                // 경력 정보가 있으면 '경력'으로 설정
-                if (result.career && result.career.careers && result.career.careers.length > 0) {
-                    setCareerType('경력');
-                    // 경력 정보 설정
-                    const formattedCareers = result.career.careers.map((career: any) => ({
-                        company: career.company,
-                        position: career.position,
-                        isCurrent: career.isCurrent,
-                        startDate: career.startDate,
-                        endDate: career.endDate,
-                        description: career.description,
-                        achievement: career.achievement
-                    }));
-                    setCareers(formattedCareers);
-                } else {
-                    setCareerType('신입');
+                // 포트폴리오 데이터 설정
+                if (portfoliosData) {
+                    const parsedPortfolios = JSON.parse(portfoliosData);
+                    console.log('Parsed portfolios:', parsedPortfolios); // 디버깅용 로그
+                    if (Array.isArray(parsedPortfolios)) {
+                        const formattedProjects = parsedPortfolios.map((portfolio: any) => ({
+                            name: portfolio.name,
+                            description: portfolio.description,
+                            techStack: Array.isArray(portfolio.techStack) ? portfolio.techStack : (typeof portfolio.techStack === 'string' ? portfolio.techStack.split(',').map((tech: string) => tech.trim()) : []),
+                            role: portfolio.role || '',
+                            startDate: portfolio.startDate || '',
+                            endDate: portfolio.endDate || '',
+                            memberCount: portfolio.memberCount || 0,
+                            memberRoles: Array.isArray(portfolio.memberRoles) ? portfolio.memberRoles.join(', ') : (portfolio.memberRoles || ''),
+                            githubLink: portfolio.githubLink || '',
+                            deployLink: portfolio.deployLink || ''
+                        }));
+                        console.log('Formatted projects:', formattedProjects); // 디버깅용 로그
+                        setProjects(formattedProjects);
+                    }
+                }
+
+                // 경력 데이터 설정
+                if (careersData) {
+                    const parsedCareers = JSON.parse(careersData);
+                    console.log('Parsed careers:', parsedCareers); // 디버깅용 로그
+                    if (Array.isArray(parsedCareers)) {
+                        setCareers(parsedCareers);
+                        if (parsedCareers.length > 0) {
+                            setCareerType('경력');
+                        }
+                    }
                 }
 
                 // 기술 스택 설정
-                if (result.tech_stack) {
-                    setTechStack(new Set(result.tech_stack.tech_stack || []));
-                    setTechSummary(result.tech_stack.tech_summary || []);
+                if (data.tech_stack) {
+                    setTechStack(new Set(data.tech_stack.tech_stack || []));
+                    setTechSummary(data.tech_stack.tech_summary || []);
                 }
 
                 // 자기소개서 설정
-                if (result.cover_letter) {
-                    setCoverLetters(result.cover_letter.coverLetter.map((item: any) => ({
+                if (data.cover_letter) {
+                    setCoverLetters(data.cover_letter.coverLetter.map((item: any) => ({
                         title: item.title,
                         content: item.content
                     })));
                 }
 
-                // 기본 링크 설정
                 setLinks([
                     { type: 'github', url: '' },
                     { type: 'notion', url: '' },
                     { type: 'blog', url: '' },
                 ]);
-
-                // 프로젝트 정보 설정
-                if (result.portfolio && result.portfolio.portfolios) {
-                    const formattedProjects = result.portfolio.portfolios.map((portfolio: any) => ({
-                        name: portfolio.name,
-                        description: portfolio.description,
-                        techStack: portfolio.techStack,
-                        role: portfolio.role,
-                        startDate: portfolio.startDate,
-                        endDate: portfolio.endDate,
-                        memberCount: portfolio.memberCount,
-                        memberRoles: portfolio.memberRoles,
-                        githubLink: portfolio.githubLink,
-                        deployLink: portfolio.deployLink
-                    }));
-                    setProjects(formattedProjects);
-                }
-
-                // 기본 학력 정보 설정 (빈 배열로 시작)
                 setEducations([]);
-
-                // 기본 자격증 정보 설정 (빈 배열로 시작)
                 setCertificates([]);
 
             } catch (error) {
                 console.error('AI 생성 데이터 파싱 중 오류 발생:', error);
             }
         } else {
-            // 일반 생성 시 기본값 설정
             setTitle('새 이력서');
             setPosition('');
             setCareerType('신입');

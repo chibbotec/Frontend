@@ -1,0 +1,129 @@
+export const mockResumeData = {
+  status: "completed",
+  result: {
+    position: "서버 개발자(3년이하)",
+    portfolio: {
+      portfolios: [
+        {
+          name: "StockNote",
+          description: "주식 투자 및 커뮤니티 플랫폼으로, 사용자 맞춤 포트폴리오 관리, 실시간 주식 시세, 게시글 및 댓글, 투표, 알림 기능을 제공하는 통합 시스템입니다. 다양한 기술을 활용하여 안정적이고 확장 가능한 구조를 구현하였으며, 사용자 경험 향상과 데이터 분석을 위한 검색 및 캐싱 시스템도 포함되어 있습니다.",
+          techStack: [
+            "Spring Boot",
+            "MySQL",
+            "Elasticsearch",
+            "Redis",
+            "OAuth2",
+            "Docker",
+            "Terraform",
+            "EC2",
+            "NCP",
+            "JPA",
+            "K6",
+            "Python"
+          ],
+          role: "Spring Boot와 JPA를 사용해서 서버 구조 설계 및 API 개발하여 클라이언트와 서버 간 데이터 교환 효율성 99.61% 개선(12s -> 47ms), 처리량 1,325.66% 개선 (4.17건/s -> 59.45건/s). Elasticsearch를 사용해서 게시글 검색 응답시간 99.61% 개선(12s -> 47ms), 처리량 1,325.66% 개선 (4.17건/s -> 59.45건/s). K6를 사용해서 부하/성능 테스트 수행 후 N+1 개선을 통해 포트폴리오 목록조회 부하테스트 응답시간 62.7% 감소(75ms -> 28ms). Terraform을 사용해서 인프라 코드화(IaC)로 AWS, NCP 리소스 배포 시간 단축. Python 스크립트와 MySQL 연동 자동화하여 주식 데이터 수집 및 업데이트 프로세스 자동화로 데이터 수집 효율화.",
+          startDate: "2022-03-01",
+          endDate: "2022-12-31",
+          memberCount: 5,
+          memberRoles: "Backend",
+          githubLink: "https://github.com/kknaks/StockNote_BE",
+          deployLink: ""
+        },
+        {
+          name: "여기잇개",
+          description: "이 프로젝트는 동물 보호센터와 유기견 발견 게시글 간의 유사 이미지 매칭 시스템을 구축하여, 사용자 간 신뢰성 높은 정보 공유와 빠른 유기견 찾기를 지원하는 플랫폼입니다. REST API, Kafka, AWS S3, 클라이언트-서버 통신, 얼굴 인식 및 임베딩 기술을 활용하여 이미지 분석과 실시간 알림 기능을 통합하였으며, 효율적이고 확장 가능한 시스템 아키텍처를 설계하였습니다.",
+          techStack: [
+            "Spring Boot",
+            "Kafka",
+            "PostgreSQL",
+            "AWS S3",
+            "Docker",
+            "OpenCV",
+            "dlib",
+            "PyTorch",
+            "CLIP (OpenAI)",
+            "FastAPI",
+            "GeoSpatial (PostGIS)",
+            "JPA"
+          ],
+          role: "Spring Boot와 JPA를 사용해서 REST API 서버 구현하여 클라이언트 요청 처리 및 데이터 저장 성능 향상. Kafka를 사용해서 비동기 메시징 시스템 구축하여 실시간 알림 및 이벤트 처리. PostgreSQL과 PostGIS를 사용해서 지리정보 기반 거리 검색 기능 구현하여 위치 기반 서비스 제공. OpenCV와 dlib를 사용해서 강아지 얼굴 검출 및 임베딩 추출 기능 구현하여 얼굴 인식 정확도 향상. CLIP 모델을 사용해서 이미지 특징 벡터 추출 및 유사도 계산 구현하여 이미지 매칭 정밀도 확보. FastAPI와 OpenCV를 사용해서 강아지 얼굴 검출 API 개발하여 이미지 처리 속도 1.5배 향상.",
+          startDate: "2023-03-01",
+          endDate: "2023-12-31",
+          memberCount: 6,
+          memberRoles: "Backend",
+          githubLink: "https://github.com/Here-is-Paw",
+          deployLink: "https://www.pawpaw.kknaks.site/"
+        }
+      ]
+    },
+    tech_stack: {
+      tech_stack: [
+        "Spring Boot",
+        "JPA",
+        "MySQL",
+        "PostgreSQL",
+        "Redis",
+        "Elasticsearch",
+        "Kafka",
+        "Docker",
+        "AWS (EC2, S3)",
+        "OAuth2",
+        "Terraform",
+        "K6",
+        "OpenCV",
+        "dlib",
+        "PyTorch",
+        "CLIP (OpenAI)",
+        "FastAPI",
+        "GeoSpatial (PostGIS)",
+        "Python",
+        "NCP"
+      ],
+      tech_summary: [
+        "대용량 트래픽 및 다양한 요구사항을 처리할 수 있는 확장성 높은 서버/시스템 설계 및 구현 경험",
+        "Spring Boot, JPA 기반의 REST API 및 MSA 환경에서의 백엔드 개발 역량",
+        "Elasticsearch, Redis 등 오픈소스 기반의 검색/캐싱 시스템을 활용한 성능 최적화 및 대규모 데이터 처리 경험",
+        "Kafka 기반 비동기 메시징 시스템 구축 및 실시간 알림/이벤트 처리 경험",
+        "Docker, Terraform 등 IaC 및 컨테이너 기반 클라우드 인프라 배포/운영 경험",
+        "OAuth2, JWT 등 인증/보안 시스템 설계 및 구현 경험",
+        "K6 등 부하/성능 테스트 도구를 활용한 시스템 병목 개선 및 최적화 경험",
+        "Python, FastAPI, OpenCV, PyTorch 등 다양한 언어/프레임워크를 활용한 데이터 자동화 및 이미지 처리 경험",
+        "PostGIS 등 위치 기반 서비스 및 지리정보 처리 경험",
+        "레거시 코드 리팩토링 및 비즈니스 요구사항에 맞춘 시스템 구조 개선 경험"
+      ]
+    },
+    cover_letter: {
+      coverLetter: [
+        {
+          title: "성장하는 서버 개발자로서의 시작",
+          content: "안녕하세요. 저는 3년 이하의 경력을 가진 서버 개발자로, 다양한 프로젝트 경험을 통해 확장성과 유연성이 높은 시스템 설계와 구현에 집중해왔습니다. 빠르게 변화하는 비즈니스 요구와 대용량 트래픽 환경에서 안정적이고 효율적인 서비스를 제공하는 것에 큰 보람을 느끼며, 토스페이먼츠의 서버 개발자로서 성장하고자 지원하게 되었습니다."
+        },
+        {
+          title: "확장성과 성능 최적화 경험",
+          content: "'StockNote' 프로젝트에서는 Spring Boot와 JPA를 활용해 서버 구조를 설계하고 API를 개발하여, 클라이언트-서버 간 데이터 교환 효율성을 99.61% 개선(12초 → 47ms), 처리량을 1,325.66% 향상(4.17건/s → 59.45건/s)시켰습니다. Elasticsearch와 Redis를 도입해 대규모 데이터의 검색 및 캐싱 시스템을 구축하고, K6로 부하/성능 테스트를 진행해 병목 구간을 개선했습니다. 이를 통해 순간적으로 증가하는 트래픽에도 무너지지 않는 시스템을 경험적으로 설계하고 운영해본 경험이 있습니다."
+        },
+        {
+          title: "비즈니스 문제 해결과 자동화",
+          content: "비즈니스 요구에 따라 Python 스크립트와 MySQL을 연동해 주식 데이터 수집 및 업데이트 프로세스를 자동화하여 데이터 관리 효율을 높였습니다. Terraform을 활용한 IaC로 AWS와 NCP 리소스 배포 시간을 단축하고, Docker 기반의 컨테이너 환경에서 무중단 배포를 경험했습니다. 이러한 경험은 토스페이먼츠의 MSA 환경에서 자유로운 배포와 신속한 비즈니스 대응에 기여할 수 있는 역량으로 이어졌습니다."
+        },
+        {
+          title: "실시간 이벤트와 대용량 데이터 처리",
+          content: "'여기잇개' 프로젝트에서는 Kafka 기반의 비동기 메시징 시스템을 구축하여 실시간 알림 및 이벤트 처리를 구현했습니다. PostgreSQL과 PostGIS를 활용해 위치 기반 서비스와 지리정보 검색 기능을 제공했고, OpenCV와 PyTorch, CLIP 모델을 활용해 이미지 임베딩 및 유사도 계산을 통한 고정밀 이미지 매칭 시스템을 개발했습니다. 이를 통해 다양한 요구사항과 대량의 데이터를 빠르고 정확하게 처리하는 시스템을 구축한 경험이 있습니다."
+        },
+        {
+          title: "레거시 코드 리팩토링 및 구조 개선",
+          content: "프로젝트 진행 중 레거시 코드의 성능 저하와 유지보수의 어려움을 경험하며, 코드 리팩토링을 통해 구조를 개선했습니다. N+1 쿼리 문제를 해결하여 포트폴리오 목록 조회의 부하 테스트 응답시간을 62.7% 감소(75ms → 28ms)시키는 등, 실제 비즈니스에 영향을 주는 성능 개선을 이끌었습니다. 이러한 경험은 토스페이먼츠에서 다양한 요구사항을 반영한 시스템 구조 개선에 직접적으로 기여할 수 있다고 생각합니다."
+        },
+        {
+          title: "토스페이먼츠와 함께 성장하고 싶은 이유",
+          content: "토스페이먼츠는 결제 트래픽의 폭발적 증가와 다양한 비즈니스 요구에 대응하는 혁신적인 시스템을 구축하고 있습니다. 저의 경험과 기술 스택(Spring Boot, JPA, Kafka, Elasticsearch, Docker, Terraform 등)은 토스페이먼츠의 서버 개발자가 수행하는 주요 업무와 높은 연관성이 있습니다. 새로운 API 개발, OpenAPI 생태계 구축, 무중단 배포 등에서 저의 역량을 발휘하고, 더 나아가 토스페이먼츠와 함께 성장하며 금융 혁신에 기여하고 싶습니다."
+        },
+        {
+          title: "끊임없는 학습과 도전의 자세",
+          content: "저는 새로운 기술과 도구를 빠르게 습득하고, 문제 상황을 주도적으로 개선하는 데에 강점을 가지고 있습니다. 실제로 다양한 오픈소스와 클라우드 인프라, 데이터 처리 기술을 프로젝트에 적용하며 실무 역량을 키워왔습니다. 앞으로도 토스페이먼츠에서 더 큰 규모의 문제를 해결하며, 기술과 비즈니스 모두에서 성장하는 개발자가 되겠습니다."
+        }
+      ]
+    }
+  },
+  message: "커스텀 이력서 생성이 완료되었습니다."
+};

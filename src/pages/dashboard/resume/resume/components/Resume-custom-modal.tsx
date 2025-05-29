@@ -185,15 +185,26 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
   const handleNextButtonClick = async () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
-    } else if (resumeResult?.result) {
-      onClose();
+    } else if (currentStep === steps.length) {
+      if (!resumeResult?.result) {
+        // 이력서 생성이 완료되지 않은 경우
+        console.error('이력서 생성이 완료되지 않았습니다.');
+        return;
+      }
 
-      const queryParams = new URLSearchParams();
-      queryParams.set('data', JSON.stringify(resumeResult.result));
-      queryParams.set('portfolios', JSON.stringify(step3State.selectedPortfolios));
-      queryParams.set('careers', JSON.stringify(step3State.careers));
+      try {
+        onClose();
 
-      navigate(`/space/${spaceId}/resume/resumes/new?${queryParams.toString()}`);
+        const portfolios = resumeResult.result?.portfolio?.portfolios || [];
+        const queryParams = new URLSearchParams();
+        queryParams.set('data', JSON.stringify(resumeResult.result));
+        queryParams.set('portfolios', JSON.stringify(portfolios));
+        queryParams.set('careers', JSON.stringify(step3State.careers));
+
+        navigate(`/space/${spaceId}/resume/resumes/new?${queryParams.toString()}`);
+      } catch (error) {
+        console.error('이력서 생성 중 오류가 발생했습니다:', error);
+      }
     }
   };
 
@@ -291,7 +302,7 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
                   className="w-full sm:w-auto"
                   disabled={currentStep === steps.length && !resumeResult}
                 >
-                  {currentStep === steps.length ? "이력서 생성 완료" : "다음"}
+                  {currentStep === steps.length ? "이력서 생성" : "다음"}
                 </Button>
               </DialogFooter>
             </div>
