@@ -175,7 +175,7 @@ export const Step1JDInput: React.FC<Step1JDInputProps> = ({
     }
 
     return (
-      <div className="max-h-[450px] overflow-y-auto pr-4 space-y-3 text-sm">
+      <div className="max-h-[400px] overflow-y-auto pr-4 space-y-3 text-sm">
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
