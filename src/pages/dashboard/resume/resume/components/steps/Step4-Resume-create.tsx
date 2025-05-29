@@ -322,13 +322,13 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
         <div className="space-y-4">
           <div>
             <h3 className="font-semibold mb-2">지원 포지션</h3>
-            <p>{resultData.result.position}</p>
+            <p>{resultData.position}</p>
           </div>
 
           <div>
             <h3 className="font-semibold mb-2">지원자와 부합하는 기술 스택</h3>
             <div className="flex flex-wrap gap-2">
-              {resultData.result.tech_stack.tech_stack.map((tech: string, index: number) => (
+              {resultData.tech_stack.tech_stack.map((tech: string, index: number) => (
                 <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm">
                   {tech}
                 </span>
@@ -338,7 +338,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
           <div>
             <h3 className="font-semibold mb-2">포트폴리오</h3>
-            {resultData.result.portfolio.portfolios.map((portfolio: any, index: number) => (
+            {resultData.portfolio.portfolios.map((portfolio: any, index: number) => (
               <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-medium">{portfolio.name}</h4>
@@ -349,7 +349,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
           <div>
             <h3 className="font-semibold mb-2">경력</h3>
-            {resultData.result.career.careers.map((career: any, index: number) => (
+            {resultData.career.careers.map((career: any, index: number) => (
               <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-medium">{career.company}</h4>
@@ -361,7 +361,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
           <div>
             <h3 className="font-semibold mb-2">자기소개서 항목</h3>
             <ul className="list-disc list-inside space-y-1">
-              {resultData.result.cover_letter.coverLetter.map((item: any, index: number) => (
+              {resultData.cover_letter.coverLetter.map((item: any, index: number) => (
                 <li key={index} className="text-gray-700">{item.title}</li>
               ))}
             </ul>
