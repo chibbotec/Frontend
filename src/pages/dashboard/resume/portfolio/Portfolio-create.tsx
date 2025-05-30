@@ -127,7 +127,7 @@ const Portfolio: React.FC = () => {
   const location = useLocation();
   const { spaceId, id, action } = useParams<{ spaceId: string; id: string; action: string }>();
   const isEditMode = action === 'edit';
-  const isNewMode = id === 'new';
+  const isNewMode = !id || id === 'new';
   const portfolioData = location.state?.portfolio;
 
   const [user, setUser] = useState<{ id: number; nickname: string } | null>(null);
