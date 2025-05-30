@@ -71,6 +71,7 @@ function AppRoutes() {
               <Route path="resumes" element={<ResumeList />} />
               <Route path="resumes/new" element={<Resume />} />
               <Route path="resumes/:id/detail" element={<ResumeDetail />} />
+              <Route path="resumes/:id/edit" element={<Resume />} />
               <Route path="portfolios" element={<PortfolioList />} />
               <Route path="portfolios/new" element={<Portfolio />} />
               <Route path="portfolios/:id/detail" element={<PortfolioDetail />} />

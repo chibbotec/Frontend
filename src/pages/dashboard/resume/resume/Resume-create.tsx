@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ResumeFormData, Career as CareerType, Project as ProjectType, Education as EducationType, Certificate as CertificateType } from './components/types';
 import BasicInfo from './components/BasicInfo';
@@ -18,8 +18,11 @@ const apiUrl = import.meta.env.VITE_API_URL || '';
 
 const ResumeCreate: React.FC = () => {
     const navigate = useNavigate();
-    const { spaceId } = useParams<{ spaceId: string }>();
+    const { spaceId, id } = useParams<{ spaceId: string; id: string }>();
     const [searchParams] = useSearchParams();
+    const location = useLocation();
+    const isEditMode = !!id;
+    const resumeData = location.state?.resumeData;
 
     const formatDate = (date: Date) => {
         const year = date.getFullYear();
@@ -67,7 +70,31 @@ const ResumeCreate: React.FC = () => {
     useEffect(() => {
         if (hasLoadedProjects.current) return;
         hasLoadedProjects.current = true;
-        // URL에서 AI가 생성한 이력서 데이터 가져오기
+
+        // 수정 모드일 경우 navigation state에서 데이터 가져오기
+        if (isEditMode && resumeData) {
+            setTitle(resumeData.title || '');
+            setName(resumeData.name || '');
+            setEmail(resumeData.email || '');
+            setPhone(resumeData.phone || '');
+            setCareerType(resumeData.careerType || '신입');
+            setPosition(resumeData.position || '');
+            setTechStack(new Set(resumeData.techStack || []));
+            setTechSummary(resumeData.techSummary ? resumeData.techSummary.split('\n') : []);
+            setLinks(resumeData.links || [
+                { type: 'github', url: '' },
+                { type: 'notion', url: '' },
+                { type: 'blog', url: '' },
+            ]);
+            setCareers(resumeData.careers || []);
+            setProjects(resumeData.projects || []);
+            setEducations(resumeData.educations || []);
+            setCertificates(resumeData.certificates || []);
+            setCoverLetters(resumeData.coverLetters || []);
+            return;
+        }
+
+        // AI 생성 데이터가 있을 때만 파싱
         const aiGeneratedData = searchParams.get('data');
         const portfoliosData = searchParams.get('portfolios');
         const careersData = searchParams.get('careers');
@@ -157,7 +184,7 @@ const ResumeCreate: React.FC = () => {
             setEducations([]);
             setCertificates([]);
         }
-    }, [searchParams]);
+    }, [searchParams, resumeData, isEditMode]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -196,18 +223,28 @@ const ResumeCreate: React.FC = () => {
         };
 
         try {
-            const response = await axios.post(`${apiUrl}/api/v1/resume/${spaceId}/resume`,
-                formData
-                , {
-                    withCredentials: true,
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-            if (response.status === 200 || response.status === 201) {
-                navigate(`/space/${spaceId}/resume/resumes`);
+            if (isEditMode) {
+                // 수정 모드일 경우 PUT 요청
+                await axios.put(`${apiUrl}/api/v1/resume/${spaceId}/resume/${id}`,
+                    formData,
+                    {
+                        withCredentials: true,
+                        headers: { 'Content-Type': 'application/json' }
+                    }
+                );
+            } else {
+                // 생성 모드일 경우 POST 요청
+                await axios.post(`${apiUrl}/api/v1/resume/${spaceId}/resume`,
+                    formData,
+                    {
+                        withCredentials: true,
+                        headers: { 'Content-Type': 'application/json' }
+                    }
+                );
             }
+            navigate(`/space/${spaceId}/resume/resumes`);
         } catch (error) {
-            console.error('이력서 생성 중 오류 발생:', error);
+            console.error('이력서 저장 중 오류 발생:', error);
             // TODO: 에러 처리 UI 추가
         }
     };
@@ -284,7 +321,7 @@ const ResumeCreate: React.FC = () => {
                             >
                                 취소
                             </Button>
-                            <Button type="submit">저장</Button>
+                            <Button type="submit">{isEditMode ? '수정' : '저장'}</Button>
                         </div>
                     </form>
                 </div>

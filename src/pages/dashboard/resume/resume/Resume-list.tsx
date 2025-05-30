@@ -99,9 +99,7 @@ const ResumeList: React.FC = () => {
               </CardFooter>
             </Card>
           ))}
-
         </div>
-
       )}
 
       {!loading && resumes.length === 0 && (

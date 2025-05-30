@@ -3,11 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, GripVertical } from 'lucide-react';
+import { ArrowLeft, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import { ResumeFormData } from './components/types';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-// import mockData from './components/Mock';
 import { Mail, Phone, Users, Calendar, UserCog, Globe, Briefcase, Printer } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
 import { SiNotion } from 'react-icons/si';
@@ -29,7 +28,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -71,7 +69,7 @@ const ResumeDetail: React.FC = () => {
     projects: true,
     education: true,
     certificates: true,
-    coverletters: true
+    coverLetters: true
   });
   const [sections, setSections] = useState([
     { id: 'basic-info', title: '기본 정보', visible: true },
@@ -149,6 +147,27 @@ const ResumeDetail: React.FC = () => {
     window.print();
     document.head.removeChild(style);
   };
+
+  const handleEdit = () => {
+    navigate(`/space/${spaceId}/resume/resumes/${id}/edit`, {
+      state: { resumeData: resume }
+    });
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('정말로 이 이력서를 삭제하시겠습니까?')) {
+      try {
+        await axios.delete(`${apiUrl}/api/v1/resume/${spaceId}/resume/${id}`, {
+          withCredentials: true
+        });
+        navigate(`/space/${spaceId}/resume/resumes`);
+      } catch (error) {
+        console.error('이력서 삭제에 실패했습니다:', error);
+        alert('이력서 삭제에 실패했습니다.');
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchResume = async () => {
       try {
@@ -170,11 +189,6 @@ const ResumeDetail: React.FC = () => {
     }
   }, [spaceId, id]);
 
-  // useEffect(() => {
-  //   setResume(mockData as any);
-  //   setLoading(false);
-  // }, []);
-
   useEffect(() => {
     const newSections = [
       { id: 'basic-info', title: '기본 정보 *', visible: true },
@@ -194,8 +208,8 @@ const ResumeDetail: React.FC = () => {
     if (resume?.certificates && resume.certificates.length > 0) {
       newSections.push({ id: 'certificates', title: '자격증 및 수상경력', visible: true });
     }
-    if (resume?.coverletters && resume.coverletters.length > 0) {
-      newSections.push({ id: 'coverletters', title: '자기소개서', visible: true });
+    if (resume?.coverLetters && resume.coverLetters.length > 0) {
+      newSections.push({ id: 'coverLetters', title: '자기소개서', visible: true });
     }
 
     setSections(newSections);
@@ -221,21 +235,43 @@ const ResumeDetail: React.FC = () => {
     <div className="p-2 md:p-6">
       <div className="mb-5 gap-2">
         <div className="pt-2 gap-0">
-          <div className="flex justify-between mb-4">
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
             <Button
               variant="ghost"
               onClick={() => navigate(`/space/${spaceId}/resume/resumes`)}
+              className="w-full sm:w-auto self-start"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               목록으로
             </Button>
-            <Button
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-              onClick={handlePrint}
-            >
-              <Printer className="mr-2 h-4 w-4" />
-              PDF
-            </Button>
+
+            <div className='flex flex-col sm:flex-row gap-2 w-full sm:w-auto'>
+              <div className='grid grid-cols-2 sm:flex gap-2'>
+                <Button
+                  variant="ghost"
+                  onClick={handleEdit}
+                  className="w-full sm:w-auto"
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  수정하기
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={handleDelete}
+                  className="w-full sm:w-auto text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  삭제하기
+                </Button>
+              </div>
+              <Button
+                className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={handlePrint}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* 좌측 컨테이너 - 메인 컨텐츠 */}
@@ -587,16 +623,16 @@ const ResumeDetail: React.FC = () => {
                         );
                       }
                       return null;
-                    case 'coverletters':
-                      if (resume.coverletters?.length > 0 && sectionVisibility.coverletters) {
+                    case 'coverLetters':
+                      if (resume.coverLetters?.length > 0 && sectionVisibility.coverLetters) {
                         return (
-                          <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id="coverletters">
+                          <Card key={`card-${section.id}`} className='gap-2 break-inside-avoid' id="coverLetters">
                             <CardHeader>
                               <CardTitle className='text-2xl font-bold'>자기소개서</CardTitle>
                             </CardHeader>
                             <CardContent className='p-3 md:p-4'>
                               <div className="space-y-6">
-                                {resume.coverletters.map((coverLetter, index) => (
+                                {resume.coverLetters.map((coverLetter, index) => (
                                   <div key={index} className="bg-white border rounded-md shadow-sm p-4">
                                     <h3 className="text-lg font-bold mb-4">{coverLetter.title}</h3>
                                     <div className="whitespace-pre-wrap text-sm">
@@ -683,7 +719,7 @@ const ResumeDetail: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
