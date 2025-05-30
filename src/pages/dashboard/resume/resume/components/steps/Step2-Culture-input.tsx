@@ -52,7 +52,7 @@ export const Step2CultureInput: React.FC<Step2CultureInputProps> = ({
           추가 정보 <span className="text-sm font-normal text-muted-foreground">(최대 5개)</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 md:max-h-[400px] overflow-y-auto pr-2">
+      <CardContent className="space-y-4 max-h-[300px] md:max-h-[400px] overflow-y-auto pr-2">
         <div className="space-y-3">
           {additionalInfo.length === 0 ? (
             <div className="text-center text-muted-foreground py-4">

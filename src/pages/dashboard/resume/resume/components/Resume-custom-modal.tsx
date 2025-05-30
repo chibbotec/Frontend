@@ -117,6 +117,14 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
   });
   const [resumeResult, setResumeResult] = useState<any>(null);
 
+  // 각 단계의 완료 상태를 관리하는 state
+  const [stepCompletion, setStepCompletion] = useState({
+    step1: false,
+    step2: false,
+    step3: false,
+    step4: false
+  });
+
   // 모달이 닫힐 때만 상태 초기화
   useEffect(() => {
     if (!isOpen) {
@@ -144,8 +152,96 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
     }
   }, [isOpen]);
 
-  const handleNext = (step: number) => {
-    setCurrentStep(step);
+  // 각 스텝의 유효성 검사 함수들
+  const isStep1Valid = () => {
+    if (step1State.isManualInput) {
+      const { company, position, mainTasks, requirements } = step1State.manualData;
+      return company.trim() !== '' &&
+        position.trim() !== '' &&
+        mainTasks.length > 0 &&
+        requirements.length > 0;
+    }
+    return step1State.url.trim() !== '';
+  };
+
+  const isStep2Valid = () => {
+    return true; // Step2는 항상 유효하다고 처리
+  };
+
+  const isStep3Valid = () => {
+    return step3State.selectedPortfolios.length > 0;
+  };
+
+  const isStep4Valid = () => {
+    return resumeResult !== null;
+  };
+
+  // 현재 스텝이 유효한지 확인하는 함수
+  const isCurrentStepValid = () => {
+    switch (currentStep) {
+      case 1:
+        return isStep1Valid();
+      case 2:
+        return isStep2Valid();
+      case 3:
+        return isStep3Valid();
+      case 4:
+        return isStep4Valid();
+      default:
+        return false;
+    }
+  };
+
+  // 스텝 완료 상태 업데이트 함수
+  const updateStepCompletion = (step: number, isCompleted: boolean) => {
+    setStepCompletion(prev => ({
+      ...prev,
+      [`step${step}`]: isCompleted
+    }));
+  };
+
+  // 다음 스텝으로 이동 가능한지 확인하는 함수
+  const canMoveToStep = (targetStep: number) => {
+    // 현재 스텝까지 완료된 스텝들만 이동 가능
+    for (let i = 1; i < targetStep; i++) {
+      if (!stepCompletion[`step${i}` as keyof typeof stepCompletion]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNextButtonClick = async () => {
+    if (!isCurrentStepValid()) {
+      alert('현재 단계의 필수 정보를 모두 입력해주세요.');
+      return;
+    }
+
+    // 현재 스텝 완료 상태 업데이트
+    updateStepCompletion(currentStep, true);
+
+    if (currentStep < steps.length) {
+      setCurrentStep(currentStep + 1);
+    } else if (currentStep === steps.length) {
+      if (!resumeResult?.result) {
+        console.error('이력서 생성이 완료되지 않았습니다.');
+        return;
+      }
+
+      try {
+        onClose();
+
+        const portfolios = resumeResult.result?.portfolio?.portfolios || [];
+        const queryParams = new URLSearchParams();
+        queryParams.set('data', JSON.stringify(resumeResult.result));
+        queryParams.set('portfolios', JSON.stringify(portfolios));
+        queryParams.set('careers', JSON.stringify(step3State.careers));
+
+        navigate(`/space/${spaceId}/resume/resumes/new?${queryParams.toString()}`);
+      } catch (error) {
+        console.error('이력서 생성 중 오류가 발생했습니다:', error);
+      }
+    }
   };
 
   const handleStep1StateChange = (url: string, isManualInput: boolean, manualData?: Step1State['manualData']) => {
@@ -180,32 +276,6 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
 
   const handleResumeComplete = (result: any) => {
     setResumeResult(result);
-  };
-
-  const handleNextButtonClick = async () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-    } else if (currentStep === steps.length) {
-      if (!resumeResult?.result) {
-        // 이력서 생성이 완료되지 않은 경우
-        console.error('이력서 생성이 완료되지 않았습니다.');
-        return;
-      }
-
-      try {
-        onClose();
-
-        const portfolios = resumeResult.result?.portfolio?.portfolios || [];
-        const queryParams = new URLSearchParams();
-        queryParams.set('data', JSON.stringify(resumeResult.result));
-        queryParams.set('portfolios', JSON.stringify(portfolios));
-        queryParams.set('careers', JSON.stringify(step3State.careers));
-
-        navigate(`/space/${spaceId}/resume/resumes/new?${queryParams.toString()}`);
-      } catch (error) {
-        console.error('이력서 생성 중 오류가 발생했습니다:', error);
-      }
-    }
   };
 
   const renderStepContent = () => {
@@ -250,27 +320,35 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[800px] w-[95vw] h-[90vh] p-0">
+      <DialogContent className="sm:max-w-[800px] w-[90vw] h-[90vh] p-0 max-h-[90vh] overflow-hidden">
         <div className="flex flex-col md:flex-row h-full">
           {/* 왼쪽 사이드바 - 스텝 네비게이션 */}
-          <div className="w-full md:w-64 border-b md:border-b-0 md:border-r p-4 md:p-6 bg-gray-50 rounded-t-lg md:rounded-tl-lg md:rounded-bl-lg">
-            <DialogHeader className="mb-4 md:mb-6">
+          <div className="w-full md:w-64 border-b md:border-b-0 md:border-r p-2 md:p-6 bg-gray-50 rounded-t-lg md:rounded-tl-lg md:rounded-bl-lg">
+            <DialogHeader className="mt-2 mb-2 md:mb-6">
               <DialogTitle>이력서 생성</DialogTitle>
             </DialogHeader>
-            <div className="flex md:flex-col space-x-2 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex md:flex-col space-x-2 md:space-x-0 md:space-y-4 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0 -mx-2 px-2 md:mx-0 md:px-0">
               {steps.map((step) => (
                 <div
                   key={step.id}
                   className={cn(
-                    "p-2 md:p-4 rounded-lg cursor-pointer transition-colors whitespace-nowrap md:whitespace-normal flex-shrink-0",
+                    "p-1 md:p-4 rounded-lg cursor-pointer transition-colors whitespace-nowrap md:whitespace-normal flex-shrink-0",
                     currentStep === step.id
                       ? "bg-primary text-primary-foreground"
-                      : "hover:bg-gray-100"
+                      : "hover:bg-gray-100",
+                    !canMoveToStep(step.id) && "opacity-50 cursor-not-allowed"
                   )}
-                  onClick={() => setCurrentStep(step.id)}
+                  onClick={() => {
+                    if (canMoveToStep(step.id)) {
+                      setCurrentStep(step.id);
+                    }
+                  }}
                 >
-                  <div className="font-medium text-sm md:text-base">Step {step.id}</div>
-                  <div className="text-xs md:text-sm mt-1">{step.title}</div>
+                  <div className="font-medium text-xs md:text-base">Step {step.id}</div>
+                  <div className="text-[11px] md:text-sm mt-0.5 md:mt-1">{step.title}</div>
+                  {stepCompletion[`step${step.id}` as keyof typeof stepCompletion] && (
+                    <div className="text-[11px] text-green-600 mt-0.5 md:mt-1">✓ 완료</div>
+                  )}
                 </div>
               ))}
             </div>
@@ -280,8 +358,8 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
           <div className="flex-1 p-4 md:p-6 overflow-y-auto">
             <div className="h-full flex flex-col">
               <div className="flex-1">
-                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">{steps[currentStep - 1].title}</h2>
-                <p className="text-sm md:text-base text-gray-600 mb-6">{steps[currentStep - 1].description}</p>
+                <h2 className="text-lg md:text-xl font-semibold mb-1 md:mb-4">{steps[currentStep - 1].title}</h2>
+                <p className="text-sm md:text-base text-gray-600 mb-2 md:mb-6">{steps[currentStep - 1].description}</p>
                 {renderStepContent()}
               </div>
 

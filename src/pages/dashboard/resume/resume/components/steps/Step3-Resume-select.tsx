@@ -14,12 +14,22 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Calendar, Globe, Lock, Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { mockPortfolios } from '../mockdata/portfolio-mock';
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -71,9 +81,9 @@ interface PortfolioResponse {
 }
 
 interface Step3ResumeSelectProps {
-  onStateChange: (data: { type: 'portfolio' | 'career', ids: string[], portfolios?: Portfolio[], careers: Career[] }) => void;
+  onStateChange: (data: { type: 'portfolio' | 'career', ids: string[], portfolios?: any[], careers: Career[] }) => void;
   initialState: {
-    selectedPortfolios: Portfolio[];
+    selectedPortfolios: any[];
     careers: Career[];
   };
   spaceId: string;
@@ -87,7 +97,7 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
   const [activeTab, setActiveTab] = useState<'portfolio' | 'career'>('portfolio');
   const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([]);
   const [careers, setCareers] = useState<Career[]>(initialState.careers || []);
-  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+  const [portfolios, setPortfolios] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,17 +105,14 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch portfolios
         const portfoliosResponse = await axios.get<PortfolioResponse>(
           `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
           { withCredentials: true }
         );
-        // Combine public and private portfolios
         const allPortfolios = [
           ...portfoliosResponse.data.publicPortfolios,
           ...portfoliosResponse.data.privatePortfolios
         ];
-        // 중복 제거
         const uniquePortfolios = Array.from(
           new Map(allPortfolios.map(portfolio => [portfolio.id, portfolio])).values()
         );
@@ -243,6 +250,27 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
     });
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = portfolios.map(portfolio => portfolio.id);
+      setSelectedPortfolioIds(allIds);
+      onStateChange({
+        type: 'portfolio',
+        ids: allIds,
+        portfolios: portfolios,
+        careers: careers
+      });
+    } else {
+      setSelectedPortfolioIds([]);
+      onStateChange({
+        type: 'portfolio',
+        ids: [],
+        portfolios: [],
+        careers: careers
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-48">
@@ -275,27 +303,40 @@ export const Step3ResumeSelect: React.FC<Step3ResumeSelectProps> = ({
               기존 포트폴리오를 선택해주세요.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {portfolios.map((portfolio) => (
-                <Card
-                  key={portfolio.id}
-                  className={`h-[80px] cursor-pointer transition-all px-2 flex items-center justify-center ${selectedPortfolioIds.includes(portfolio.id)
-                    ? 'bg-blue-100 shadow-md'
-                    : 'hover:shadow-md hover:border-primary/50'
-                    }`}
-                  onClick={() => handlePortfolioSelect(portfolio)}
-                >
-                  <div className="flex flex-col items-center justify-center w-full">
-                    <div className="text-sm font-medium text-center w-full">{portfolio.title}</div>
-                    <div className="flex justify-center items-center text-[10px] text-muted-foreground gap-1 mt-1">
-                      <Calendar className="h-2 w-2 mr-0.5" />
-                      {formatDateRange(portfolio.duration.startDate, portfolio.duration.endDate)}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox
+                      checked={selectedPortfolioIds.length === portfolios.length && portfolios.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="text-center">프로젝트명</TableHead>
+                  <TableHead className="text-center hidden md:table-cell">기간</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {portfolios.map((portfolio) => (
+                  <TableRow
+                    key={portfolio.id}
+                    className={`cursor-pointer hover:bg-muted/50 ${selectedPortfolioIds.includes(portfolio.id) ? 'bg-muted' : ''
+                      }`}
+                    onClick={() => handlePortfolioSelect(portfolio)}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedPortfolioIds.includes(portfolio.id)}
+                        onCheckedChange={() => handlePortfolioSelect(portfolio)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium text-center">{portfolio.title}</TableCell>
+                    <TableCell className="hidden md:table-cell text-center">{formatDateRange(portfolio.duration.startDate, portfolio.duration.endDate)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </TabsContent>

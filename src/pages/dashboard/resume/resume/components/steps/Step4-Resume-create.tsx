@@ -407,7 +407,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
             AI가 생성한 이력서 정보를 확인하세요.
           </CardDescription>
         </CardHeader>
-        <CardContent className='max-h-[400px] overflow-y-auto'>
+        <CardContent className='max-h-[300px] md:max-h-[400px] overflow-y-auto'>
           {renderResultSummary()}
         </CardContent>
       </Card>
@@ -423,8 +423,8 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
             입력하신 정보를 확인하고 이력서 생성을 시작하세요.
           </CardDescription>
         </CardHeader>
-        <CardContent className="relative">
-          <div className="max-h-[500px] overflow-y-auto pb-16">
+        <CardContent className="relative max-h-[400px] md:max-h-[500px]">
+          <div className=" md:pb-16">
             {renderSummary()}
           </div>
           <div className="absolute bottom-0 left-0 right-0 bg-background p-4 border-t">
