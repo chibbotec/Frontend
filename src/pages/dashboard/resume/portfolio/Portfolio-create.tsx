@@ -664,13 +664,24 @@ const Portfolio: React.FC = () => {
 
       console.log('전송할 데이터:', JSON.stringify(portfolioData, null, 2));
 
-      const response = await axios.post(
-        `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
-        portfolioData,
-        { withCredentials: true }
-      );
+      let response;
+      if (isEditMode) {
+        // 수정 모드일 경우 PUT 요청
+        response = await axios.put(
+          `${apiUrl}/api/v1/resume/${spaceId}/portfolio/${id}`,
+          portfolioData,
+          { withCredentials: true }
+        );
+      } else {
+        // 생성 모드일 경우 POST 요청
+        response = await axios.post(
+          `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
+          portfolioData,
+          { withCredentials: true }
+        );
+      }
 
-      toast.success('포트폴리오가 성공적으로 저장되었습니다.');
+      toast.success(isEditMode ? '포트폴리오가 성공적으로 수정되었습니다.' : '포트폴리오가 성공적으로 저장되었습니다.');
 
       // 생성/수정된 포트폴리오 상세 페이지로 이동
       navigate(`/space/${spaceId}/resume/portfolios/${response.data.id}`);

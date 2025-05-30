@@ -103,7 +103,7 @@ const PortfolioDetail: React.FC = () => {
 
   const handleEdit = () => {
     if (!portfolio) return;
-    navigate(`/space/${spaceId}/resume/portfolio/${id}/edit`, {
+    navigate(`/space/${spaceId}/resume/portfolios/${id}/edit`, {
       state: { portfolio }
     });
   };
