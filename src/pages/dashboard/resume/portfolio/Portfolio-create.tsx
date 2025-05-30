@@ -126,7 +126,7 @@ const Portfolio: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { spaceId, id, action } = useParams<{ spaceId: string; id: string; action: string }>();
-  const isEditMode = action === 'edit';
+  const isEditMode = action === 'edit' || (!!id && !!location.state?.portfolio);
   const portfolioData = location.state?.portfolio;
 
   console.log('Portfolio Create Mode:', { spaceId, id, action, isEditMode, portfolioData });
