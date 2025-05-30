@@ -410,7 +410,7 @@ export const Step1JDInput: React.FC<Step1JDInputProps> = ({
               채용 공고 내용을 직접 입력해주세요.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className='max-h-[400px] overflow-y-auto'>
             {renderAnalysisResult()}
           </CardContent>
         </Card>
