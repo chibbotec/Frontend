@@ -127,8 +127,9 @@ const Portfolio: React.FC = () => {
   const location = useLocation();
   const { spaceId, id, action } = useParams<{ spaceId: string; id: string; action: string }>();
   const isEditMode = action === 'edit';
-  const isNewMode = !id || id === 'new';
   const portfolioData = location.state?.portfolio;
+
+  console.log('Portfolio Create Mode:', { spaceId, id, action, isEditMode, portfolioData });
 
   const [user, setUser] = useState<{ id: number; nickname: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -514,7 +515,7 @@ const Portfolio: React.FC = () => {
   // 기존 포트폴리오 정보 가져오기 (수정 모드일 때)
   useEffect(() => {
     const initializePortfolio = () => {
-      if (isNewMode || !isEditMode) {
+      if (isEditMode || !isEditMode) {
         setLoading(false);
         return;
       }
@@ -588,7 +589,7 @@ const Portfolio: React.FC = () => {
     };
 
     initializePortfolio();
-  }, [isEditMode, isNewMode, portfolioData]);
+  }, [isEditMode, portfolioData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -798,7 +799,7 @@ const Portfolio: React.FC = () => {
           목록으로
         </Button>
         <h2 className="text-2xl font-bold">
-          {isNewMode ? '새 포트폴리오 작성' : '포트폴리오 수정'}
+          {isEditMode ? '포트폴리오 수정' : '새 포트폴리오 작성'}
         </h2>
       </div>
       <div className="grid grid-cols-3 gap-4 mb-6">
