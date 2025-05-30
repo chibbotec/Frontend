@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -89,6 +89,10 @@ interface PortfolioCreate {
   updatedAt?: string;
   publicAccess?: boolean;
   githubRepos?: GitHubRepo[];
+  memberCount?: number;
+  memberRoles?: string;
+  githubLink?: string;
+  deployLink?: string;
 }
 
 interface Feature {
@@ -120,9 +124,11 @@ const apiUrl = import.meta.env.VITE_API_URL || '';
 
 const Portfolio: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { spaceId, id, action } = useParams<{ spaceId: string; id: string; action: string }>();
   const isEditMode = action === 'edit';
   const isNewMode = id === 'new';
+  const portfolioData = location.state?.portfolio;
 
   const [user, setUser] = useState<{ id: number; nickname: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -507,25 +513,24 @@ const Portfolio: React.FC = () => {
 
   // 기존 포트폴리오 정보 가져오기 (수정 모드일 때)
   useEffect(() => {
-    const fetchPortfolio = async () => {
+    const initializePortfolio = () => {
       if (isNewMode || !isEditMode) {
         setLoading(false);
         return;
       }
 
+      if (!portfolioData) {
+        setError('포트폴리오 정보를 불러오는데 실패했습니다.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(
-          `${apiUrl}/api/v1/resume/${spaceId}/portfolio/${id}`,
-          { withCredentials: true }
-        );
-
-        const portfolio: PortfolioCreate = response.data;
-
         // 폼 상태 초기화
-        setTitle(portfolio.title || '');
+        setTitle(portfolioData.title || '');
         // 기술 스택 처리
-        if (portfolio.contents?.techStack) {
-          const techStackArray = portfolio.contents.techStack
+        if (portfolioData.contents?.techStack) {
+          const techStackArray = portfolioData.contents.techStack
             .split(',')
             .map((tech: string) => tech.trim())
             .filter((tech: string) => tech.length > 0)
@@ -536,19 +541,36 @@ const Portfolio: React.FC = () => {
         } else {
           setTechStack([]);
         }
-        setSummary(portfolio.contents?.summary || '');
-        setDescription(portfolio.contents?.description || '');
-        setStartDate(portfolio.duration?.startDate ? formatDate(new Date(portfolio.duration.startDate)) : '');
-        setEndDate(portfolio.duration?.endDate ? formatDate(new Date(portfolio.duration.endDate)) : '');
-        setPublicAccess(portfolio.publicAccess || false);
+        setSummary(portfolioData.contents?.summary || '');
+        setDescription(portfolioData.contents?.description || '');
+        setStartDate(portfolioData.duration?.startDate ? formatDate(new Date(portfolioData.duration.startDate)) : '');
+        setEndDate(portfolioData.duration?.endDate ? formatDate(new Date(portfolioData.duration.endDate)) : '');
+        setPublicAccess(portfolioData.publicAccess || false);
+        setArchitecture(portfolioData.contents?.architecture?.communication || '');
+        setDeployment(portfolioData.contents?.architecture?.deployment || '');
+        setRoles(portfolioData.contents?.roles || []);
+        setMemberCount(portfolioData.memberCount || 0);
+        setMemberRole(portfolioData.memberRoles || '');
+        setGithubLink(portfolioData.githubLink || '');
+        setDeployLink(portfolioData.deployLink || '');
+
+        // 기능 정보 설정
+        if (portfolioData.contents?.features) {
+          const featuresArray = Object.entries(portfolioData.contents.features).map(([title, descriptions]) => ({
+            title,
+            descriptions: descriptions as string[],
+            imageUrl: undefined
+          }));
+          setFeatures(featuresArray);
+        }
 
         // GitHub 저장소 정보가 있으면 설정
-        if (portfolio.githubRepos && portfolio.githubRepos.length > 0) {
-          setSelectedRepos(portfolio.githubRepos);
+        if (portfolioData.githubRepos && portfolioData.githubRepos.length > 0) {
+          setSelectedRepos(portfolioData.githubRepos);
           setIsGitHubConnected(true);
 
           // 지식 공량 퍼센트 계산
-          const totalBytes = portfolio.githubRepos.reduce((sum, repo) => sum + (repo.byteSize || 0), 0);
+          const totalBytes = portfolioData.githubRepos.reduce((sum: number, repo: GitHubRepo) => sum + (repo.byteSize || 0), 0);
           setTotalByteSize(totalBytes);
 
           // 지식 공량 퍼센트 계산
@@ -565,8 +587,8 @@ const Portfolio: React.FC = () => {
       }
     };
 
-    fetchPortfolio();
-  }, [spaceId, id, isEditMode, isNewMode]);
+    initializePortfolio();
+  }, [isEditMode, isNewMode, portfolioData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

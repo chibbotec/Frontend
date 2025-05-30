@@ -75,6 +75,7 @@ function AppRoutes() {
               <Route path="portfolios" element={<PortfolioList />} />
               <Route path="portfolios/new" element={<Portfolio />} />
               <Route path="portfolios/:id/detail" element={<PortfolioDetail />} />
+              <Route path="portfolios/:id/edit" element={<Portfolio />} />
               <Route path="schedule" element={<DescriptionList />} />
             </Route>
 

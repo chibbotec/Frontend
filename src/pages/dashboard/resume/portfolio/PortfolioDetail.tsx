@@ -101,6 +101,30 @@ const PortfolioDetail: React.FC = () => {
     navigate(`/space/${spaceId}/resume/portfolios`);
   };
 
+  const handleEdit = () => {
+    if (!portfolio) return;
+    navigate(`/space/${spaceId}/resume/portfolio/${id}/edit`, {
+      state: { portfolio }
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('정말로 이 포트폴리오를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `${apiUrl}/api/v1/resume/${spaceId}/portfolio/${id}`,
+        { withCredentials: true }
+      );
+      navigate(`/space/${spaceId}/resume/portfolios`);
+    } catch (err) {
+      console.error('포트폴리오 삭제에 실패했습니다:', err);
+      alert('포트폴리오 삭제에 실패했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -129,12 +153,15 @@ const PortfolioDetail: React.FC = () => {
           목록으로
         </Button>
         <div className="flex justify-between items-center gap-1">
-          <Button className="px-4 py-2 bg-blue-500 text-white rounded">
+          <Button
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+            onClick={handleEdit}>
             수정하기
           </Button>
           <Button
             className="px-4 py-2 text-white rounded"
-            variant="destructive">
+            variant="destructive"
+            onClick={handleDelete}>
             삭제하기
           </Button>
         </div>
