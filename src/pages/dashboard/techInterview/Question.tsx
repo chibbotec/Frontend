@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Eye } from "lucide-react";
 import { useParams } from "react-router-dom";
+import { StudyCreateModal } from './qna/Study-create-modal';
 
 
 // 타입 정의
@@ -33,14 +34,19 @@ interface Participant {
 }
 
 interface Question {
-  id: string;
+  id: number;
   spaceId: number;
+  techInterviewId: number;
   techClass: string;
+  aiAnswer: string | null;
+  keyPoints: string | null;
+  additionalTopics: string | null;
   questionText: string;
   author: Participant;
-  createdAt: string;
   participants: Participant[];
-  answers?: Record<string, string>;
+  answers: any[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface SpaceMemberRequest {
@@ -140,6 +146,7 @@ export function QuestionsTable() {
 
   // 새 문제 등록
   const handleAddQuestion = async () => {
+    /* 모달로 이동
     if (!currentSpaceId) {
       alert('유효한 스페이스 ID가 없습니다.');
       return;
@@ -180,10 +187,13 @@ export function QuestionsTable() {
       console.error('문제 등록 중 오류 발생:', err);
       alert('문제를 등록하는데 실패했습니다.');
     }
+    */
+    fetchQuestions(); // 목록 새로고침
+    setIsDialogOpen(false);
   };
 
   // 문제 삭제
-  const handleDeleteQuestion = async (id: string) => {
+  const handleDeleteQuestion = async (id: number) => {
     if (!currentSpaceId) {
       alert('유효한 스페이스 ID가 없습니다.');
       return;
@@ -247,7 +257,7 @@ export function QuestionsTable() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">문제 관리</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline">
               <Plus className="mr-2 h-4 w-4" />
@@ -296,7 +306,19 @@ export function QuestionsTable() {
               <Button variant="outline" type="submit" onClick={handleAddQuestion}>등록하기</Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
+        <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          새 문제 등록
+        </Button>
+        {isDialogOpen && (
+          <StudyCreateModal
+            isOpen={isDialogOpen}
+            onClose={() => setIsDialogOpen(false)}
+            onSubmit={handleAddQuestion}
+            existingQuestions={questions}
+          />
+        )}
       </div>
 
       <Table>
