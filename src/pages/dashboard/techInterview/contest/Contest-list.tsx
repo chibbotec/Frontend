@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Eye, Play } from "lucide-react";
+import { Plus, Eye, Play, Trash2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ContestCreateModal from './Contest-create-modal';
 
@@ -104,6 +104,23 @@ export function ContestList() {
     return contest.participants.some(participant => participant.id === user.id);
   };
 
+  const handleDeleteContest = async (contestId: number) => {
+    if (!window.confirm('정말로 이 대회를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/contests/${contestId}`, {
+        withCredentials: true
+      });
+      // Refresh the contest list after successful deletion
+      fetchContests();
+    } catch (err) {
+      console.error('대회 삭제 중 오류 발생:', err);
+      setError('대회 삭제에 실패했습니다.');
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center p-6">데이터를 불러오는 중...</div>;
   }
@@ -130,13 +147,14 @@ export function ContestList() {
             <TableHead className="w-[180px] hidden md:table-cell">등록일</TableHead>
             <TableHead className="text-center w-[120px]">참여자</TableHead>
             <TableHead className="text-center w-[120px]">상태</TableHead>
-            <TableHead className="text-center w-[120px]">시험</TableHead>
+            <TableHead className="text-center w-[180px]">시험</TableHead>
+            <TableHead className="text-center w-[80px]">삭제</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {contests.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-6">
+              <TableCell colSpan={6} className="text-center py-6">
                 등록된 대회가 없습니다. 새 대회를 등록해보세요.
               </TableCell>
             </TableRow>
@@ -190,18 +208,28 @@ export function ContestList() {
                     </Button>
                   </div>
                 </TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteContest(contest.id)}
+                    className="text-black-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
         <TableFooter>
           <TableRow className="hidden md:table-row">
-            <TableCell colSpan={4}>총 대회 수</TableCell>
+            <TableCell colSpan={5}>총 대회 수</TableCell>
             <TableCell className="text-right">{contests.length}개</TableCell>
           </TableRow>
           <TableRow className="md:hidden">
-            <TableCell colSpan={3}>총 대회 수</TableCell>
-            <TableCell className="text-right">{contests.length}개</TableCell>
+            <TableCell colSpan={4}>총 대회 수</TableCell>
+            <TableCell className="text-right" colSpan={2}>{contests.length}개</TableCell>
           </TableRow>
         </TableFooter>
       </Table>
