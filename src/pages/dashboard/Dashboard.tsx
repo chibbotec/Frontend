@@ -26,12 +26,15 @@ const pathToKorean: { [key: string]: string } = {
   share: '이력서 공유',
   portfolios: '포트폴리오',
   schedule: '일정 관리',
-  study: '문제 풀기',
-  questions: '문제 제출',
-  contests: '콘테스트',
-  notes: '나의 노트',
+  questions: '공부하기',
+  contests: '시험보기',
+  notes: '필기노트',
   problems: '문제 풀기',
   'wrong-notes': '오답 노트',
+  new: '새로 만들기',
+  detail: '상세 보기',
+  edit: '수정하기',
+  test: '시험',
 };
 
 // 대시보드 메인 컴포넌트

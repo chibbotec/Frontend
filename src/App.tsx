@@ -9,7 +9,7 @@ import MainPage from "@/pages/MainPage";
 // 이력서 & 포트폴리오 관련 컴포넌트
 import PortfolioList from "@/pages/dashboard/resume/portfolio/Portfolio-list.tsx"
 import Portfolio from "@/pages/dashboard/resume/portfolio/Portfolio-create.tsx";
-import PortfolioDetail from "@/pages/dashboard/resume/portfolio/PortfolioDetail.tsx";
+import PortfolioDetail from "@/pages/dashboard/resume/portfolio/Portfolio-detail";
 import ResumeList from "@/pages/dashboard/resume/resume/Resume-list.tsx";
 import Resume from "@/pages/dashboard/resume/resume/Resume-create.tsx";
 import ResumeDetail from "@/pages/dashboard/resume/resume/Resume-detail.tsx";
@@ -18,14 +18,13 @@ import DescriptionList from "@/pages/dashboard/resume/schedule-job/Description-l
 // import Schedule from "@/pages/dashboard/resume/Schedule";
 
 // 기술 면접 관련 컴포넌트
-import Study from "@/pages/dashboard/techInterview/Study"
 import Questions from "@/pages/dashboard/techInterview/qna/Question"
 import StudyDetail from "@/pages/dashboard/techInterview/qna/Study-detail"
 import Contest from "@/pages/dashboard/techInterview/contest/Contest-list"
 import ContestDetail from "@/pages/dashboard/techInterview/contest/Contest-detail"
 import ContestTest from "@/pages/dashboard/techInterview/contest/Contest-test"
-import NotesList from "@/pages/dashboard/techInterview/Note-list"
-import NotesCreate from "@/pages/dashboard/techInterview/Note-create"
+import NotesList from "@/pages/dashboard/techInterview/note/Note-list"
+import NotesCreate from "@/pages/dashboard/techInterview/note/Note-create"
 
 // 코딩 테스트 관련 컴포넌트
 import ProblemsList from "@/pages/dashboard/codingtest/Problem-list.tsx"
@@ -82,8 +81,7 @@ function AppRoutes() {
 
             {/* 기술 면접 섹션 */}
             <Route path="interview">
-              <Route index element={<Study />} />
-              <Route path="study" element={<Study />} />
+              <Route index element={<Questions />} />
               <Route path="questions" element={<Questions />} />
               <Route path="questions/:questionId" element={<StudyDetail />} />
               <Route path="contests" element={<Contest />} />

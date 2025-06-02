@@ -191,7 +191,7 @@ const Portfolio: React.FC = () => {
   });
 
   // 커밋 정보 포함 체크박스 상태 추가
-  const [includeCommitInfo, setIncludeCommitInfo] = useState(true);
+  const [includeCommitInfo, setIncludeCommitInfo] = useState(false);
 
   // 주요 역할 상태 추가
   const [roles, setRoles] = useState<string[]>([]);
@@ -1018,7 +1018,8 @@ const Portfolio: React.FC = () => {
                           className={`h-1.5 ${knowledgePercent > 90 ? "[&>div]:bg-red-500" : knowledgePercent > 80 ? "[&>div]:bg-amber-500" : ""}`}
                         />
                         <div className="flex justify-end">
-                          <div className="flex items-center space-x-2 ml-2">
+                          {/* //추후 개발용 삭제 금지 */}
+                          {/* <div className="flex items-center space-x-2 ml-2">
                             <Switch
                               id="includeCommitInfo"
                               checked={includeCommitInfo}
@@ -1026,7 +1027,7 @@ const Portfolio: React.FC = () => {
                               className="h-3 w-6"
                             />
                             <Label htmlFor="includeCommitInfo" className="text-xs">커밋 정보 포함</Label>
-                          </div>
+                          </div> */}
                           <Button
                             type="button"
                             variant="outline"

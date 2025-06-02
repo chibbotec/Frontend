@@ -52,18 +52,18 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
 
   // 디렉토리 크기 계산 함수 (크기를 캐싱하기 위한 맵)
   const directorySizeCache = useRef<Record<string, number>>({});
-  
+
   // 특정 디렉토리의 총 크기 계산
   const calculateDirectorySize = (node: FileNode): number => {
     // 캐시된 값이 있으면 반환
     if (directorySizeCache.current[node.path] !== undefined) {
       return directorySizeCache.current[node.path];
     }
-    
+
     if (node.type !== 'directory' || !node.children) {
       return 0;
     }
-    
+
     let total = 0;
     const calculateSize = (children: FileNode[]) => {
       for (const child of children) {
@@ -74,15 +74,15 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
         }
       }
     };
-    
+
     calculateSize(node.children);
-    
+
     // 결과 캐싱
     directorySizeCache.current[node.path] = total;
-    
+
     return total;
   };
-  
+
   // 파일 크기 포맷팅 함수
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return bytes + ' B';
@@ -94,10 +94,10 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
   useEffect(() => {
     const selectedPaths = getSelectedPaths(fileTree);
     const totalSize = calculateTotalSize(fileTree);
-    
+
     // 부모 컴포넌트에 정보 전달
     onSaveSelection(selectedPaths, totalSize);
-    
+
     // 크기가 변경되면 디버그 정보 업데이트
     if (totalSize > 0) {
       setDebugInfo(`총 선택된 크기: ${formatFileSize(totalSize)}`);
@@ -317,7 +317,7 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
       const newState = updatedNode ? (updatedNode.selected ? '선택됨' : '선택안됨') : '알 수 없음';
 
       console.log(`${nodeTypeStr} '${node.path}' 선택 상태 변경 ${result ? '성공' : '실패'} -> ${newState}`);
-      
+
       // 디렉토리 선택시 특별 처리 (사용자에게 정보 표시)
       if (node.type === 'directory' && updatedNode?.selected) {
         setDebugInfo(`디렉토리 '${node.path}'를 선택하면 모든 하위 파일이 포함됩니다. 크기 계산 중...`);
@@ -338,14 +338,14 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
       if (node.path === path) {
         // 이전 상태 저장
         const wasSelected = node.selected;
-        
+
         // 선택 상태 토글
         node.selected = !node.selected;
 
         // 디렉토리면 모든 하위 항목에 적용
         if (node.type === 'directory' && node.children) {
           toggleChildrenSelection(node.children, node.selected);
-          
+
           // 디렉토리 선택 시 디버그 메시지 표시
           if (node.selected && !wasSelected) {
             // 선택 시, 캐시된 디렉토리 크기가 있으면 표시
@@ -443,10 +443,17 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
   const renderTree = (nodes: FileNode[], depth = 0) => {
     if (!nodes || nodes.length === 0) return null;
 
-    return nodes.map(node => {
+    // 디렉토리가 먼저 오고, 그 다음에 파일이 오도록 정렬
+    const sortedNodes = [...nodes].sort((a, b) => {
+      if (a.type === 'directory' && b.type !== 'directory') return -1;
+      if (a.type !== 'directory' && b.type === 'directory') return 1;
+      return a.name.localeCompare(b.name); // 같은 타입끼리는 이름순 정렬
+    });
+
+    return sortedNodes.map(node => {
       // 디렉토리인 경우 크기 계산 (UI 표시용)
       const dirSize = node.type === 'directory' ? calculateDirectorySize(node) : 0;
-      
+
       return (
         <div key={node.path} className="py-1">
           <div
@@ -492,7 +499,7 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
                   ({formatFileSize(node.original.size)})
                 </span>
               )}
-              
+
               {/* 디렉토리 크기 표시 (디렉토리인 경우) */}
               {node.type === 'directory' && dirSize > 0 && (
                 <span className="ml-2 text-xs text-gray-400">
@@ -523,7 +530,7 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
           if (node.type === 'file' && node.original && node.original.size) {
             total += node.original.size;
           }
-          
+
           // 하위 노드 처리 (선택된 경우 모든 하위 노드도 선택된 것으로 처리)
           if (node.children && node.children.length > 0) {
             traverse(node.children, true);
@@ -536,7 +543,7 @@ const GitHubDirectorySelector: React.FC<GitHubDirectorySelectorProps> = ({
     };
 
     traverse(tree);
-    
+
     console.log(`총 선택된 크기: ${total} 바이트 (${formatFileSize(total)})`);
     return total;
   };
