@@ -59,6 +59,14 @@ interface DefaultQuestionResponse {
   questionText: string;
 }
 
+interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
 interface Question {
   id: number;
   spaceId: number;
@@ -99,8 +107,12 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
   const [publicError, setPublicError] = useState<string | null>(null);
   const [selectedTechClass, setSelectedTechClass] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [publicCurrentPage, setPublicCurrentPage] = useState(0);
+  const [publicTotalPages, setPublicTotalPages] = useState(0);
+  const [publicTotalElements, setPublicTotalElements] = useState(0);
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<number[]>([]);
   const [directQuestions, setDirectQuestions] = useState<Array<{
     techClass: string;
@@ -125,8 +137,6 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
     techClass: boolean;
     questionText: boolean;
   }>>([]);
-  const [publicCurrentPage, setPublicCurrentPage] = useState(1);
-  const publicItemsPerPage = 8;
 
   // 모달이 열릴 때 데이터베이스에서 문제 목록 가져오기
   useEffect(() => {
@@ -148,11 +158,21 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
     setError(null);
 
     try {
-      const response = await axios.get<DefaultQuestionResponse[]>(
+      const response = await axios.get<PageResponse<DefaultQuestionResponse>>(
         `${API_BASE_URL}/api/v1/tech-interview/${spaceId}/questions/db/DEFAULT`,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          params: {
+            page: currentPage,
+            size: 8,
+            'tech-class': selectedTechClass || undefined,
+            search: searchQuery || undefined
+          }
+        }
       );
-      setQuestions(response.data);
+      setQuestions(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setTotalElements(response.data.totalElements);
     } catch (err) {
       console.error('문제 목록을 가져오는 중 오류 발생:', err);
       setError('문제 목록을 불러오는데 실패했습니다.');
@@ -169,11 +189,21 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
     setIsPublicLoading(true);
     setPublicError(null);
     try {
-      const response = await axios.get<DefaultQuestionResponse[]>(
+      const response = await axios.get<PageResponse<DefaultQuestionResponse>>(
         `${API_BASE_URL}/api/v1/tech-interview/${spaceId}/questions/db/PUBLIC`,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          params: {
+            page: publicCurrentPage,
+            size: 8,
+            'tech-class': selectedTechClass || undefined,
+            search: searchQuery || undefined
+          }
+        }
       );
-      setPublicQuestions(response.data);
+      setPublicQuestions(response.data.content);
+      setPublicTotalPages(response.data.totalPages);
+      setPublicTotalElements(response.data.totalElements);
     } catch (err) {
       console.error('공개 문제 목록을 가져오는 중 오류 발생:', err);
       setPublicError('공개 문제 목록을 불러오는데 실패했습니다.');
@@ -191,7 +221,7 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
     return matchesTechClass && matchesSearch;
   });
 
-  // 공개문제 필터링 및 페이지네이션
+  // 공개문제 필터링
   const filteredPublicQuestions = publicQuestions.filter(question => {
     const matchesTechClass = !selectedTechClass || question.techClass === selectedTechClass;
     const matchesSearch = !searchQuery ||
@@ -207,38 +237,36 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
     );
   };
 
-  // 페이지네이션 계산
-  const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedQuestions = filteredQuestions.slice(startIndex, startIndex + itemsPerPage);
-
-  // 공개문제 페이지네이션 계산
-  const publicTotalPages = Math.ceil(filteredPublicQuestions.length / publicItemsPerPage);
-  const publicStartIndex = (publicCurrentPage - 1) * publicItemsPerPage;
-  const paginatedPublicQuestions = filteredPublicQuestions.slice(publicStartIndex, publicStartIndex + publicItemsPerPage);
-
   // 페이지 변경 핸들러
   const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
+    if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
+      fetchQuestions();
     }
   };
 
   // 공개문제 페이지 변경 핸들러
   const handlePublicPageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= publicTotalPages) {
+    if (newPage >= 0 && newPage < publicTotalPages) {
       setPublicCurrentPage(newPage);
+      fetchPublicQuestions();
     }
   };
 
   // 검색어나 필터가 변경될 때 첫 페이지로 리셋
   useEffect(() => {
-    setCurrentPage(1);
+    setCurrentPage(0);
+    if (isOpen && activeTab === "database") {
+      fetchQuestions();
+    }
   }, [searchQuery, selectedTechClass]);
 
   // 공개문제 검색/필터 변경 시 첫 페이지로 리셋
   useEffect(() => {
-    setPublicCurrentPage(1);
+    setPublicCurrentPage(0);
+    if (isOpen && activeTab === "public") {
+      fetchPublicQuestions();
+    }
   }, [searchQuery, selectedTechClass]);
 
   // 체크박스 핸들러
@@ -384,14 +412,14 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[70vw] w-[70vw] h-[80vh] flex flex-col">
+      <DialogContent className="sm:max-w-[90vw] md:w-[75vw] h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>새 기술 문제 등록</DialogTitle>
+          <DialogTitle>문제 등록</DialogTitle>
           <DialogDescription>
             등록할 기술 문제의 정보를 입력해주세요. 등록 후 참여자들이 답변할 수 있습니다.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto pt-1">
+        <div className="flex-1 overflow-y-auto pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <Tabs defaultValue="database" className="w-full" onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="database">데이터베이스</TabsTrigger>
@@ -399,20 +427,45 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
               <TabsTrigger value="direct">직접 제출</TabsTrigger>
             </TabsList>
             <TabsContent value="database" className="mt-0">
-              <div className="grid grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-6">
                 {/* 좌측 컨테이너: 검색 및 기술 분야 리스트 */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-md"
-                      placeholder="검색어를 입력하세요..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <div className="flex gap-2">
+                      <div className="md:hidden">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full justify-between">
+                              {selectedTechClass || "전체"}
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6" /></svg>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => setSelectedTechClass(null)}>
+                              전체
+                            </DropdownMenuItem>
+                            {["JAVASCRIPT", "TYPESCRIPT", "REACT", "VUE", "ANGULAR", "NODE.JS", "JAVA", "SPRING", "PYTHON", "DJANGO", "DATABASE", "DEVOPS", "MOBILE", "ALGORITHM", "CS", "OS", "NETWORK", "SECURITY", "CLOUD", "CSS", "ETC"].map((tech) => (
+                              <DropdownMenuItem
+                                key={tech}
+                                onClick={() => setSelectedTechClass(tech)}
+                              >
+                                {tech}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full p-2 border rounded-md"
+                        placeholder="검색어를 입력하세요..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <div className="border rounded-md p-4 max-h-[350px] overflow-y-auto">
+                    <div className="hidden md:block border rounded-md p-4 max-h-[350px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           key="all"
@@ -448,16 +501,16 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                   ) : error ? (
                     <div className="p-4 text-center text-red-500">{error}</div>
                   ) : (
-                    <Table>
+                    <Table >
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[50px]">선택</TableHead>
-                          <TableHead>기술 분야</TableHead>
-                          <TableHead>문제 내용</TableHead>
+                          <TableHead className='w-[80px] md:w-auto'>기술 분야</TableHead>
+                          <TableHead className='w-[80px] md:w-auto'>문제 내용</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {paginatedQuestions.map((question) => {
+                        {filteredQuestions.map((question) => {
                           const registered = isAlreadyRegistered(question.id);
                           return (
                             <TableRow
@@ -476,20 +529,20 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                                     onClick={(e) => e.stopPropagation()}
                                   />
                                   {registered && (
-                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                    <span className="hidden md:inline text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                       이미 등록됨
                                     </span>
                                   )}
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-[10px] md:text-xs">
                                   {question.techClass}
                                 </span>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-[10px] md:text-xs md:whitespace-nowrap md:break-normal whitespace-normal break-words">
                                 {question.questionText.length > 50
-                                  ? `${question.questionText.slice(0, 50)}...`
+                                  ? question.questionText.slice(0, 50) + '...'
                                   : question.questionText}
                               </TableCell>
                             </TableRow>
@@ -502,23 +555,23 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                   <div className="px-4 py-3 border-t">
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-500">
-                        총 {filteredQuestions.length}개의 문제
+                        총 {totalElements}개의 문제
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
                           className="px-3 py-1 border rounded-md text-sm hover:bg-gray-50 disabled:opacity-50"
                           onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage === 1}
+                          disabled={currentPage === 0}
                         >
                           이전
                         </button>
                         <span className="text-sm">
-                          {currentPage} / {totalPages}
+                          {currentPage + 1} / {totalPages}
                         </span>
                         <button
                           className="px-3 py-1 border rounded-md text-sm hover:bg-gray-50 disabled:opacity-50"
                           onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage === totalPages}
+                          disabled={currentPage === totalPages - 1}
                         >
                           다음
                         </button>
@@ -529,20 +582,46 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
               </div>
             </TabsContent>
             <TabsContent value="public" className="mt-0">
-              <div className="grid grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-0 md:gap-6">
                 {/* 좌측 컨테이너: 검색 및 기술 분야 리스트 */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <input
-                      type="text"
-                      className="w-full p-2 border rounded-md"
-                      placeholder="검색어를 입력하세요..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                    <div className="flex gap-2">
+                      <div className="md:hidden">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-full justify-between">
+                              {selectedTechClass || "전체"}
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6" /></svg>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => setSelectedTechClass(null)}>
+                              전체
+                            </DropdownMenuItem>
+                            {["JAVASCRIPT", "TYPESCRIPT", "REACT", "VUE", "ANGULAR", "NODE.JS", "JAVA", "SPRING", "PYTHON", "DJANGO", "DATABASE", "DEVOPS", "MOBILE", "ALGORITHM", "CS", "OS", "NETWORK", "SECURITY", "CLOUD", "CSS", "ETC"].map((tech) => (
+                              <DropdownMenuItem
+                                key={tech}
+                                onClick={() => setSelectedTechClass(tech)}
+                              >
+                                {tech}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <input
+                        type="text"
+                        className="w-full p-2 border rounded-md"
+                        placeholder="검색어를 입력하세요..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <div className="border rounded-md p-4 max-h-[350px] overflow-y-auto">
+                    {/* 모바일에서는 드롭다운, 데스크탑에서는 리스트로 표시 */}
+                    <div className="hidden md:block border rounded-md p-4 max-h-[350px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           key="all"
@@ -570,6 +649,7 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                     </div>
                   </div>
                 </div>
+
                 {/* 우측 컨테이너: 문제 리스트 테이블 */}
                 <div className="border rounded-md col-span-3">
                   {isPublicLoading ? (
@@ -582,12 +662,12 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                         <TableHeader>
                           <TableRow>
                             <TableHead className="w-[50px]">선택</TableHead>
-                            <TableHead>기술 분야</TableHead>
-                            <TableHead>문제 내용</TableHead>
+                            <TableHead className='w-[80px] md:w-auto'>기술 분야</TableHead>
+                            <TableHead className='w-[80px] md:w-auto'>문제 내용</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {paginatedPublicQuestions.map((question) => {
+                          {filteredPublicQuestions.map((question) => {
                             const registered = isAlreadyRegistered(question.id);
                             return (
                               <TableRow
@@ -606,20 +686,20 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                                       onClick={(e) => e.stopPropagation()}
                                     />
                                     {registered && (
-                                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                      <span className="hidden md:inline text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                         이미 등록됨
                                       </span>
                                     )}
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-[10px] md:text-xs">
                                     {question.techClass}
                                   </span>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="text-[10px] md:text-xs md:whitespace-nowrap md:break-normal whitespace-normal break-words">
                                   {question.questionText.length > 50
-                                    ? `${question.questionText.slice(0, 50)}...`
+                                    ? question.questionText.slice(0, 50) + '...'
                                     : question.questionText}
                                 </TableCell>
                               </TableRow>
@@ -631,23 +711,23 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                       <div className="px-4 py-3 border-t">
                         <div className="flex items-center justify-between">
                           <div className="text-sm text-gray-500">
-                            총 {filteredPublicQuestions.length}개의 문제
+                            총 {publicTotalElements}개의 문제
                           </div>
                           <div className="flex items-center space-x-2">
                             <button
                               className="px-3 py-1 border rounded-md text-sm hover:bg-gray-50 disabled:opacity-50"
-                              onClick={() => setPublicCurrentPage(publicCurrentPage - 1)}
-                              disabled={publicCurrentPage === 1}
+                              onClick={() => handlePublicPageChange(publicCurrentPage - 1)}
+                              disabled={publicCurrentPage === 0}
                             >
                               이전
                             </button>
                             <span className="text-sm">
-                              {publicCurrentPage} / {publicTotalPages}
+                              {publicCurrentPage + 1} / {publicTotalPages}
                             </span>
                             <button
                               className="px-3 py-1 border rounded-md text-sm hover:bg-gray-50 disabled:opacity-50"
-                              onClick={() => setPublicCurrentPage(publicCurrentPage + 1)}
-                              disabled={publicCurrentPage === publicTotalPages}
+                              onClick={() => handlePublicPageChange(publicCurrentPage + 1)}
+                              disabled={publicCurrentPage === publicTotalPages - 1}
                             >
                               다음
                             </button>
@@ -661,55 +741,139 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
             </TabsContent>
             <TabsContent value="direct" className="mt-4">
               <div className="space-y-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[200px]">기술 분야</TableHead>
-                      <TableHead>문제 내용</TableHead>
-                      <TableHead className="w-[100px]">공개 여부</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {directQuestions.map((question, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <div className="relative">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  className={`w-[180px] justify-between ${validationErrors[index]?.techClass ? 'border-red-500' : ''}`}
-                                >
-                                  {question.techClass || "기술 분야 선택"}
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6" /></svg>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent className="w-[180px]">
-                                {["JAVASCRIPT", "TYPESCRIPT", "REACT", "VUE", "ANGULAR", "NODE.JS", "JAVA", "SPRING", "PYTHON", "DJANGO", "DATABASE", "DEVOPS", "MOBILE", "ALGORITHM", "CS", "OS", "NETWORK", "SECURITY", "CLOUD", "CSS", "ETC"].map((tech) => (
-                                  <DropdownMenuItem
-                                    key={tech}
-                                    onClick={() => handleQuestionChange(index, 'techClass', tech)}
+                {/* 데스크탑 테이블 뷰 */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[200px]">기술 분야</TableHead>
+                        <TableHead>문제 내용</TableHead>
+                        <TableHead className="w-[100px]">공개 여부</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {directQuestions.map((question, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <div className="relative">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className={`w-[180px] justify-between ${validationErrors[index]?.techClass ? 'border-red-500' : ''}`}
                                   >
-                                    {tech}
-                                  </DropdownMenuItem>
-                                ))}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              className={`w-full p-2 border rounded-md ${validationErrors[index]?.questionText ? 'border-red-500' : ''}`}
-                              placeholder="문제 내용을 입력하세요..."
-                              value={question.questionText}
-                              onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell>
+                                    {question.techClass || "기술 분야 선택"}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6" /></svg>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-[180px]">
+                                  {["JAVASCRIPT", "TYPESCRIPT", "REACT", "VUE", "ANGULAR", "NODE.JS", "JAVA", "SPRING", "PYTHON", "DJANGO", "DATABASE", "DEVOPS", "MOBILE", "ALGORITHM", "CS", "OS", "NETWORK", "SECURITY", "CLOUD", "CSS", "ETC"].map((tech) => (
+                                    <DropdownMenuItem
+                                      key={tech}
+                                      onClick={() => handleQuestionChange(index, 'techClass', tech)}
+                                    >
+                                      {tech}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                className={`w-full p-2 border rounded-md ${validationErrors[index]?.questionText ? 'border-red-500' : ''}`}
+                                placeholder="문제 내용을 입력하세요..."
+                                value={question.questionText}
+                                onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={question.isPublic}
+                                onCheckedChange={(checked) => handleQuestionChange(index, 'isPublic', checked)}
+                              />
+                              <span className="text-sm text-gray-500">
+                                {question.isPublic ? '공개' : '비공개'}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {index > 0 && (
+                              <button
+                                onClick={() => handleRemoveQuestionForm(index)}
+                                className="text-gray-500 hover:text-red-500"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* 모바일 카드 뷰 */}
+                <div className="md:hidden space-y-4">
+                  {directQuestions.map((question, index) => (
+                    <div key={index} className="border rounded-lg p-4 space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-sm font-medium">문제 {index + 1}</h3>
+                        {index > 0 && (
+                          <button
+                            onClick={() => handleRemoveQuestionForm(index)}
+                            className="text-gray-500 hover:text-red-500"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">기술 분야</label>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={`w-full justify-between ${validationErrors[index]?.techClass ? 'border-red-500' : ''}`}
+                              >
+                                {question.techClass || "기술 분야 선택"}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6" /></svg>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-full">
+                              {["JAVASCRIPT", "TYPESCRIPT", "REACT", "VUE", "ANGULAR", "NODE.JS", "JAVA", "SPRING", "PYTHON", "DJANGO", "DATABASE", "DEVOPS", "MOBILE", "ALGORITHM", "CS", "OS", "NETWORK", "SECURITY", "CLOUD", "CSS", "ETC"].map((tech) => (
+                                <DropdownMenuItem
+                                  key={tech}
+                                  onClick={() => handleQuestionChange(index, 'techClass', tech)}
+                                >
+                                  {tech}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">문제 내용</label>
+                          <input
+                            type="text"
+                            className={`w-full p-2 border rounded-md ${validationErrors[index]?.questionText ? 'border-red-500' : ''}`}
+                            placeholder="문제 내용을 입력하세요..."
+                            value={question.questionText}
+                            onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs text-gray-500">공개 여부</label>
                           <div className="flex items-center gap-2">
                             <Switch
                               checked={question.isPublic}
@@ -719,23 +883,12 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                               {question.isPublic ? '공개' : '비공개'}
                             </span>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {index > 0 && (
-                            <button
-                              onClick={() => handleRemoveQuestionForm(index)}
-                              className="text-gray-500 hover:text-red-500"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <Button
                   type="button"
                   variant="outline"

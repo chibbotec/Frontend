@@ -19,7 +19,8 @@ import DescriptionList from "@/pages/dashboard/resume/schedule-job/Description-l
 
 // 기술 면접 관련 컴포넌트
 import Study from "@/pages/dashboard/techInterview/Study"
-import Questions from "@/pages/dashboard/techInterview/Question"
+import Questions from "@/pages/dashboard/techInterview/qna/Question"
+import StudyDetail from "@/pages/dashboard/techInterview/qna/Study-detail"
 import Contest from "@/pages/dashboard/techInterview/contest/Contest-list"
 import ContestDetail from "@/pages/dashboard/techInterview/contest/ContestDetail"
 import ContestTest from "@/pages/dashboard/techInterview/contest/ContestTest"
@@ -84,6 +85,7 @@ function AppRoutes() {
               <Route index element={<Study />} />
               <Route path="study" element={<Study />} />
               <Route path="questions" element={<Questions />} />
+              <Route path="questions/:questionId" element={<StudyDetail />} />
               <Route path="contests" element={<Contest />} />
               <Route path="contests/:contestId" element={<ContestDetail />} />
               <Route path="contests/:contestId/test" element={<ContestTest />} />

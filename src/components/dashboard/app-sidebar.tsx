@@ -59,19 +59,15 @@ const data = {
       icon: Bot,
       items: [
         {
-          title: "문제 풀기",
-          url: "/interview/study",
-        },
-        {
-          title: "문제 제출",
+          title: "공부하기",
           url: "/interview/questions",
         },
         {
-          title: "콘테스트",
+          title: "시험보기",
           url: "/interview/contests",
         },
         {
-          title: "나의 노트",
+          title: "필기노트",
           url: "/interview/notes",
         },
       ],
