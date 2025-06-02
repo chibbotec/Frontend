@@ -190,7 +190,7 @@ const ContestDetail: React.FC = () => {
     <div className="container mx-auto p-4 space-y-6">
       <Card>
         <CardContent>
-          <div className="grid grid-cols-2 gap-8">
+          <div className="grid sm:grid-col-1 md:grid-cols-2 gap-8">
             <div>
               <CardTitle>{contest.title}</CardTitle>
               <div className="grid grid-cols-2 gap-1 mt-4">
@@ -243,16 +243,17 @@ const ContestDetail: React.FC = () => {
       </Card>
 
       {contest.submit === 'EVALUATED' && (
-        <Card>
+        <Card className="mb-4">
           <CardHeader>
             <CardTitle>종합 평가</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 md:gap-8">
               {/* Left side - Bar Chart */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">득점 현황</h3>
-                <div className="h-[300px]">
+                {/* Desktop Chart */}
+                <div className="hidden md:block h-full">
                   <BarChart
                     width={Math.max(400, getChartData().length * 70)}
                     height={250}
@@ -287,8 +288,51 @@ const ContestDetail: React.FC = () => {
                     />
                     <Bar
                       dataKey="score"
-                      fill="#2563eb" // tailwind blue-600
+                      fill="#2563eb"
                       radius={4}
+                    />
+                  </BarChart>
+                </div>
+                {/* Mobile Chart */}
+                <div className="md:hidden h-full">
+                  <BarChart
+                    width={Math.max(250, getChartData().length * 40)}
+                    height={180}
+                    data={getChartData()}
+                  >
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tickLine={false}
+                      tickMargin={5}
+                      axisLine={false}
+                      tickFormatter={(value) =>
+                        value.length > 4 ? value.slice(0, 4) + '…' : value
+                      }
+                      interval={0}
+                      tick={{ fontSize: 8 }}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      tickMargin={5}
+                      axisLine={false}
+                      tick={{ fontSize: 8 }}
+                    />
+                    <RechartsTooltip
+                      cursor={false}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '4px',
+                        padding: '4px',
+                        fontSize: '10px'
+                      }}
+                      formatter={(value) => [`${value}점`, '점수']}
+                    />
+                    <Bar
+                      dataKey="score"
+                      fill="#2563eb"
+                      radius={2}
                     />
                   </BarChart>
                 </div>
@@ -328,8 +372,8 @@ const ContestDetail: React.FC = () => {
 
       <div className="space-y-4">
         {contest.problems.map((problem, index) => (
-          <div key={index} className="flex gap-6 mb-4">
-            <Card className="w-1/3 flex-shrink-0">
+          <div key={index} className="flex flex-col md:flex-row gap-6 mb-4">
+            <Card className="w-full md:w-1/3 flex-shrink-0">
               <CardContent>
                 <div className="flex items-center gap-2 mb-4">
                   <CardTitle className="text-lg md:text-xl">Pr {index + 1}.</CardTitle>
@@ -340,7 +384,7 @@ const ContestDetail: React.FC = () => {
                 <p className="whitespace-pre-wrap text-sm md:text-base">{problem.problem}</p>
               </CardContent>
             </Card>
-            <div className="w-2/3">
+            <div className="w-full md:w-2/3">
               <Tabs defaultValue="ai" className="w-full border rounded-lg p-2 md:p-4 h-[250px]">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="ai" className="text-xs md:text-sm">AI 답변</TabsTrigger>
@@ -351,21 +395,21 @@ const ContestDetail: React.FC = () => {
                   {contest.submit === 'EVALUATED' ? problem.aiAnswer ? (
                     (() => {
                       try {
-                        const parsedAnswer: AIAnswer = JSON.parse(problem.aiAnswer);
+                        // const parsedAnswer: AIAnswer = JSON.parse(problem.aiAnswer);
                         return (
                           <div className="space-y-3">
                             <div>
-                              <h4 className="text-sm font-medium">모범 답변</h4>
-                              <p className="text-sm mt-1 whitespace-pre-line">{parsedAnswer.answer}</p>
+                              <h4 className="text-sm font-bold">모범 답변</h4>
+                              <p className="text-sm mt-1 whitespace-pre-line">{problem.aiAnswer}</p>
                             </div>
-                            <div>
+                            {/* <div>
                               <h4 className="text-sm font-medium">면접 팁</h4>
                               <p className="text-sm mt-1 whitespace-pre-line">{parsedAnswer.tips}</p>
                             </div>
                             <div>
                               <h4 className="text-sm font-medium">관련 주제</h4>
                               <p className="text-sm mt-1">{parsedAnswer.related_topics}</p>
-                            </div>
+                            </div> */}
                           </div>
                         );
                       } catch (e) {

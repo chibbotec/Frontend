@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Eye, Play } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-import ContestCreateModal from './ContestCreateModal';
+import ContestCreateModal from './Contest-create-modal';
 
 // 타입 정의
 interface Contest {
@@ -65,7 +65,7 @@ export function ContestList() {
         withCredentials: true
       });
       // Sort contests by creation date in descending order
-      const sortedContests = response.data.sort((a: Contest, b: Contest) => 
+      const sortedContests = response.data.sort((a: Contest, b: Contest) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       setContests(sortedContests);
@@ -126,45 +126,45 @@ export function ContestList() {
         <TableCaption>현재 등록된 대회 목록입니다.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[80px]">ID</TableHead>
             <TableHead>제목</TableHead>
-            <TableHead className="w-[150px]">등록일</TableHead>
-            <TableHead className="text-center w-[100px]">참여자</TableHead>
-            <TableHead className="text-center w-[100px]">상태</TableHead>
-            <TableHead className="text-center w-[100px]">시험</TableHead>
+            <TableHead className="w-[180px] hidden md:table-cell">등록일</TableHead>
+            <TableHead className="text-center w-[120px]">참여자</TableHead>
+            <TableHead className="text-center w-[120px]">상태</TableHead>
+            <TableHead className="text-center w-[120px]">시험</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {contests.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-6">
+              <TableCell colSpan={5} className="text-center py-6">
                 등록된 대회가 없습니다. 새 대회를 등록해보세요.
               </TableCell>
             </TableRow>
           ) : (
             contests.map((contest) => (
               <TableRow key={contest.id}>
-                <TableCell className="font-medium">{contest.id}</TableCell>
-                <TableCell>{contest.title}</TableCell>
-                <TableCell>{formatDate(contest.createdAt)}</TableCell>
+                <TableCell>
+                  <span className="md:inline hidden">{contest.title}</span>
+                  <span className="md:hidden inline-block break-words whitespace-normal">{contest.title}</span>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{formatDate(contest.createdAt)}</TableCell>
                 <TableCell className="text-center">
                   <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
                     {contest.participants.length}명
                   </span>
                 </TableCell>
                 <TableCell className="text-center">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    contest.submit === 'IN_PROGRESS' 
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : contest.submit === 'COMPLETED'
+                  <span className={`px-2 py-1 rounded-full text-xs ${contest.submit === 'IN_PROGRESS'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : contest.submit === 'COMPLETED'
                       ? 'bg-blue-100 text-blue-800'
                       : 'bg-green-100 text-green-800'
-                  }`}>
-                    {contest.submit === 'IN_PROGRESS' 
+                    }`}>
+                    {contest.submit === 'IN_PROGRESS'
                       ? '진행중'
                       : contest.submit === 'COMPLETED'
-                      ? '제출완료'
-                      : '평가완료'}
+                        ? '제출완료'
+                        : '평가완료'}
                   </span>
                 </TableCell>
                 <TableCell className="text-center">
@@ -195,8 +195,12 @@ export function ContestList() {
           )}
         </TableBody>
         <TableFooter>
-          <TableRow>
-            <TableCell colSpan={5}>총 대회 수</TableCell>
+          <TableRow className="hidden md:table-row">
+            <TableCell colSpan={4}>총 대회 수</TableCell>
+            <TableCell className="text-right">{contests.length}개</TableCell>
+          </TableRow>
+          <TableRow className="md:hidden">
+            <TableCell colSpan={3}>총 대회 수</TableCell>
             <TableCell className="text-right">{contests.length}개</TableCell>
           </TableRow>
         </TableFooter>

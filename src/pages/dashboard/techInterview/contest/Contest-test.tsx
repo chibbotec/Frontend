@@ -61,7 +61,7 @@ const ContestTest: React.FC = () => {
     if (!user || !contest) return false;
     // 대회가 EVALUATED 상태이거나
     if (contest.submit === 'EVALUATED') return true;
-    
+
     // 사용자의 제출 상태가 COMPLETED나 EVALUATED인 경우
     const participant = contest.participants.find(p => p.id === user.id);
     return participant?.submmit === 'COMPLETED' || participant?.submmit === 'EVALUATED';
@@ -136,7 +136,7 @@ const ContestTest: React.FC = () => {
 
   const techClassData = React.useMemo(() => {
     if (!contest) return [];
-    
+
     const techClassCount = contest.problems.reduce((acc, problem) => {
       acc[problem.techClass] = (acc[problem.techClass] || 0) + 1;
       return acc;
@@ -181,18 +181,18 @@ const ContestTest: React.FC = () => {
         body,
         { withCredentials: true }
       );
-      
+
       // Update contest state after successful submission
       setContest(prev => {
         if (!prev) return null;
         return {
           ...prev,
-          participants: prev.participants.map(p => 
+          participants: prev.participants.map(p =>
             p.id === user.id ? { ...p, submmit: 'COMPLETED' } : p
           )
         };
       });
-      
+
       setIsStarted(false);
       toast.success("제출이 완료되었습니다!");
     } catch (e) {
@@ -228,7 +228,7 @@ const ContestTest: React.FC = () => {
     <div className="container mx-auto p-4 space-y-6">
       <Card>
         <CardContent>
-          <div className="grid grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <CardTitle>{contest.title}</CardTitle>
               <div className="text-sm text-gray-500 mt-2">
@@ -241,7 +241,7 @@ const ContestTest: React.FC = () => {
                 참여 인원: {contest.participants.length}명
               </div>
             </div>
-            <div>
+            <div className="flex justify-center">
               <div className="text-sm text-gray-500 mt-2">
                 제출 비중:
                 <div className="h-[120px] w-[120px] mx-auto flex items-center justify-center">
@@ -302,7 +302,7 @@ const ContestTest: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <Button 
+                  <Button
                     onClick={handleStart}
                     className="w-32"
                   >
