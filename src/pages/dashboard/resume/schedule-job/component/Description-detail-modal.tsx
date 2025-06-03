@@ -33,6 +33,7 @@ interface DescriptionDetailModalProps {
   jobDescription: JobDescription | null;
   onDeleted?: () => void;
   onEdit?: () => void;
+  onResumeCustom?: () => void;
 }
 
 export const DescriptionDetailModal: React.FC<DescriptionDetailModalProps> = ({
@@ -41,6 +42,7 @@ export const DescriptionDetailModal: React.FC<DescriptionDetailModalProps> = ({
   jobDescription,
   onDeleted,
   onEdit,
+  onResumeCustom,
 }) => {
   if (!jobDescription) return null;
 
@@ -164,8 +166,9 @@ export const DescriptionDetailModal: React.FC<DescriptionDetailModalProps> = ({
           </Button>
           <Button
             onClick={() => {
-              // TODO: 이력서 작성 페이지로 이동하는 로직 추가
-              console.log('이력서 작성 페이지로 이동', jobDescription?.id);
+              if (onResumeCustom) {
+                onResumeCustom();
+              }
             }}
             className="w-full sm:w-auto"
           >

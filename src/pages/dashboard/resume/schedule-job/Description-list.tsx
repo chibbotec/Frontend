@@ -28,6 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import { ApplyDetailModal } from './component/Apply-detail-modal';
 import { ApplyCreateModal } from './component/Apply-create-modal';
+import { ResumeCustomModal } from '../resume/components/Resume-custom-modal';
 
 interface Schedule {
   title: string;
@@ -260,6 +261,7 @@ const DescriptionList = () => {
   const [isApplyDetailModalOpen, setIsApplyDetailModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<ProcessCard | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isResumeCustomModalOpen, setIsResumeCustomModalOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -566,6 +568,10 @@ const DescriptionList = () => {
           setIsDetailModalOpen(false);
           setIsEditModalOpen(true);
         }}
+        onResumeCustom={() => {
+          setIsDetailModalOpen(false);
+          setIsResumeCustomModalOpen(true);
+        }}
       />
       <DescriptionEditModal
         isOpen={isEditModalOpen}
@@ -593,6 +599,16 @@ const DescriptionList = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateSubmit}
         spaceId={currentSpace?.id?.toString() || ''}
+      />
+      <ResumeCustomModal
+        isOpen={isResumeCustomModalOpen}
+        onClose={() => setIsResumeCustomModalOpen(false)}
+        spaceId={currentSpace?.id?.toString() || ''}
+        jobDescription={selectedJob}
+        onCreated={() => {
+          setIsResumeCustomModalOpen(false);
+          fetchJobDescriptions();
+        }}
       />
     </div>
   );

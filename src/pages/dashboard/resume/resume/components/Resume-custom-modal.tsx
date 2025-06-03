@@ -18,10 +18,28 @@ import axios from 'axios';
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
+interface JobDescription {
+  id: string;
+  url: string | null;
+  isManualInput: boolean;
+  company: string;
+  position: string;
+  mainTasks: string[];
+  requirements: string[];
+  career: string;
+  resumeRequirements: string[];
+  recruitmentProcess: string[];
+  spaceId: number;
+  createdAt: string;
+  updatedAt: string;
+  publicGrade: string;
+}
+
 interface ResumeCustomModalProps {
   isOpen: boolean;
   onClose: () => void;
   spaceId: string;
+  jobDescription?: JobDescription | null;
   onCreated?: () => void;
 }
 
@@ -91,6 +109,7 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
   isOpen,
   onClose,
   spaceId,
+  jobDescription,
   onCreated,
 }) => {
   const navigate = useNavigate();
@@ -151,6 +170,29 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
       });
     }
   }, [isOpen]);
+
+  // 모달이 열릴 때 jobDescription이 있으면 콘솔에 출력하고 step1을 완료 상태로 설정
+  useEffect(() => {
+    if (isOpen && jobDescription) {
+      console.log('채용 공고 정보:', jobDescription);
+      // step1State 업데이트
+      setStep1State({
+        url: jobDescription.url || '',
+        isManualInput: true,
+        manualData: {
+          company: jobDescription.company || '',
+          position: jobDescription.position || '',
+          mainTasks: jobDescription.mainTasks || [],
+          requirements: jobDescription.requirements || [],
+          career: jobDescription.career || '',
+          resumeRequirements: jobDescription.resumeRequirements || [],
+          recruitmentProcess: jobDescription.recruitmentProcess || []
+        }
+      });
+      // step1을 완료 상태로 설정
+      updateStepCompletion(1, true);
+    }
+  }, [isOpen, jobDescription]);
 
   // 각 스텝의 유효성 검사 함수들
   const isStep1Valid = () => {
@@ -284,7 +326,19 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
         return (
           <Step1JDInput
             onStateChange={handleStep1StateChange}
-            initialState={step1State}
+            initialState={{
+              url: jobDescription?.url || '',
+              isManualInput: true,
+              manualData: {
+                company: jobDescription?.company || '',
+                position: jobDescription?.position || '',
+                mainTasks: jobDescription?.mainTasks || [],
+                requirements: jobDescription?.requirements || [],
+                career: jobDescription?.career || '',
+                resumeRequirements: jobDescription?.resumeRequirements || [],
+                recruitmentProcess: jobDescription?.recruitmentProcess || []
+              }
+            }}
             spaceId={spaceId}
           />
         );
