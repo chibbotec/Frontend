@@ -339,7 +339,11 @@ const DescriptionList = () => {
         `${apiUrl}/api/v1/resume/${currentSpace.id}/job-description`,
         { withCredentials: true }
       );
-      setJobDescriptions(response.data);
+      // createdAt 기준으로 내림차순 정렬 (최신순)
+      const sortedData = [...response.data].sort((a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setJobDescriptions(sortedData);
     } catch (error) {
       console.error('채용 공고 목록을 불러오는데 실패했습니다:', error);
       setJobDescriptions([]);
