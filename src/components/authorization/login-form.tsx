@@ -98,7 +98,7 @@ export function LoginForm({
             {error}
           </div>
         )}
-        <div className="grid gap-2">
+        {/* <div className="grid gap-2">
           <Label htmlFor="username">사용자 이름</Label>
           <Input
             id="username"
@@ -136,14 +136,14 @@ export function LoginForm({
           <span className="relative z-10 bg-background px-2 text-muted-foreground">
             또는 다음으로 계속하기
           </span>
-        </div>
+        </div> */}
         {/* GitHub 소셜 로그인 버튼으로 교체 */}
         <GitHubLoginButton disabled={isLoading} />
       </div>
-      <div className="text-center text-sm">
+      {/* <div className="text-center text-sm">
         새로운 계정 만들기!{" "}
         <RegisterLink onSignupSuccess={handleSignupSuccess} />
-      </div>
+      </div> */}
     </form>
   )
 }
