@@ -101,7 +101,7 @@ interface Portfolio {
 const steps = [
   { id: 1, title: "공고 등록 및 분석", description: "채용 공고를 등록하고 분석합니다" },
   { id: 2, title: "추가 정보 등록", description: "채용에 필요한 추가정보를 등록합니다" },
-  { id: 3, title: "이력서 선택", description: "생성할 이력서를 선택합니다" },
+  { id: 3, title: "포트폴리오/경력 선택", description: "생성할 이력서를 선택합니다" },
   { id: 4, title: "이력서 생성", description: "이력서를 생성합니다" },
 ];
 
