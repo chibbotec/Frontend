@@ -218,7 +218,7 @@ const DroppableSection: React.FC<{
       >
         <div className="h-full p-2">
           {cards.length > 0 ? (
-            <div className="h-full">
+            <div className="h-full overflow-y-auto">
               <SortableContext
                 items={cards.map(card => card.id)}
                 strategy={verticalListSortingStrategy}
