@@ -197,18 +197,32 @@ const StudyDetail = () => {
 
   // 답변 제출 핸들러
   const handleSubmitAnswer = async (e: React.FormEvent) => {
+    console.log('handleSubmitAnswer 함수 시작');
     e.preventDefault();
-    if (!question) return;
+    if (!question) {
+      console.log('question이 없음');
+      return;
+    }
+
+    console.log('답변 제출 시도:', {
+      answerText,
+      questionId: question.id,
+      techClass: question.techClass,
+      spaceId
+    });
 
     if (!answerText.trim()) {
+      console.log('답변 내용이 비어있음');
       toast.error("답변 내용을 입력해주세요.");
       return;
     }
 
     setIsSubmitting(true);
+    console.log('제출 시작 - isSubmitting:', true);
 
     try {
-      await axios.post(
+      console.log('API 요청 시작');
+      const response = await axios.post(
         `${apiUrl}/api/v1/tech-interview/${spaceId}/questions/answers`,
         {
           questionId: question.id,
@@ -217,22 +231,26 @@ const StudyDetail = () => {
         },
         { withCredentials: true }
       );
+      console.log('API 응답 성공:', response.data);
 
       toast.success("답변이 성공적으로 제출되었습니다.");
       setAnswerText("");
 
       // 문제 데이터 새로고침
-      const response = await axios.get(
+      console.log('문제 데이터 새로고침 시작');
+      const refreshResponse = await axios.get(
         `${apiUrl}/api/v1/tech-interview/${spaceId}/questions/${questionId}`,
         { withCredentials: true }
       );
-      setQuestion(response.data);
+      console.log('문제 데이터 새로고침 완료');
+      setQuestion(refreshResponse.data);
 
     } catch (error) {
       console.error("답변 제출 실패:", error);
       toast.error("답변 제출에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
+      console.log('제출 완료 - isSubmitting:', false);
     }
   };
 
@@ -445,7 +463,7 @@ ${response.data.content}`;
               </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col overflow-hidden pt-0 px-3">
-              <form onSubmit={handleSubmitAnswer} className="flex-1 flex flex-col h-full">
+              <div className="flex-1 flex flex-col h-full">
                 <div className="flex-1 overflow-hidden">
                   <Textarea
                     placeholder="답변을 입력하세요"
@@ -454,10 +472,14 @@ ${response.data.content}`;
                     className="w-full h-full text-sm resize-none overflow-y-auto"
                   />
                 </div>
-                <Button type="submit" disabled={isSubmitting} className="self-end text-xs px-3 py-1 h-7 mt-2">
+                <Button
+                  onClick={handleSubmitAnswer}
+                  disabled={isSubmitting}
+                  className="self-end text-xs px-3 py-1 h-7 mt-2"
+                >
                   {isSubmitting ? "제출 중..." : "답변 제출"}
                 </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
 
