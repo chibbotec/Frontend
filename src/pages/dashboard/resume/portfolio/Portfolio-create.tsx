@@ -170,6 +170,7 @@ const Portfolio: React.FC = () => {
   const [isAISummarizing, setIsAISummarizing] = useState(false);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
   const [progress, setProgress] = useState<{
     total: number;
     completed: number;
@@ -231,6 +232,7 @@ const Portfolio: React.FC = () => {
       setIsAISummarizing(true);
       setElapsedTime(0);
       setProgress(null);
+      setStartTime(Date.now());
 
       // 1단계: Commit 정보 수집
       setAiStatus({
@@ -295,6 +297,7 @@ const Portfolio: React.FC = () => {
               setIsAISummarizing(false);
               setElapsedTime(0);
               setProgress(null);
+              setStartTime(null);
               setAiStatus({
                 status: 'completed',
                 currentStep: 'completed',
@@ -349,6 +352,7 @@ const Portfolio: React.FC = () => {
               setIsAISummarizing(false);
               setElapsedTime(0);
               setProgress(null);
+              setStartTime(null);
               setAiStatus({
                 status: 'failed',
                 currentStep: 'completed',
@@ -357,7 +361,9 @@ const Portfolio: React.FC = () => {
               toast.error('AI 요약 생성에 실패했습니다.');
             } else if (statusResponse.data.status === 'processing') {
               // 처리 중일 때 경과 시간과 진행 상태 업데이트
-              setElapsedTime(Math.floor(statusResponse.data.elapsed_time));
+              if (startTime) {
+                setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+              }
               setProgress(statusResponse.data.progress);
 
               // 현재 단계에 따른 메시지 업데이트
@@ -383,6 +389,7 @@ const Portfolio: React.FC = () => {
             setIsAISummarizing(false);
             setElapsedTime(0);
             setProgress(null);
+            setStartTime(null);
             setAiStatus({
               status: 'failed',
               currentStep: 'completed',
@@ -404,6 +411,7 @@ const Portfolio: React.FC = () => {
       setIsAISummarizing(false);
       setElapsedTime(0);
       setProgress(null);
+      setStartTime(null);
       setAiStatus({
         status: 'failed',
         currentStep: 'completed',
