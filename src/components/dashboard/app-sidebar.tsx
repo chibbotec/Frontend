@@ -6,6 +6,7 @@ import {
   Bot,
   Frame,
   Map,
+  MessageCircle,
   PieChart,
   Settings2,
   SquareTerminal,
@@ -106,24 +107,7 @@ const data = {
         },
       ],
     },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
+  ]
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -147,6 +131,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
         {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
+      <div className="px-3 py-2">
+        <a
+          href="https://discord.gg/DNAeTkrC"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span>Discord 피드백 남기기</span>
+        </a>
+      </div>
       <SidebarFooter>
         <NavUser user={userData} />
       </SidebarFooter>
