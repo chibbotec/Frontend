@@ -210,6 +210,8 @@ const Portfolio: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { login, isGuest } = useAuth();
 
+  const [completedFiles, setCompletedFiles] = useState(0);
+
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -438,6 +440,9 @@ const Portfolio: React.FC = () => {
           );
           const status = statusResponse.data;
           console.log('파일 저장 상태=======================:', status);
+
+          // completedFiles 상태 업데이트
+          setCompletedFiles(status.completedFiles || 0);
 
           if (status.completed || status.error) {
             console.log('폴링 중지 조건 충족:=========', { completed: status.completed, error: status.error });
@@ -1020,7 +1025,7 @@ const Portfolio: React.FC = () => {
                         <p className="text-center text-xs text-muted-foreground">
                           GitHub 계정을 연동하여 포트폴리오에 저장소를 추가하세요
                         </p>
-                        <Button onClick={handleConnectGitHub} className="mt-1 h-7 text-xs">
+                        <Button type="button" onClick={handleConnectGitHub} className="mt-1 h-7 text-xs">
                           <FaGithub className="h-3 w-3 mr-1" />
                           GitHub 연동하기
                         </Button>
@@ -1093,7 +1098,7 @@ const Portfolio: React.FC = () => {
                               size="sm"
                               className="h-7 text-xs"
                               onClick={handleAISummary}
-                              disabled={savedFiles.length === 0}
+                              disabled={selectedRepos.length === 0}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                                 <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z" />
