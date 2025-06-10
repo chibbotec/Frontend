@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, Loader2, Users, UserCog, Globe } from 'lucide-reac
 import { FaGithub } from 'react-icons/fa';
 import { SiNotion } from 'react-icons/si';
 import { mockPortfolioDetails } from '@/mock-data/Portfolio-detail-mock';
+import { useAuth } from '@/context/AuthContext';
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -70,14 +71,14 @@ const PortfolioDetail: React.FC = () => {
   const [portfolio, setPortfolio] = useState<PortfolioDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const isGuestMode = !localStorage.getItem('accessToken');
+  const { isGuest } = useAuth();
 
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
         setLoading(true);
 
-        if (isGuestMode && id) {
+        if (isGuest && id) {
           // 게스트 모드일 때는 목데이터 사용
           const mockData = mockPortfolioDetails[id];
           if (mockData) {
@@ -107,7 +108,7 @@ const PortfolioDetail: React.FC = () => {
     };
 
     fetchPortfolio();
-  }, [spaceId, id, isGuestMode]);
+  }, [spaceId, id, isGuest]);
 
   // useEffect(() => {
   //   setPortfolio(mockData as PortfolioDetail);
@@ -173,7 +174,7 @@ const PortfolioDetail: React.FC = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           목록으로
         </Button>
-        {!isGuestMode && (
+        {!isGuest && (
           <div className="flex justify-between items-center gap-1">
             <Button
               className="px-4 py-2 bg-blue-500 text-white rounded"
