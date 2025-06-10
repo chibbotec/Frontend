@@ -31,12 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 사용자 정보 확인
   useEffect(() => {
     const checkAuth = async () => {
-      // 로그인 페이지에서는 인증 검사를 건너뜀
-      if (location.pathname === '/login') {
-        setIsLoading(false);
-        return;
-      }
-
       try {
         const apiUrl = import.meta.env.VITE_API_URL || ''
         console.log('API URL:', apiUrl);
@@ -49,12 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsGuest(false);
       } catch (error: any) {
         console.error('인증 실패 상세:', error.response?.data || error.message);
-        // 401 에러가 아닌 경우에만 게스트 모드로 전환
-        if (error.response?.status !== 401) {
-          setUser(null);
-          setIsLoggedIn(false);
-          setIsGuest(true);
-        }
+        // 401 에러를 포함한 모든 에러에서 게스트 모드로 전환
+        setUser(null);
+        setIsLoggedIn(false);
+        setIsGuest(true);
       } finally {
         setIsLoading(false);
       }

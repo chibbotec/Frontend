@@ -91,7 +91,7 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       console.log('===== fetchSpaces 함수 호출 완료 =====');
     }
-  }, [isGuest, navigate]);
+  }, [isGuest]);
 
   // 스페이스 변경 함수
   const switchSpace = useCallback((space: Space) => {
@@ -140,11 +140,6 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log('SpaceProvider 마운트. fetchSpaces 호출');
     fetchSpaces();
-
-    // 컴포넌트 언마운트 시 로그
-    return () => {
-      console.log('SpaceProvider 언마운트');
-    };
   }, [fetchSpaces]);
 
   // 현재 상태 로깅

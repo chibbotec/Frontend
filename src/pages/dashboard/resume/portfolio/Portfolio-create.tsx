@@ -816,7 +816,7 @@ const Portfolio: React.FC = () => {
       </div>
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="col-span-3">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
             <Card className="mb-6">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>기본 정보</CardTitle>
@@ -842,6 +842,11 @@ const Portfolio: React.FC = () => {
                           placeholder="포트폴리오 제목을 입력하세요"
                           required
                           className="flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                            }
+                          }}
                         />
                       </div>
 
@@ -897,6 +902,11 @@ const Portfolio: React.FC = () => {
                               <Button
                                 variant="outline"
                                 className="h-8 text-xs w-full justify-start text-left font-normal"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                  }
+                                }}
                               >
                                 {startDate ? (
                                   format(new Date(startDate), 'yyyy.MM.dd', { locale: ko })
@@ -923,6 +933,11 @@ const Portfolio: React.FC = () => {
                               <Button
                                 variant="outline"
                                 className="h-8 text-xs w-full justify-start text-left font-normal"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                  }
+                                }}
                               >
                                 {endDate ? (
                                   format(new Date(endDate), 'yyyy.MM.dd', { locale: ko })
@@ -957,6 +972,11 @@ const Portfolio: React.FC = () => {
                           placeholder="링크 입력"
                           value={githubLink}
                           onChange={e => setGithubLink(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                            }
+                          }}
                         />
                       </div>
 
@@ -970,6 +990,11 @@ const Portfolio: React.FC = () => {
                           placeholder="링크 입력"
                           value={deployLink}
                           onChange={e => setDeployLink(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                            }
+                          }}
                         />
                       </div>
                     </div>
@@ -1425,9 +1450,11 @@ const Portfolio: React.FC = () => {
         isOpen={isLoginModalOpen}
         onClose={async () => {
           setIsLoginModalOpen(false);
-          return Promise.resolve();
         }}
-        onLogin={login}
+        onLogin={async () => {
+          await login();
+          setIsLoginModalOpen(false);
+        }}
       />
 
       {/* AI 요약 로딩 모달 */}

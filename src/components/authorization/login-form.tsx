@@ -12,11 +12,11 @@ import { GalleryVerticalEnd } from "lucide-react"
 
 interface LoginFormProps {
   isOpen: boolean;
-  onClose?: () => void;
+  onClose?: () => Promise<void>;
   onLogin?: () => Promise<void>;
 }
 
-export function LoginForm({ isOpen, onClose = () => { }, onLogin }: LoginFormProps) {
+export function LoginForm({ isOpen, onClose = async () => { }, onLogin }: LoginFormProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,7 +30,7 @@ export function LoginForm({ isOpen, onClose = () => { }, onLogin }: LoginFormPro
       if (onLogin) {
         await onLogin();
       }
-      onClose();
+      await onClose();
       const savedSpaceId = localStorage.getItem('activeSpaceId');
       if (savedSpaceId) {
         navigate(`/space/${savedSpaceId}`);
