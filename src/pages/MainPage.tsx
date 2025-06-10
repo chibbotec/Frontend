@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSpace } from '@/context/SpaceContext';
+import { useAuth } from '@/context/AuthContext';
 import { format } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Lock, Globe, Code, FileText, BookOpen, Users, Briefcase, ClipboardList, CheckCircle, XCircle, Calendar, ChevronRight } from 'lucide-react';
@@ -182,6 +183,7 @@ const DroppableSection: React.FC<{
 
 const MainPage: React.FC = () => {
   const { currentSpace } = useSpace();
+  const { isGuest } = useAuth();
   const navigate = useNavigate();
 
   // 기술면접 통계 상태
@@ -227,6 +229,18 @@ const MainPage: React.FC = () => {
   useEffect(() => {
     if (!currentSpace?.id) return;
     setLoading(true);
+
+    // 게스트 모드일 때는 기본 데이터 사용
+    if (isGuest) {
+      setStats({
+        totalContestCount: 0,
+        totalQuestionCount: 0,
+        totalNoteCount: 0,
+      });
+      setLoading(false);
+      return;
+    }
+
     axios
       .get(`${apiUrl}/api/v1/tech-interview/${currentSpace.id}/home`, { withCredentials: true })
       .then((res) => setStats(res.data))
@@ -236,7 +250,7 @@ const MainPage: React.FC = () => {
         totalNoteCount: 0,
       }))
       .finally(() => setLoading(false));
-  }, [currentSpace?.id]);
+  }, [currentSpace?.id, isGuest]);
 
   // 포트폴리오 데이터 가져오기
   useEffect(() => {
@@ -245,6 +259,14 @@ const MainPage: React.FC = () => {
     const fetchPortfolios = async () => {
       try {
         setPortfolioLoading(true);
+        // 게스트 모드일 때는 기본 데이터 사용
+        if (isGuest) {
+          setPrivatePortfolios([]);
+          setPublicPortfolios([]);
+          setPortfolioLoading(false);
+          return;
+        }
+
         const response = await axios.get(
           `${apiUrl}/api/v1/resume/${currentSpace.id}/portfolio`,
           { withCredentials: true }
@@ -261,7 +283,7 @@ const MainPage: React.FC = () => {
     };
 
     fetchPortfolios();
-  }, [currentSpace?.id]);
+  }, [currentSpace?.id, isGuest]);
 
   // 채용 공고 데이터 가져오기
   const fetchJobDescriptions = async () => {
@@ -269,6 +291,13 @@ const MainPage: React.FC = () => {
 
     try {
       setLoading(true);
+      // 게스트 모드일 때는 기본 데이터 사용
+      if (isGuest) {
+        setJobDescriptions([]);
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.get<JobDescription[]>(
         `${apiUrl}/api/v1/resume/${currentSpace.id}/job-description`,
         { withCredentials: true }
@@ -288,6 +317,21 @@ const MainPage: React.FC = () => {
 
     try {
       setLoading(true);
+      // 게스트 모드일 때는 기본 데이터 사용
+      if (isGuest) {
+        setApplicationStats({
+          resume: 0,
+          document: 0,
+          coding: 0,
+          interview1: 0,
+          interview2: 0,
+          pass: 0,
+          fail: 0,
+        });
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.get(
         `${apiUrl}/api/v1/resume/${currentSpace.id}/job-application`,
         { withCredentials: true }
@@ -338,6 +382,13 @@ const MainPage: React.FC = () => {
     const fetchResumes = async () => {
       try {
         setResumeLoading(true);
+        // 게스트 모드일 때는 기본 데이터 사용
+        if (isGuest) {
+          setResumes([]);
+          setResumeLoading(false);
+          return;
+        }
+
         const response = await axios.get<ResumeSummary[]>(
           `${apiUrl}/api/v1/resume/${currentSpace.id}/resume`,
           { withCredentials: true }
@@ -350,7 +401,7 @@ const MainPage: React.FC = () => {
       }
     };
     fetchResumes();
-  }, [currentSpace?.id]);
+  }, [currentSpace?.id, isGuest]);
 
   return (
     <div className="p-6 space-y-6">

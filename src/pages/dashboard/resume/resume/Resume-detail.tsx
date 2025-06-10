@@ -28,6 +28,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { mockResumeDetailList } from '@/mock-data/Resume-detail-mock';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -76,6 +77,7 @@ const ResumeDetail: React.FC = () => {
     { id: 'tech-info', title: '기술 역량', visible: true },
   ]);
   const [isSorting, setIsSorting] = useState(false);
+  const isGuestMode = !localStorage.getItem('token'); // 게스트 모드 체크
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -172,10 +174,16 @@ const ResumeDetail: React.FC = () => {
     const fetchResume = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${apiUrl}/api/v1/resume/${spaceId}/resume/${id}`, {
-          withCredentials: true
-        });
-        setResume(response.data);
+        if (isGuestMode) {
+          // 게스트 모드일 경우 항상 mock 데이터의 첫 번째 이력서를 보여줌
+          const mockResumeId = "1"; // mockResumeDetailList의 첫 번째 이력서 ID
+          setResume(mockResumeDetailList[mockResumeId] as ResumeFormData);
+        } else {
+          const response = await axios.get(`${apiUrl}/api/v1/resume/${spaceId}/resume/${id}`, {
+            withCredentials: true
+          });
+          setResume(response.data);
+        }
       } catch (error) {
         console.error('이력서를 불러오는데 실패했습니다:', error);
         setResume(null);
@@ -187,7 +195,7 @@ const ResumeDetail: React.FC = () => {
     if (spaceId && id) {
       fetchResume();
     }
-  }, [spaceId, id]);
+  }, [spaceId, id, isGuestMode]);
 
   useEffect(() => {
     const newSections = [
@@ -246,24 +254,26 @@ const ResumeDetail: React.FC = () => {
             </Button>
 
             <div className='flex flex-col sm:flex-row gap-2 w-full sm:w-auto'>
-              <div className='grid grid-cols-2 sm:flex gap-2'>
-                <Button
-                  variant="ghost"
-                  onClick={handleEdit}
-                  className="w-full sm:w-auto"
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  수정하기
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={handleDelete}
-                  className="w-full sm:w-auto text-red-500 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  삭제하기
-                </Button>
-              </div>
+              {!isGuestMode && (
+                <div className='grid grid-cols-2 sm:flex gap-2'>
+                  <Button
+                    variant="ghost"
+                    onClick={handleEdit}
+                    className="w-full sm:w-auto"
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    수정하기
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={handleDelete}
+                    className="w-full sm:w-auto text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    삭제하기
+                  </Button>
+                </div>
+              )}
               <Button
                 className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 onClick={handlePrint}
@@ -323,9 +333,9 @@ const ResumeDetail: React.FC = () => {
                                         href={link.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-sm text-blue-600 hover:underline"
+                                        className="text-xs text-blue-600 hover:underline"
                                       >
-                                        [바로가기]
+                                        [링크]
                                       </a>
                                     </div>
                                   );

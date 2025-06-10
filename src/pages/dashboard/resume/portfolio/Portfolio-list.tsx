@@ -4,6 +4,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Lock, Globe, Calendar } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { mockPortfolios } from '@/mock-data/Portfolio-list';
+import { LoginForm } from '@/components/authorization/login-form';
+import { useAuth } from '@/context/AuthContext';
 
 // 포트폴리오 타입 정의
 interface Author {
@@ -49,23 +52,32 @@ const PortfolioList: React.FC = () => {
   const [privatePortfolios, setPrivatePortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
   const { spaceId } = useParams<{ spaceId: string }>();
+  const isGuestMode = !localStorage.getItem('accessToken');
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const { login } = useAuth();
 
   useEffect(() => {
     const fetchPortfolios = async () => {
       try {
         setLoading(true);
 
-        // 쿠키 기반 인증 사용
+        if (isGuestMode) {
+          // 게스트 모드일 때는 목데이터 사용
+          setPublicPortfolios(mockPortfolios.publicPortfolios);
+          setPrivatePortfolios(mockPortfolios.privatePortfolios);
+          return;
+        }
+
+        // 로그인된 사용자의 경우 API 호출
         const response = await axios.get(
           `${apiUrl}/api/v1/resume/${spaceId}/portfolio`,
           {
-            withCredentials: true // 쿠키 기반 인증
+            withCredentials: true
           }
         );
 
         console.log('API 응답:', response.data);
 
-        // 서버 응답 데이터 처리
         const data: CategorizedPortfolios = response.data;
 
         if (data.publicPortfolios && data.privatePortfolios) {
@@ -85,7 +97,7 @@ const PortfolioList: React.FC = () => {
     if (spaceId) {
       fetchPortfolios();
     }
-  }, [spaceId]);
+  }, [spaceId, isGuestMode]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '날짜 없음';
@@ -105,7 +117,11 @@ const PortfolioList: React.FC = () => {
   };
 
   const handleCreatePortfolio = () => {
-    navigate(`/space/${spaceId}/resume/portfolios/new`);
+    if (isGuestMode) {
+      setIsLoginModalOpen(true);
+    } else {
+      navigate(`/space/${spaceId}/resume/portfolios/new`);
+    }
   };
 
   // 포트폴리오 카드 렌더링 함수 (신규 생성 버튼 포함)
@@ -227,10 +243,14 @@ const PortfolioList: React.FC = () => {
           </div>
         )}
       </div>
+
+      <LoginForm
+        isOpen={isLoginModalOpen}
+        onClose={async () => setIsLoginModalOpen(false)}
+        onLogin={login}
+      />
     </div>
-
   );
-
 };
 
 export default PortfolioList;

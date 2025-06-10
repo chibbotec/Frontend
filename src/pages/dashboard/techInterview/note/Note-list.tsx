@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Lock, Globe } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/context/AuthContext';
 
 // 노트 응답 타입 정의
 interface Author {
@@ -27,6 +28,7 @@ const apiUrl = import.meta.env.VITE_API_URL || '';
 
 const NoteList: React.FC = () => {
   const navigate = useNavigate();
+  const { isGuest } = useAuth();
   const [publicNotes, setPublicNotes] = useState<NoteResponse[]>([]);
   const [privateNotes, setPrivateNotes] = useState<NoteResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,11 @@ const NoteList: React.FC = () => {
     const fetchNotes = async () => {
       try {
         setLoading(true);
+
+        if (isGuest) {
+          setLoading(false);
+          return;
+        }
 
         // 쿠키 기반 인증 사용
         const response = await axios.get(
@@ -50,7 +57,6 @@ const NoteList: React.FC = () => {
         // 서버 응답 구조 확인 및 데이터 처리
         const data = response.data;
 
-        // 서버 응답 구조에 따라 데이터 처리 로직을 조정
         // Case 1: 서버가 publicNotes와 privateNotes 필드를 직접 제공하는 경우
         if (data.publicNotes && data.privateNotes) {
           setPublicNotes(data.publicNotes);
@@ -69,7 +75,7 @@ const NoteList: React.FC = () => {
     if (spaceId) {
       fetchNotes();
     }
-  }, [spaceId]);
+  }, [spaceId, isGuest]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -92,7 +98,7 @@ const NoteList: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {/* 새 노트 생성 버튼 - 개인 노트 섹션에만 표시 */}
         {!isPublic && (
-          <div 
+          <div
             className="h-[200px] border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-blue-50 transition-colors"
             onClick={handleCreateNote}
           >
@@ -102,11 +108,11 @@ const NoteList: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         {/* 노트 목록 */}
         {notes.map((note) => (
-          <Card 
-            key={note.id} 
+          <Card
+            key={note.id}
             className="h-[200px] cursor-pointer hover:shadow-md hover:border-primary/50 transition-all"
             onClick={() => handleNoteClick(note.id)}
           >
@@ -147,7 +153,7 @@ const NoteList: React.FC = () => {
           <h3 className="text-lg font-medium">공유 노트</h3>
         </div>
         <Separator className="mb-4" />
-        
+
         {loading ? (
           <div className="flex justify-center items-center h-24">
             <p>로딩 중...</p>
@@ -167,7 +173,7 @@ const NoteList: React.FC = () => {
           <h3 className="text-lg font-medium">개인 노트</h3>
         </div>
         <Separator className="mb-4" />
-        
+
         {loading ? (
           <div className="flex justify-center items-center h-24">
             <p>로딩 중...</p>
@@ -177,7 +183,7 @@ const NoteList: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {/* 새 노트 생성 버튼 - 노트가 없을 때도 표시 */}
-            <div 
+            <div
               className="h-[200px] border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-blue-50 transition-colors"
               onClick={handleCreateNote}
             >

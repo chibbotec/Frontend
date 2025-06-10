@@ -41,9 +41,9 @@ const SKIP_LOGIN = false;
 
 // 인증 필요한 라우트를 위한 래퍼 컴포넌트
 const ProtectedRoute = () => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isGuest } = useAuth();
   if (SKIP_LOGIN) return <Outlet />;
-  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  if (!isLoggedIn && !isGuest) return <Navigate to="/login" replace />;
   return <Outlet />;
 };
 
@@ -51,7 +51,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* 공개 라우트 */}
-      <Route path="/login" element={SKIP_LOGIN ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/callback/github" element={<GitHubCallback />} />
 
       {/* 인증 필요한 라우트 */}

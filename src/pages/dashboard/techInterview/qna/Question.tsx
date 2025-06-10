@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSpace } from "@/context/SpaceContext";
+import { useAuth } from "@/context/AuthContext";
 import axios from 'axios';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ import {
 import { Plus, Trash2, Eye } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { StudyCreateModal } from './Study-create-modal';
+import { mockQuestions } from '@/mock-data/Study-list-mock';
 
 
 // 타입 정의
@@ -80,7 +82,8 @@ const techClassOptions = [
 ];
 
 export function QuestionsTable() {
-  const { currentSpace } = useSpace(); // SpaceContext에서 현재 스페이스 정보 가져오기
+  const { currentSpace } = useSpace();
+  const { isGuest } = useAuth(); // AuthContext에서 게스트 모드 상태 가져오기
   const { spaceId } = useParams<{ spaceId: string }>();
   const currentSpaceId = spaceId || localStorage.getItem('activeSpaceId') || '';
   const navigate = useNavigate();
@@ -120,14 +123,32 @@ export function QuestionsTable() {
 
   // 문제 목록 가져오기
   const fetchQuestions = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    if (isGuest) {
+      // 게스트 모드일 때는 목데이터 사용
+      const filteredQuestions = selectedTechClass
+        ? mockQuestions.filter(q => q.techClass === selectedTechClass)
+        : mockQuestions;
+
+      const startIndex = currentPage * 10;
+      const endIndex = startIndex + 10;
+      const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
+
+      setQuestions(paginatedQuestions);
+      setTotalPages(Math.ceil(filteredQuestions.length / 10));
+      setTotalElements(filteredQuestions.length);
+      setIsLoading(false);
+      return;
+    }
+
+    // 로그인 모드일 때만 API 호출
     if (!currentSpaceId) {
       setError('유효한 스페이스 ID가 없습니다.');
       setIsLoading(false);
       return;
     }
-
-    setIsLoading(true);
-    setError(null);
 
     try {
       const response = await axios.get<PageResponse<Question>>(
@@ -291,11 +312,13 @@ export function QuestionsTable() {
     <div className="container mx-auto p-2 sm:p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl sm:text-2xl font-bold">문제 관리</h2>
-        <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          새 문제 등록
-        </Button>
-        {isDialogOpen && (
+        {!isGuest && (
+          <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            새 문제 등록
+          </Button>
+        )}
+        {isDialogOpen && !isGuest && (
           <StudyCreateModal
             isOpen={isDialogOpen}
             onClose={() => setIsDialogOpen(false)}
@@ -380,14 +403,16 @@ export function QuestionsTable() {
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => handleDeleteQuestion(question.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        {!isGuest && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleDeleteQuestion(question.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

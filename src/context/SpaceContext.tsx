@@ -1,6 +1,7 @@
-import {createContext, useContext, useState, useEffect, ReactNode, useCallback} from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { spaceService, type Space, type SpaceMember } from '@/pages/dashboard/space/Space';
+import { useAuth } from './AuthContext';
 
 // 스페이스 컨텍스트 타입 정의
 interface SpaceContextType {
@@ -20,6 +21,7 @@ const SpaceContext = createContext<SpaceContextType | undefined>(undefined);
 // 스페이스 컨텍스트 프로바이더
 export function SpaceProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const { isGuest } = useAuth();
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [currentSpace, setCurrentSpace] = useState<Space | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +36,23 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
       // 로그인 페이지에서는 스페이스 조회를 건너뜁니다
       if (location.pathname === '/login') {
         console.log('로그인 페이지에서는 스페이스 조회를 건너뜁니다');
+        setIsLoading(false);
+        return;
+      }
+
+      // 게스트 모드일 경우 기본 스페이스 생성
+      if (isGuest) {
+        const guestSpace: Space = {
+          id: -1,  // 게스트 스페이스는 음수 ID 사용
+          spaceName: 'Guest Space',
+          spaceOwner: 'Guest',
+          type: 'PERSONAL',
+          members: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        setSpaces([guestSpace]);
+        setCurrentSpace(guestSpace);
         setIsLoading(false);
         return;
       }
@@ -77,7 +96,7 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       console.log('===== fetchSpaces 함수 호출 완료 =====');
     }
-  }, []);  // navigate 의존성 제거
+  }, [isGuest]);  // isGuest 의존성 추가
 
   // 스페이스 변경 함수
   const switchSpace = useCallback((space: Space) => {
@@ -110,12 +129,12 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
     });
 
     setSpaces(prev => prev.map(space =>
-        space.id === currentSpace.id
-            ? {
-              ...space,
-              members: [...space.members, ...members]
-            }
-            : space
+      space.id === currentSpace.id
+        ? {
+          ...space,
+          members: [...space.members, ...members]
+        }
+        : space
     ));
   }, [currentSpace]);
 
@@ -152,9 +171,9 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-      <SpaceContext.Provider value={value}>
-        {children}
-      </SpaceContext.Provider>
+    <SpaceContext.Provider value={value}>
+      {children}
+    </SpaceContext.Provider>
   );
 }
 

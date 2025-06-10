@@ -1,20 +1,24 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 export const useLogout = () => {
   const apiUrl = import.meta.env.VITE_API_URL || '';
-
   const navigate = useNavigate();
+  const { enterGuestMode } = useAuth();
 
   const logout = async () => {
     try {
       const response = await axios.get(`${apiUrl}/api/v1/auth/logout`, {
         withCredentials: true
       });
-      
+
       if (response.status === 200) {
-        // 로그아웃 성공 후 로그인 페이지로 리다이렉트
-        navigate('/login');
+        // 로그아웃 성공 후 게스트 모드로 전환
+        localStorage.removeItem('token');
+        enterGuestMode();
+        // 현재 페이지에서 새로고침
+        window.location.reload();
       } else {
         console.error('로그아웃에 실패했습니다:', response.status);
       }

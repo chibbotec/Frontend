@@ -9,9 +9,11 @@ import { Switch } from '@/components/ui/switch';
 import { Globe, Lock, Save, ArrowLeft, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { toast } from "sonner";
+import { useAuth } from '@/context/AuthContext';
 
 const NoteCreate: React.FC = () => {
   const navigate = useNavigate();
+  const { isGuest } = useAuth();
   const { spaceId, noteId } = useParams<{ spaceId: string, noteId: string }>();
   const [title, setTitle] = useState<string>('');
   const [content, setContent] = useState<string>('');
@@ -153,12 +155,14 @@ const NoteCreate: React.FC = () => {
             />
           </div>
 
-          <Button onClick={handleSave} disabled={loading} size="sm" className="text-xs sm:text-sm">
-            <Save className="h-4 w-4 mr-1 sm:mr-2" />
-            {isEditMode ? '수정' : '저장'}
-          </Button>
+          {!isGuest && (
+            <Button onClick={handleSave} disabled={loading} size="sm" className="text-xs sm:text-sm">
+              <Save className="h-4 w-4 mr-1 sm:mr-2" />
+              {isEditMode ? '수정' : '저장'}
+            </Button>
+          )}
 
-          {isEditMode && (
+          {isEditMode && !isGuest && (
             <Button
               onClick={handleDelete}
               disabled={loading}

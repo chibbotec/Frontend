@@ -29,6 +29,7 @@ import {
 import { ApplyDetailModal } from './component/Apply-detail-modal';
 import { ApplyCreateModal } from './component/Apply-create-modal';
 import { ResumeCustomModal } from '../resume/components/Resume-custom-modal';
+import { mockJobDescriptions } from '@/mock-data/JD-list-mock';
 
 interface Schedule {
   title: string;
@@ -262,6 +263,7 @@ const DescriptionList = () => {
   const [selectedCard, setSelectedCard] = useState<ProcessCard | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isResumeCustomModalOpen, setIsResumeCustomModalOpen] = useState(false);
+  const isGuestMode = !localStorage.getItem('accessToken');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -335,15 +337,20 @@ const DescriptionList = () => {
 
     try {
       setLoading(true);
-      const response = await axios.get<JobDescription[]>(
-        `${apiUrl}/api/v1/resume/${currentSpace.id}/job-description`,
-        { withCredentials: true }
-      );
-      // createdAt 기준으로 내림차순 정렬 (최신순)
-      const sortedData = [...response.data].sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      setJobDescriptions(sortedData);
+      if (isGuestMode) {
+        // 게스트 모드일 때는 mock 데이터 사용
+        setJobDescriptions(mockJobDescriptions);
+      } else {
+        const response = await axios.get<JobDescription[]>(
+          `${apiUrl}/api/v1/resume/${currentSpace.id}/job-description`,
+          { withCredentials: true }
+        );
+        // createdAt 기준으로 내림차순 정렬 (최신순)
+        const sortedData = [...response.data].sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setJobDescriptions(sortedData);
+      }
     } catch (error) {
       console.error('채용 공고 목록을 불러오는데 실패했습니다:', error);
       setJobDescriptions([]);
@@ -435,7 +442,7 @@ const DescriptionList = () => {
               cards={getCardsBySection('resume')}
               onCardClick={handleCardClick}
               onAddCard={handleAddCard}
-              showAddButton={true}
+              showAddButton={!isGuestMode}
             />
             <DroppableSection
               id="document"
@@ -496,12 +503,14 @@ const DescriptionList = () => {
       <div className="grid grid-cols-1 gap-4 rounded-lg shadow p-4 mt-4">
         <div className="flex justify-between items-center mb-4">
           <p className="text-xl font-semibold">채용 공고</p>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="text-xs px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-          >
-            채용공고등록
-          </button>
+          {!isGuestMode && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="text-xs px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+            >
+              채용공고등록
+            </button>
+          )}
         </div>
         <div className="overflow-x-auto">
           <div className="flex gap-4 pb-4 min-w-min">

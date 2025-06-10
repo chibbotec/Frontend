@@ -11,6 +11,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
+import { useAuth } from "@/context/AuthContext";
+import { mockContestDetails } from '@/mock-data/Contest-detail';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -58,6 +60,7 @@ interface ContestDetailResponse {
 
 const ContestDetail: React.FC = () => {
   const { spaceId, contestId } = useParams<{ spaceId: string; contestId: string }>();
+  const { isGuest } = useAuth();
   const [contest, setContest] = useState<ContestDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,6 +70,17 @@ const ContestDetail: React.FC = () => {
     const fetchContestDetail = async () => {
       try {
         setLoading(true);
+
+        if (isGuest) {
+          // 게스트 모드일 때는 mock 데이터 사용
+          const mockContest = mockContestDetails[Number(contestId)];
+          if (!mockContest) {
+            throw new Error('대회 정보를 찾을 수 없습니다.');
+          }
+          setContest(mockContest);
+          return;
+        }
+
         const response = await axios.get(
           `${apiUrl}/api/v1/tech-interview/${spaceId}/contests/${contestId}`,
           {
@@ -85,9 +99,14 @@ const ContestDetail: React.FC = () => {
     if (spaceId && contestId) {
       fetchContestDetail();
     }
-  }, [spaceId, contestId]);
+  }, [spaceId, contestId, isGuest]);
 
   const handleEvaluate = async () => {
+    if (isGuest) {
+      setError('게스트 모드에서는 채점할 수 없습니다.');
+      return;
+    }
+
     if (!spaceId || !contestId) return;
 
     try {
@@ -201,7 +220,7 @@ const ContestDetail: React.FC = () => {
                 <div className="text-sm text-gray-500">
                   제한시간: {Math.floor(contest.timeoutMillis / 60000)}분 {Math.floor((contest.timeoutMillis % 60000) / 1000)}초
                 </div>
-                {contest.submit === 'COMPLETED' && (
+                {contest.submit === 'COMPLETED' && !isGuest && (
                   <div className="flex items-center justify-end">
                     <button
                       onClick={handleEvaluate}

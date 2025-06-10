@@ -16,15 +16,17 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { useSpace } from '@/context/SpaceContext';
+import { useAuth } from '@/context/AuthContext';
 
 // 경로에 따른 한글 이름 매핑
 const pathToKorean: { [key: string]: string } = {
   resume: '이력서 & 포트폴리오',
+  resumes: '이력서',
+  portfolios: '포트폴리오',
   interview: '기술 면접',
   coding: '코딩 테스트',
   settings: '설정',
   share: '이력서 공유',
-  portfolios: '포트폴리오',
   schedule: '일정 관리',
   questions: '공부하기',
   contests: '시험보기',
@@ -34,13 +36,14 @@ const pathToKorean: { [key: string]: string } = {
   new: '새로 만들기',
   detail: '상세 보기',
   edit: '수정하기',
-  test: '시험',
+  test: '시험 시작',
 };
 
 // 대시보드 메인 컴포넌트
 export default function Dashboard() {
   const { spaceId } = useParams<{ spaceId: string }>();
   const { currentSpace } = useSpace();
+  const { isGuest } = useAuth();
   const location = useLocation();
 
   // 현재 경로를 배열로 분리
@@ -51,6 +54,52 @@ export default function Dashboard() {
   const spaceIdx = pathSegments.findIndex(seg => seg === 'space');
   if (spaceIdx !== -1 && pathSegments.length > spaceIdx + 1) {
     filteredSegments = pathSegments.slice(spaceIdx + 2); // 'space'와 spaceId 건너뜀
+  }
+
+  // 이력서 ID 제외
+  if (filteredSegments.includes('resumes')) {
+    const resumesIdx = filteredSegments.findIndex(seg => seg === 'resumes');
+    if (resumesIdx !== -1 && filteredSegments.length > resumesIdx + 1) {
+      // 이력서 ID는 항상 제외
+      filteredSegments = [
+        ...filteredSegments.slice(0, resumesIdx + 1),
+        ...filteredSegments.slice(resumesIdx + 2)
+      ];
+    }
+  }
+
+  // 포트폴리오 ID 제외
+  if (filteredSegments.includes('portfolios')) {
+    const portfoliosIdx = filteredSegments.findIndex(seg => seg === 'portfolios');
+    if (portfoliosIdx !== -1 && filteredSegments.length > portfoliosIdx + 1) {
+      // 포트폴리오 ID는 항상 제외
+      filteredSegments = [
+        ...filteredSegments.slice(0, portfoliosIdx + 1),
+        ...filteredSegments.slice(portfoliosIdx + 2)
+      ];
+    }
+  }
+
+  // 문제 ID를 "문제풀기"로 변경
+  if (filteredSegments.includes('questions')) {
+    const questionsIdx = filteredSegments.findIndex(seg => seg === 'questions');
+    if (questionsIdx !== -1 && filteredSegments.length > questionsIdx + 1) {
+      filteredSegments = [
+        ...filteredSegments.slice(0, questionsIdx + 1),
+        '문제풀기'
+      ];
+    }
+  }
+
+  // 대회 ID를 "조회"로 변경
+  if (filteredSegments.includes('contests')) {
+    const contestsIdx = filteredSegments.findIndex(seg => seg === 'contests');
+    if (contestsIdx !== -1 && filteredSegments.length > contestsIdx + 1) {
+      filteredSegments = [
+        ...filteredSegments.slice(0, contestsIdx + 1),
+        '조회'
+      ];
+    }
   }
 
   // breadcrumb 항목 생성

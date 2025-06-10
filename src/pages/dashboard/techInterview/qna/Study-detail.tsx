@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, StickyNote, Save } from "lucide-react";
 import MDEditor from '@uiw/react-md-editor';
 import { useAuth } from "@/context/AuthContext";
+import { mockStudyDetails } from "@/mock-data/Study-detail-mock";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +79,7 @@ type Question = {
 const StudyDetail = () => {
   const { spaceId, questionId } = useParams<{ spaceId: string; questionId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [question, setQuestion] = useState<QuestionResponse | null>(null);
   const [otherQuestions, setOtherQuestions] = useState<Question[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -98,12 +99,33 @@ const StudyDetail = () => {
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
+        if (isGuest && questionId) {
+          // 게스트 모드일 때는 목데이터 사용
+          const mockQuestion = mockStudyDetails[parseInt(questionId)];
+          if (mockQuestion) {
+            // AI 답변을 제외한 기본 정보만 설정
+            const { aiAnswer, keyPoints, additionalTopics, ...questionData } = mockQuestion;
+            setQuestion({
+              ...questionData,
+              id: mockQuestion.id.toString(),
+              techInterviewId: mockQuestion.techInterviewId.toString(),
+              aiAnswer: null,
+              keyPoints: null,
+              additionalTopics: null
+            });
+            setAiAnswer(null);
+          } else {
+            toast.error("문제를 찾을 수 없습니다.");
+            navigate(-1);
+          }
+          return;
+        }
+
         const response = await axios.get(
           `${apiUrl}/api/v1/tech-interview/${spaceId}/questions/${questionId}`,
           { withCredentials: true }
         );
         setQuestion(response.data);
-        // 초기에는 aiAnswer를 null로 설정
         setAiAnswer(null);
       } catch (error) {
         console.error("문제 데이터 로드 실패:", error);
@@ -112,15 +134,30 @@ const StudyDetail = () => {
       }
     };
 
-    if (spaceId && questionId) {
+    if (questionId) {
       fetchQuestion();
     }
-  }, [spaceId, questionId]);
+  }, [spaceId, questionId, isGuest]);
 
   // 다른 문제들 가져오기
   useEffect(() => {
     const fetchOtherQuestions = async () => {
-      if (!spaceId || !question?.techClass) return;
+      if (!question?.techClass) return;
+
+      if (isGuest) {
+        // 게스트 모드일 때는 목데이터에서 같은 techClass의 다른 문제들을 필터링
+        const filteredQuestions = Object.values(mockStudyDetails)
+          .filter(q => q.techClass === question.techClass && q.id.toString() !== questionId)
+          .slice(currentPage * 4, (currentPage + 1) * 4);
+
+        setOtherQuestions(filteredQuestions.map(q => ({
+          ...q,
+          id: q.id.toString(),
+          techInterviewId: q.techInterviewId.toString()
+        })));
+        setHasNextPage(filteredQuestions.length === 4);
+        return;
+      }
 
       try {
         const response = await axios.get(
@@ -142,7 +179,7 @@ const StudyDetail = () => {
     };
 
     fetchOtherQuestions();
-  }, [spaceId, question?.techClass, currentPage]);
+  }, [spaceId, question?.techClass, currentPage, isGuest, questionId]);
 
   const handleNextPage = () => {
     if (hasNextPage) {
@@ -159,6 +196,20 @@ const StudyDetail = () => {
   // AI 답변 요청 핸들러
   const handleRequestAIAnswer = async () => {
     if (!question) return;
+
+    if (isGuest) {
+      // 게스트 모드일 때는 목데이터에서 AI 답변 가져오기
+      const mockQuestion = mockStudyDetails[parseInt(question.id)];
+      if (mockQuestion) {
+        setAiAnswer({
+          answer: mockQuestion.aiAnswer || '',
+          tips: mockQuestion.keyPoints || '',
+          related_topics: mockQuestion.additionalTopics || ''
+        });
+        toast.success("AI 답변이 생성되었습니다.");
+      }
+      return;
+    }
 
     // 이미 답변이 있으면 바로 표시
     if (question.aiAnswer) {
@@ -197,31 +248,22 @@ const StudyDetail = () => {
 
   // 답변 제출 핸들러
   const handleSubmitAnswer = async (e: React.FormEvent) => {
-    console.log('handleSubmitAnswer 함수 시작');
     e.preventDefault();
-    if (!question) {
-      console.log('question이 없음');
+    if (!question) return;
+
+    if (isGuest) {
+      toast.error("게스트 모드에서는 답변을 제출할 수 없습니다.");
       return;
     }
 
-    console.log('답변 제출 시도:', {
-      answerText,
-      questionId: question.id,
-      techClass: question.techClass,
-      spaceId
-    });
-
     if (!answerText.trim()) {
-      console.log('답변 내용이 비어있음');
       toast.error("답변 내용을 입력해주세요.");
       return;
     }
 
     setIsSubmitting(true);
-    console.log('제출 시작 - isSubmitting:', true);
 
     try {
-      console.log('API 요청 시작');
       const response = await axios.post(
         `${apiUrl}/api/v1/tech-interview/${spaceId}/questions/answers`,
         {
@@ -231,18 +273,15 @@ const StudyDetail = () => {
         },
         { withCredentials: true }
       );
-      console.log('API 응답 성공:', response.data);
 
       toast.success("답변이 성공적으로 제출되었습니다.");
       setAnswerText("");
 
       // 문제 데이터 새로고침
-      console.log('문제 데이터 새로고침 시작');
       const refreshResponse = await axios.get(
         `${apiUrl}/api/v1/tech-interview/${spaceId}/questions/${questionId}`,
         { withCredentials: true }
       );
-      console.log('문제 데이터 새로고침 완료');
       setQuestion(refreshResponse.data);
 
     } catch (error) {
@@ -250,7 +289,6 @@ const StudyDetail = () => {
       toast.error("답변 제출에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
-      console.log('제출 완료 - isSubmitting:', false);
     }
   };
 
@@ -416,8 +454,7 @@ ${response.data.content}`;
                       return (
                         <Card
                           key={q.id}
-                          className={`w-full cursor-pointer hover:bg-accent/50 p-0 ${hasUserAnswer ? 'bg-blue-50' : ''
-                            }`}
+                          className={`w-full cursor-pointer hover:bg-accent/50 p-0 ${hasUserAnswer ? 'bg-blue-50' : ''}`}
                           onClick={() => navigate(`/space/${spaceId}/interview/questions/${q.id}`)}
                         >
                           <CardContent className="p-3">
@@ -451,34 +488,39 @@ ${response.data.content}`;
             <CardHeader className="flex-shrink-0 mb-0 pb-0">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-base">내 답변 작성</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs h-7 px-2"
-                  onClick={() => setIsNoteModalOpen(true)}
-                >
-                  <StickyNote className="h-4 w-4 mr-1" />
-                  노트 추가
-                </Button>
+                {!isGuest && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 px-2"
+                    onClick={() => setIsNoteModalOpen(true)}
+                  >
+                    <StickyNote className="h-4 w-4 mr-1" />
+                    노트 추가
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col overflow-hidden pt-0 px-3">
               <div className="flex-1 flex flex-col h-full">
                 <div className="flex-1 overflow-hidden">
                   <Textarea
-                    placeholder="답변을 입력하세요"
+                    placeholder={isGuest ? "게스트 모드에서는 답변을 작성할 수 없습니다." : "답변을 입력하세요"}
                     value={answerText}
                     onChange={(e) => setAnswerText(e.target.value)}
                     className="w-full h-full text-sm resize-none overflow-y-auto"
+                    disabled={isGuest}
                   />
                 </div>
-                <Button
-                  onClick={handleSubmitAnswer}
-                  disabled={isSubmitting}
-                  className="self-end text-xs px-3 py-1 h-7 mt-2"
-                >
-                  {isSubmitting ? "제출 중..." : "답변 제출"}
-                </Button>
+                {!isGuest && (
+                  <Button
+                    onClick={handleSubmitAnswer}
+                    disabled={isSubmitting}
+                    className="self-end text-xs px-3 py-1 h-7 mt-2"
+                  >
+                    {isSubmitting ? "제출 중..." : "답변 제출"}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -544,39 +586,43 @@ ${response.data.content}`;
         />
       )}
 
-      <NoteAddModal
-        isOpen={isNoteModalOpen}
-        onClose={() => setIsNoteModalOpen(false)}
-        onNoteSelect={handleNoteSelect}
-      />
+      {!isGuest && (
+        <>
+          <NoteAddModal
+            isOpen={isNoteModalOpen}
+            onClose={() => setIsNoteModalOpen(false)}
+            onNoteSelect={handleNoteSelect}
+          />
 
-      <Sheet open={isNoteSheetOpen} onOpenChange={setIsNoteSheetOpen}>
-        <SheetContent className="w-[95vw] sm:w-[600px] md:w-[800px] overflow-y-auto p-3">
-          <h2 className="text-2xl font-bold ">노트 추가</h2>
-          <SheetHeader className="flex flex-row pb-0 mb-0 items-center justify-between">
-            <SheetTitle>{selectedNote?.title}</SheetTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSaveNote}
-              className="text-xs"
-            >
-              <Save className="h-4 w-4 mr-1" />
-              저장
-            </Button>
-          </SheetHeader>
-          <div className="mt-0">
-            <div data-color-mode="light">
-              <MDEditor
-                value={editedContent}
-                onChange={(value) => setEditedContent(value || '')}
-                height={600}
-                preview="edit"
-              />
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          <Sheet open={isNoteSheetOpen} onOpenChange={setIsNoteSheetOpen}>
+            <SheetContent className="w-[95vw] sm:w-[600px] md:w-[800px] overflow-y-auto p-3">
+              <h2 className="text-2xl font-bold ">노트 추가</h2>
+              <SheetHeader className="flex flex-row pb-0 mb-0 items-center justify-between">
+                <SheetTitle>{selectedNote?.title}</SheetTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveNote}
+                  className="text-xs"
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  저장
+                </Button>
+              </SheetHeader>
+              <div className="mt-0">
+                <div data-color-mode="light">
+                  <MDEditor
+                    value={editedContent}
+                    onChange={(value) => setEditedContent(value || '')}
+                    height={600}
+                    preview="edit"
+                  />
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </>
+      )}
     </div>
   );
 };

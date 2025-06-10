@@ -18,6 +18,7 @@ import { NavMain } from "@/components/dashboard/nav-main.tsx"
 import { NavProjects } from "@/components/dashboard/nav-projects"
 import { NavUser } from "@/components/dashboard/nav-user"
 import { TeamSwitcher } from "@/pages/dashboard/space/team-switcher.tsx"
+import { GitHubLoginButton } from "@/components/authorization/GitHubLoginButton"
 import {
   Sidebar,
   SidebarContent,
@@ -82,14 +83,14 @@ const data = {
           title: "문제 풀기",
           url: "/coding/problems",
         },
-        {
-          title: "문제 제출",
-          url: "/coding/problems/present",
-        },
-        {
-          title: "오답노트",
-          url: "/coding/wrong-notes",
-        },
+        // {
+        //   title: "문제 제출",
+        //   url: "/coding/problems/present",
+        // },
+        // {
+        //   title: "오답노트",
+        //   url: "/coding/wrong-notes",
+        // },
       ],
     },
     {
@@ -97,10 +98,10 @@ const data = {
       url: "#",
       icon: Settings2,
       items: [
-        {
-          title: "일반설정",
-          url: "/settings",
-        },
+        // {
+        //   title: "일반설정",
+        //   url: "/settings",
+        // },
         {
           title: "스페이스 설정",
           url: "/settings",
@@ -112,6 +113,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
+  const isGuestMode = !user;
 
   // 사용자 정보 구성 (기본 값 설정 및 실제 사용자 정보로 대체)
   const userData = {
@@ -143,7 +145,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </a>
       </div>
       <SidebarFooter>
-        <NavUser user={userData} />
+        {isGuestMode ? (
+          <div className="px-3 py-2">
+            <GitHubLoginButton />
+          </div>
+        ) : (
+          <NavUser user={userData} />
+        )}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -5,6 +5,9 @@ import { Plus, Calendar } from 'lucide-react';
 import axios from 'axios';
 import { ResumeSummary } from './components/types';
 import { ResumeCustomModal } from './components/Resume-custom-modal';
+import { mockResumeList } from '@/mock-data/Resume-list-mock';
+import { LoginForm } from '@/components/authorization/login-form';
+import { useAuth } from '@/context/AuthContext';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -14,14 +17,22 @@ const ResumeList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { spaceId } = useParams<{ spaceId: string }>();
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const isGuestMode = !localStorage.getItem('token'); // 게스트 모드 체크
+  const { login } = useAuth();
 
   const fetchResumes = async () => {
     try {
       setLoading(true);
-      const response = await axios.get<ResumeSummary[]>(`${apiUrl}/api/v1/resume/${spaceId}/resume`, {
-        withCredentials: true
-      });
-      setResumes(response.data);
+      if (isGuestMode) {
+        // 게스트 모드일 경우 mock 데이터 사용
+        setResumes(mockResumeList as ResumeSummary[]);
+      } else {
+        const response = await axios.get<ResumeSummary[]>(`${apiUrl}/api/v1/resume/${spaceId}/resume`, {
+          withCredentials: true
+        });
+        setResumes(response.data);
+      }
     } catch (error) {
       console.error('이력서 목록을 불러오는데 실패했습니다:', error);
       setResumes([]);
@@ -31,10 +42,10 @@ const ResumeList: React.FC = () => {
   };
 
   useEffect(() => {
-    if (spaceId) {
+    if (spaceId || isGuestMode) {
       fetchResumes();
     }
-  }, [spaceId]);
+  }, [spaceId, isGuestMode]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
@@ -47,7 +58,11 @@ const ResumeList: React.FC = () => {
   };
 
   const handleCreateResume = () => {
-    navigate(`/space/${spaceId}/resume/resumes/new`);
+    if (isGuestMode) {
+      setIsLoginModalOpen(true);
+    } else {
+      navigate(`/space/${spaceId}/resume/resumes/new`);
+    }
   };
 
   return (
@@ -110,7 +125,13 @@ const ResumeList: React.FC = () => {
       <div className="flex justify-center mt-6">
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          onClick={() => setIsCustomModalOpen(true)}
+          onClick={() => {
+            if (isGuestMode) {
+              setIsLoginModalOpen(true);
+            } else {
+              setIsCustomModalOpen(true);
+            }
+          }}
         >
           채용공고 맞춤 이력서 작성
         </button>
@@ -127,6 +148,12 @@ const ResumeList: React.FC = () => {
             fetchResumes();
           }
         }}
+      />
+
+      <LoginForm
+        isOpen={isLoginModalOpen}
+        onClose={async () => setIsLoginModalOpen(false)}
+        onLogin={login}
       />
     </div>
   );

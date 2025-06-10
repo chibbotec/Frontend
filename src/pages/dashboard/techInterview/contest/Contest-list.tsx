@@ -16,6 +16,7 @@ import {
 import { Plus, Eye, Play, Trash2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ContestCreateModal from './Contest-create-modal';
+import { mockContests } from '@/mock-data/Contest-list';
 
 // 타입 정의
 interface Contest {
@@ -35,7 +36,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export function ContestList() {
   const { currentSpace } = useSpace();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { spaceId } = useParams<{ spaceId: string }>();
   const currentSpaceId = spaceId || localStorage.getItem('activeSpaceId') || '';
   const navigate = useNavigate();
@@ -51,14 +52,21 @@ export function ContestList() {
 
   // 대회 목록 가져오기
   const fetchContests = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    if (isGuest) {
+      // 게스트 모드일 때는 목데이터 사용
+      setContests(mockContests);
+      setIsLoading(false);
+      return;
+    }
+
     if (!currentSpaceId) {
       setError('유효한 스페이스 ID가 없습니다.');
       setIsLoading(false);
       return;
     }
-
-    setIsLoading(true);
-    setError(null);
 
     try {
       const response = await axios.get(`${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/contests`, {
@@ -133,10 +141,12 @@ export function ContestList() {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">시험 관리</h2>
-        <Button variant="outline" onClick={() => setIsCreateModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          새 대회 등록
-        </Button>
+        {!isGuest && (
+          <Button variant="outline" onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            새 대회 등록
+          </Button>
+        )}
       </div>
 
       <Table>
@@ -148,13 +158,13 @@ export function ContestList() {
             <TableHead className="text-center w-[120px]">참여자</TableHead>
             <TableHead className="text-center w-[120px]">상태</TableHead>
             <TableHead className="text-center w-[180px]">시험</TableHead>
-            <TableHead className="text-center w-[80px]">삭제</TableHead>
+            {!isGuest && <TableHead className="text-center w-[80px]">삭제</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {contests.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-6">
+              <TableCell colSpan={isGuest ? 5 : 6} className="text-center py-6">
                 등록된 대회가 없습니다. 새 대회를 등록해보세요.
               </TableCell>
             </TableRow>
@@ -197,48 +207,55 @@ export function ContestList() {
                       조회
                     </Button>
                     <Button
-                      variant={isParticipant(contest) ? "default" : "secondary"}
+                      variant="secondary"
                       size="icon"
-                      disabled={!isParticipant(contest)}
+                      disabled={true}
+                      className={isGuest ? "opacity-50 cursor-not-allowed" : ""}
                       onClick={() => {
-                        navigate(`/space/${currentSpaceId}/interview/contests/${contest.id}/test`);
+                        if (!isGuest) {
+                          navigate(`/space/${currentSpaceId}/interview/contests/${contest.id}/test`);
+                        }
                       }}
                     >
                       <Play className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteContest(contest.id)}
-                    className="text-black-500 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
+                {!isGuest && (
+                  <TableCell className="text-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteContest(contest.id)}
+                      className="text-black-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
         </TableBody>
         <TableFooter>
           <TableRow className="hidden md:table-row">
-            <TableCell colSpan={5}>총 대회 수</TableCell>
+            <TableCell colSpan={isGuest ? 4 : 5}>총 대회 수</TableCell>
             <TableCell className="text-right">{contests.length}개</TableCell>
           </TableRow>
           <TableRow className="md:hidden">
-            <TableCell colSpan={4}>총 대회 수</TableCell>
-            <TableCell className="text-right" colSpan={2}>{contests.length}개</TableCell>
+            <TableCell colSpan={isGuest ? 3 : 4}>총 대회 수</TableCell>
+            <TableCell className="text-right" colSpan={isGuest ? 2 : 3}>{contests.length}개</TableCell>
           </TableRow>
         </TableFooter>
       </Table>
 
-      <ContestCreateModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
+      {!isGuest && (
+        <ContestCreateModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      )}
     </div>
   );
 }

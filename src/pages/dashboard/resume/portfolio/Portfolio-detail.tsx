@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Loader2, Users, UserCog, Globe } from 'lucide-react';
 import { FaGithub } from 'react-icons/fa';
 import { SiNotion } from 'react-icons/si';
-import mockData from './components/Mock';
+import { mockPortfolioDetails } from '@/mock-data/Portfolio-detail-mock';
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -36,6 +36,16 @@ interface Contents {
   roles?: string[];
 }
 
+interface GithubRepo {
+  name: string;
+  url?: string;
+  description: string;
+  language: string;
+  lineCount: number;
+  byteSize: number | null;
+  selectedDirectories: string[];
+}
+
 interface PortfolioDetail {
   id: string;
   spaceId: number;
@@ -51,15 +61,7 @@ interface PortfolioDetail {
   deployLink?: string;
   memberCount?: number;
   memberRoles?: string;
-  githubRepos?: Array<{
-    name: string;
-    url: string;
-    description: string;
-    language: string;
-    lineCount: number;
-    byteSize: number | null;
-    selectedDirectories: string[];
-  }>;
+  githubRepos?: GithubRepo[];
 }
 
 const PortfolioDetail: React.FC = () => {
@@ -68,10 +70,26 @@ const PortfolioDetail: React.FC = () => {
   const [portfolio, setPortfolio] = useState<PortfolioDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isGuestMode = !localStorage.getItem('accessToken');
 
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
+        setLoading(true);
+
+        if (isGuestMode && id) {
+          // 게스트 모드일 때는 목데이터 사용
+          const mockData = mockPortfolioDetails[id];
+          if (mockData) {
+            setPortfolio(mockData);
+            setError(null);
+          } else {
+            setError('포트폴리오를 찾을 수 없습니다.');
+          }
+          return;
+        }
+
+        // 로그인된 사용자의 경우 API 호출
         const response = await axios.get(
           `${apiUrl}/api/v1/resume/${spaceId}/portfolio/${id}`,
           { withCredentials: true }
@@ -89,7 +107,7 @@ const PortfolioDetail: React.FC = () => {
     };
 
     fetchPortfolio();
-  }, [spaceId, id]);
+  }, [spaceId, id, isGuestMode]);
 
   // useEffect(() => {
   //   setPortfolio(mockData as PortfolioDetail);
@@ -155,19 +173,21 @@ const PortfolioDetail: React.FC = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           목록으로
         </Button>
-        <div className="flex justify-between items-center gap-1">
-          <Button
-            className="px-4 py-2 bg-blue-500 text-white rounded"
-            onClick={handleEdit}>
-            수정하기
-          </Button>
-          <Button
-            className="px-4 py-2 text-white rounded"
-            variant="destructive"
-            onClick={handleDelete}>
-            삭제하기
-          </Button>
-        </div>
+        {!isGuestMode && (
+          <div className="flex justify-between items-center gap-1">
+            <Button
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+              onClick={handleEdit}>
+              수정하기
+            </Button>
+            <Button
+              className="px-4 py-2 text-white rounded"
+              variant="destructive"
+              onClick={handleDelete}>
+              삭제하기
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4">
