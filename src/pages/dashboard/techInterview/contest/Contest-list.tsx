@@ -207,7 +207,7 @@ export function ContestList() {
                       조회
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant={isParticipant(contest) ? "default" : "secondary"}
                       size="icon"
                       disabled={!isParticipant(contest)}
                       className={!isParticipant(contest) ? "opacity-50 cursor-not-allowed" : ""}
