@@ -42,6 +42,7 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
 
       // 게스트 모드일 경우 기본 스페이스 생성
       if (isGuest) {
+        console.log('게스트 모드: 게스트 스페이스 생성');
         const guestSpace: Space = {
           id: -1,  // 게스트 스페이스는 음수 ID 사용
           spaceName: 'Guest Space',
@@ -57,52 +58,60 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      // 로그인된 사용자의 경우 API로 스페이스 목록 조회
       console.log('spaceService.getMySpaces 호출 전');
       const result = await spaceService.getMySpaces();
       console.log('스페이스 목록 조회 결과:', result);
       setSpaces(result);
 
-      // localStorage에서 이전에 선택한 스페이스 ID 가져오기
-      const savedSpaceId = localStorage.getItem('activeSpaceId');
-      console.log('localStorage에서 가져온 activeSpaceId:', savedSpaceId);
-
-      // 활성 스페이스 선택 로직
       if (result.length > 0) {
         console.log('스페이스 목록이 존재함. 길이:', result.length);
-        // 1. 저장된 ID가 있고, 그 ID가 현재 스페이스 목록에 있으면 해당 스페이스 선택
-        if (savedSpaceId) {
-          const savedSpace = result.find(space => space.id.toString() === savedSpaceId);
-          console.log('저장된 ID로 찾은 스페이스:', savedSpace);
-          if (savedSpace) {
-            setCurrentSpace(savedSpace);
-            console.log('저장된 스페이스로 현재 스페이스 설정:', savedSpace);
+        // URL에서 현재 스페이스 ID 가져오기
+        const pathParts = location.pathname.split('/');
+        const spaceIdFromUrl = pathParts[pathParts.indexOf('space') + 1];
+
+        // URL에 있는 스페이스 ID로 스페이스 찾기
+        if (spaceIdFromUrl) {
+          const spaceFromUrl = result.find(space => space.id.toString() === spaceIdFromUrl);
+          if (spaceFromUrl) {
+            setCurrentSpace(spaceFromUrl);
             return;
           }
         }
-
-        // 2. 저장된 ID가 없거나 유효하지 않으면 첫 번째 스페이스 선택
-        console.log('첫 번째 스페이스로 설정:', result[0]);
+        // URL에 스페이스 ID가 없거나 유효하지 않으면 첫 번째 스페이스 선택
         setCurrentSpace(result[0]);
-        localStorage.setItem('activeSpaceId', result[0].id.toString());
+        navigate(`/space/${result[0].id}`);
       } else {
         console.log('스페이스 목록이 비어 있음');
         setCurrentSpace(null);
-        localStorage.removeItem('activeSpaceId');
       }
     } catch (err) {
       console.error("스페이스 목록 조회 실패:", err);
       setError(true);
+      // 에러 발생 시 게스트 모드로 전환
+      if (isGuest) {
+        const guestSpace: Space = {
+          id: -1,
+          spaceName: 'Guest Space',
+          spaceOwner: 'Guest',
+          type: 'PERSONAL',
+          members: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        setSpaces([guestSpace]);
+        setCurrentSpace(guestSpace);
+      }
     } finally {
       setIsLoading(false);
       console.log('===== fetchSpaces 함수 호출 완료 =====');
     }
-  }, [isGuest]);  // isGuest 의존성 추가
+  }, [isGuest, navigate]);
 
   // 스페이스 변경 함수
   const switchSpace = useCallback((space: Space) => {
     console.log('switchSpace 호출. 선택된 스페이스:', space);
     setCurrentSpace(space);
-    localStorage.setItem('activeSpaceId', space.id.toString());
     console.log(`/space/${space.id}로 이동합니다.`);
     navigate(`/space/${space.id}`);
   }, [navigate]);
