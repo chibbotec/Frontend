@@ -47,32 +47,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.data);
         setIsLoggedIn(true);
         setIsGuest(false);
-        // 로그인 성공 시 게스트 모드 상태 제거
-        localStorage.removeItem('isGuest');
-        localStorage.setItem('isLoggedIn', 'true');
       } catch (error: any) {
         console.error('인증 실패 상세:', error.response?.data || error.message);
-        setUser(null);
-        setIsLoggedIn(false);
-        setIsGuest(true);
-
-        // 로컬 스토리지에 게스트 모드 상태 저장
-        localStorage.setItem('isGuest', 'true');
+        // 401 에러가 아닌 경우에만 게스트 모드로 전환
+        if (error.response?.status !== 401) {
+          setUser(null);
+          setIsLoggedIn(false);
+          setIsGuest(true);
+        }
       } finally {
         setIsLoading(false);
       }
     }
 
-    // 로컬 스토리지에서 게스트 모드 상태 확인
-    const isGuestMode = localStorage.getItem('isGuest') === 'true';
-    if (isGuestMode) {
-      setIsGuest(true);
-      setIsLoggedIn(false);
-      setUser(null);
-      setIsLoading(false);
-    } else {
-      checkAuth();
-    }
+    checkAuth();
   }, [])
 
   const enterGuestMode = () => {
@@ -91,9 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.data);
       setIsLoggedIn(true);
       setIsGuest(false);
-
-      localStorage.setItem('isLoggedIn', 'true');
-
       return response.data;
     } catch (error) {
       console.error('사용자 정보 가져오기 실패:', error);
@@ -111,8 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoggedIn(false);
       setUser(null);
       setIsGuest(true);
-
-      localStorage.removeItem('isLoggedIn');
     } catch (error) {
       console.error('로그아웃 오류:', error);
     }
