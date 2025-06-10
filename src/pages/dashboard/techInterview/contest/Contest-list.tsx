@@ -88,7 +88,7 @@ export function ContestList() {
   // 컴포넌트 마운트 시 대회 목록 가져오기
   useEffect(() => {
     fetchContests();
-  }, [currentSpaceId]);
+  }, [currentSpaceId, isGuest]);
 
   // 날짜 포맷 함수
   const formatDate = (dateString: string) => {

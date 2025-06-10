@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const apiUrl = import.meta.env.VITE_API_URL || ''
+        console.log('API URL:', apiUrl);
         const response = await axios.get(`${apiUrl}/api/v1/members/me`, {
           withCredentials: true
         });
@@ -46,8 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.data);
         setIsLoggedIn(true);
         setIsGuest(false);
+        // 로그인 성공 시 게스트 모드 상태 제거
+        localStorage.removeItem('isGuest');
+        localStorage.setItem('isLoggedIn', 'true');
       } catch (error: any) {
-        console.log('인증 실패, 게스트 모드로 전환');
+        console.error('인증 실패 상세:', error.response?.data || error.message);
         setUser(null);
         setIsLoggedIn(false);
         setIsGuest(true);
