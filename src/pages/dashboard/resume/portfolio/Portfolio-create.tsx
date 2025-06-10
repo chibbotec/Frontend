@@ -19,6 +19,8 @@ import { ko } from 'date-fns/locale';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import AddRepoDialog from './AddRepo-dailog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { LoginForm } from '@/components/authorization/login-form';
+import { useAuth } from '@/context/AuthContext';
 
 // 포트폴리오 타입 정의
 interface Author {
@@ -204,6 +206,9 @@ const Portfolio: React.FC = () => {
   // 상태 추가
   const [githubLink, setGithubLink] = useState<string>('');
   const [deployLink, setDeployLink] = useState<string>('');
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const { login, isGuest } = useAuth();
 
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
@@ -700,6 +705,11 @@ const Portfolio: React.FC = () => {
   };
 
   const handleConnectGitHub = () => {
+    if (isGuest) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     // GitHub OAuth 인증을 위한 URL
     const redirectUrl = encodeURIComponent(`${window.location.origin}/github/callback?spaceId=${spaceId}`);
     const githubAuthUrl = `${apiUrl}/api/v1/auth/oauth2/authorization/github?redirect_uri=${redirectUrl}`;
@@ -1058,6 +1068,7 @@ const Portfolio: React.FC = () => {
                               size="sm"
                               className="h-7 text-xs"
                               onClick={handleAISummary}
+                              disabled={savedFiles.length === 0}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
                                 <path d="M12 2a8 8 0 0 0-8 8c0 1.892.402 3.13 1.5 4.5L12 22l6.5-7.5c1.098-1.37 1.5-2.608 1.5-4.5a8 8 0 0 0-8-8Z" />
@@ -1408,6 +1419,16 @@ const Portfolio: React.FC = () => {
           />
         )
       }
+
+      {/* 로그인 모달 */}
+      <LoginForm
+        isOpen={isLoginModalOpen}
+        onClose={async () => {
+          setIsLoginModalOpen(false);
+          return Promise.resolve();
+        }}
+        onLogin={login}
+      />
 
       {/* AI 요약 로딩 모달 */}
       {isAISummarizing && (
