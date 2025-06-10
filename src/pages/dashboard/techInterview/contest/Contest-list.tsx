@@ -209,8 +209,8 @@ export function ContestList() {
                     <Button
                       variant="secondary"
                       size="icon"
-                      disabled={true}
-                      className={isGuest ? "opacity-50 cursor-not-allowed" : ""}
+                      disabled={!isParticipant(contest)}
+                      className={!isParticipant(contest) ? "opacity-50 cursor-not-allowed" : ""}
                       onClick={() => {
                         if (!isGuest) {
                           navigate(`/space/${currentSpaceId}/interview/contests/${contest.id}/test`);

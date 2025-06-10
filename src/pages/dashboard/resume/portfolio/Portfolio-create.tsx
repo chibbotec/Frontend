@@ -686,8 +686,8 @@ const Portfolio: React.FC = () => {
 
       toast.success(isEditMode ? '포트폴리오가 성공적으로 수정되었습니다.' : '포트폴리오가 성공적으로 저장되었습니다.');
 
-      // 생성/수정된 포트폴리오 상세 페이지로 이동
-      navigate(`/space/${spaceId}/resume/portfolios/${response.data.id}`);
+      // 포트폴리오 목록 페이지로 이동
+      navigate(`/space/${spaceId}/resume/portfolios`);
     } catch (err) {
       console.error('포트폴리오 저장에 실패했습니다:', err);
       setError('포트폴리오 저장에 실패했습니다. 다시 시도해주세요.');
