@@ -142,6 +142,11 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
     fetchSpaces();
   }, [fetchSpaces]);
 
+  // isGuest가 바뀔 때마다 스페이스 목록 재조회 (게스트 스페이스 반영)
+  useEffect(() => {
+    fetchSpaces();
+  }, [isGuest]);
+
   // 현재 상태 로깅
   useEffect(() => {
     console.log('현재 스페이스 상태:', {

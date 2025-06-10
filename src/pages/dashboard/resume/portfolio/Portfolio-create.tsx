@@ -462,7 +462,7 @@ const Portfolio: React.FC = () => {
               }));
               setSavedFiles(prev => [...prev, ...newFiles]);
               toast.success('파일 저장 성공', {
-                description: `${newFiles.length}개의 파일이 저장되었습니다.`
+                description: `${status.completedFiles}개의 파일이 저장되었습니다.`
               });
             }
           }
