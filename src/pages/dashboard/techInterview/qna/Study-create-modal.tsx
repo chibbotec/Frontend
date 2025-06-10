@@ -241,7 +241,6 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
-      fetchQuestions();
     }
   };
 
@@ -249,25 +248,32 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
   const handlePublicPageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < publicTotalPages) {
       setPublicCurrentPage(newPage);
-      fetchPublicQuestions();
     }
   };
 
   // 검색어나 필터가 변경될 때 첫 페이지로 리셋
   useEffect(() => {
     setCurrentPage(0);
-    if (isOpen && activeTab === "database") {
-      fetchQuestions();
-    }
   }, [searchQuery, selectedTechClass]);
 
   // 공개문제 검색/필터 변경 시 첫 페이지로 리셋
   useEffect(() => {
     setPublicCurrentPage(0);
+  }, [searchQuery, selectedTechClass]);
+
+  // 페이지 변경 시 데이터 가져오기
+  useEffect(() => {
+    if (isOpen && activeTab === "database") {
+      fetchQuestions();
+    }
+  }, [isOpen, activeTab, currentPage, searchQuery, selectedTechClass]);
+
+  // 공개문제 페이지 변경 시 데이터 가져오기
+  useEffect(() => {
     if (isOpen && activeTab === "public") {
       fetchPublicQuestions();
     }
-  }, [searchQuery, selectedTechClass]);
+  }, [isOpen, activeTab, publicCurrentPage, searchQuery, selectedTechClass]);
 
   // 체크박스 핸들러
   const handleCheckboxChange = (questionId: number) => {
