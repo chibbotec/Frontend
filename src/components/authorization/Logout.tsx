@@ -15,7 +15,6 @@ export const useLogout = () => {
 
       if (response.status === 200) {
         // 로그아웃 성공 후 게스트 모드로 전환
-        localStorage.removeItem('token');
         enterGuestMode();
         // 현재 페이지에서 새로고침
         window.location.reload();

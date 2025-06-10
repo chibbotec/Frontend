@@ -41,9 +41,12 @@ const SKIP_LOGIN = false;
 
 // 인증 필요한 라우트를 위한 래퍼 컴포넌트
 const ProtectedRoute = () => {
-  const { isLoggedIn, isGuest } = useAuth();
+  const { isLoggedIn, isGuest, enterGuestMode } = useAuth();
   if (SKIP_LOGIN) return <Outlet />;
-  if (!isLoggedIn && !isGuest) return <Navigate to="/login" replace />;
+  if (!isLoggedIn && !isGuest) {
+    enterGuestMode();
+    return <Outlet />;
+  }
   return <Outlet />;
 };
 
