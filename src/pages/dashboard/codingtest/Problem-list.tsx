@@ -33,8 +33,7 @@ export function ProblemCardsView() {
   const { spaceId } = useParams<{ spaceId: string }>();
   const currentSpaceId = spaceId || localStorage.getItem('activeSpaceId') || '';
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const isGuestMode = !localStorage.getItem('accessToken');
+  const { login, isGuest } = useAuth();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -59,7 +58,7 @@ export function ProblemCardsView() {
       return;
     }
 
-    if (isGuestMode) {
+    if (isGuest) {
       setIsLoginModalOpen(true);
       setIsLoading(false);
       return;
@@ -94,6 +93,7 @@ export function ProblemCardsView() {
       }));
 
       setProblems(mappedProblems);
+      setIsLoginModalOpen(false); // 로그인 성공 후 모달 닫기
     } catch (err) {
       console.error('문제 목록을 가져오는 중 오류 발생:', err);
       setError('문제 목록을 불러오는데 실패했습니다.');
@@ -105,11 +105,11 @@ export function ProblemCardsView() {
   // 컴포넌트 마운트 시 문제 목록 가져오기
   useEffect(() => {
     fetchProblems();
-  }, [currentSpaceId]);
+  }, [currentSpaceId, isGuest]); // isGuest 상태 변경 시에도 fetchProblems 호출
 
   // 문제 풀기 핸들러
   const handleSolveProblem = (problemId: string) => {
-    if (isGuestMode) {
+    if (isGuest) {
       setIsLoginModalOpen(true);
       return;
     }
@@ -118,7 +118,7 @@ export function ProblemCardsView() {
 
   // 새 문제 등록 핸들러
   const handleNewProblem = () => {
-    if (isGuestMode) {
+    if (isGuest) {
       setIsLoginModalOpen(true);
       return;
     }

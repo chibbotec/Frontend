@@ -6,6 +6,7 @@ import { DescriptionDetailModal } from './component/Description-detail-modal';
 import { DescriptionEditModal } from './component/Description-edit-modal';
 import { SortableProcessCard, ProcessCard } from './component/Drag-and-Drop-card';
 import { useSpace } from '@/context/SpaceContext';
+import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import {
   DndContext,
@@ -254,6 +255,7 @@ const DescriptionList = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobDescription | null>(null);
   const { currentSpace } = useSpace();
+  const { isGuest } = useAuth();
   const [jobDescriptions, setJobDescriptions] = useState<JobDescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -263,7 +265,6 @@ const DescriptionList = () => {
   const [selectedCard, setSelectedCard] = useState<ProcessCard | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isResumeCustomModalOpen, setIsResumeCustomModalOpen] = useState(false);
-  const isGuestMode = !localStorage.getItem('accessToken');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -337,7 +338,7 @@ const DescriptionList = () => {
 
     try {
       setLoading(true);
-      if (isGuestMode) {
+      if (isGuest) {
         // 게스트 모드일 때는 mock 데이터 사용
         setJobDescriptions(mockJobDescriptions);
       } else {
@@ -442,7 +443,7 @@ const DescriptionList = () => {
               cards={getCardsBySection('resume')}
               onCardClick={handleCardClick}
               onAddCard={handleAddCard}
-              showAddButton={!isGuestMode}
+              showAddButton={!isGuest}
             />
             <DroppableSection
               id="document"
@@ -503,7 +504,7 @@ const DescriptionList = () => {
       <div className="grid grid-cols-1 gap-4 rounded-lg shadow p-4 mt-4">
         <div className="flex justify-between items-center mb-4">
           <p className="text-xl font-semibold">채용 공고</p>
-          {!isGuestMode && (
+          {!isGuest && (
             <button
               onClick={() => setIsModalOpen(true)}
               className="text-xs px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition"

@@ -10,11 +10,11 @@ import Education from './components/Education';
 import Certificate from './components/Certificate';
 import CoverLetter from './components/Coverletter';
 import axios from 'axios';
-
+import { useAuth } from '@/context/AuthContext';
+import { LoginForm } from '@/components/authorization/login-form';
 
 // API 기본 URL
 const apiUrl = import.meta.env.VITE_API_URL || '';
-
 
 const ResumeCreate: React.FC = () => {
     const navigate = useNavigate();
@@ -23,6 +23,14 @@ const ResumeCreate: React.FC = () => {
     const location = useLocation();
     const isEditMode = !!id;
     const resumeData = location.state?.resumeData;
+    const { isGuest, login } = useAuth();
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+    useEffect(() => {
+        if (isGuest) {
+            setIsLoginModalOpen(true);
+        }
+    }, [isGuest]);
 
     const formatDate = (date: Date) => {
         const year = date.getFullYear();
@@ -189,6 +197,11 @@ const ResumeCreate: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (isGuest) {
+            setIsLoginModalOpen(true);
+            return;
+        }
+
         const formData: ResumeFormData = {
             title,
             name,
@@ -248,6 +261,17 @@ const ResumeCreate: React.FC = () => {
             // TODO: 에러 처리 UI 추가
         }
     };
+
+    if (isGuest) {
+        return (
+            <div className="p-6">
+                <h2 className="text-2xl font-bold mb-4">이력서 작성</h2>
+                <p className="text-muted-foreground mb-4">
+                    이력서를 작성하려면 로그인이 필요합니다.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6">
@@ -326,6 +350,11 @@ const ResumeCreate: React.FC = () => {
                     </form>
                 </div>
             </div>
+            <LoginForm
+                isOpen={isLoginModalOpen}
+                onClose={() => setIsLoginModalOpen(false)}
+                onLogin={login}
+            />
         </div>
     );
 };

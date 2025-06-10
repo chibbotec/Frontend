@@ -29,6 +29,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { mockResumeDetailList } from '@/mock-data/Resume-detail-mock';
+import { useAuth } from '@/context/AuthContext';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -77,7 +78,7 @@ const ResumeDetail: React.FC = () => {
     { id: 'tech-info', title: '기술 역량', visible: true },
   ]);
   const [isSorting, setIsSorting] = useState(false);
-  const isGuestMode = !localStorage.getItem('token'); // 게스트 모드 체크
+  const { isGuest } = useAuth();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -174,7 +175,7 @@ const ResumeDetail: React.FC = () => {
     const fetchResume = async () => {
       try {
         setLoading(true);
-        if (isGuestMode) {
+        if (isGuest) {
           // 게스트 모드일 경우 항상 mock 데이터의 첫 번째 이력서를 보여줌
           const mockResumeId = "1"; // mockResumeDetailList의 첫 번째 이력서 ID
           setResume(mockResumeDetailList[mockResumeId] as ResumeFormData);
@@ -195,7 +196,7 @@ const ResumeDetail: React.FC = () => {
     if (spaceId && id) {
       fetchResume();
     }
-  }, [spaceId, id, isGuestMode]);
+  }, [spaceId, id, isGuest]);
 
   useEffect(() => {
     const newSections = [
@@ -254,7 +255,7 @@ const ResumeDetail: React.FC = () => {
             </Button>
 
             <div className='flex flex-col sm:flex-row gap-2 w-full sm:w-auto'>
-              {!isGuestMode && (
+              {!isGuest && (
                 <div className='grid grid-cols-2 sm:flex gap-2'>
                   <Button
                     variant="ghost"

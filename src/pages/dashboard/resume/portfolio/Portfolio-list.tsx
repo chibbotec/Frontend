@@ -5,7 +5,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Plus, Lock, Globe, Calendar } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { mockPortfolios } from '@/mock-data/Portfolio-list';
-import { LoginForm } from '@/components/authorization/login-form';
 import { useAuth } from '@/context/AuthContext';
 
 // 포트폴리오 타입 정의
@@ -52,16 +51,14 @@ const PortfolioList: React.FC = () => {
   const [privatePortfolios, setPrivatePortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
   const { spaceId } = useParams<{ spaceId: string }>();
-  const isGuestMode = !localStorage.getItem('accessToken');
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const { login } = useAuth();
+  const { isGuest } = useAuth();
 
   useEffect(() => {
     const fetchPortfolios = async () => {
       try {
         setLoading(true);
 
-        if (isGuestMode) {
+        if (isGuest) {
           // 게스트 모드일 때는 목데이터 사용
           setPublicPortfolios(mockPortfolios.publicPortfolios);
           setPrivatePortfolios(mockPortfolios.privatePortfolios);
@@ -97,7 +94,7 @@ const PortfolioList: React.FC = () => {
     if (spaceId) {
       fetchPortfolios();
     }
-  }, [spaceId, isGuestMode]);
+  }, [spaceId, isGuest]);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '날짜 없음';
@@ -117,11 +114,7 @@ const PortfolioList: React.FC = () => {
   };
 
   const handleCreatePortfolio = () => {
-    if (isGuestMode) {
-      setIsLoginModalOpen(true);
-    } else {
-      navigate(`/space/${spaceId}/resume/portfolios/new`);
-    }
+    navigate(`/space/${spaceId}/resume/portfolios/new`);
   };
 
   // 포트폴리오 카드 렌더링 함수 (신규 생성 버튼 포함)
@@ -243,14 +236,10 @@ const PortfolioList: React.FC = () => {
           </div>
         )}
       </div>
-
-      <LoginForm
-        isOpen={isLoginModalOpen}
-        onClose={async () => setIsLoginModalOpen(false)}
-        onLogin={login}
-      />
     </div>
+
   );
+
 };
 
 export default PortfolioList;

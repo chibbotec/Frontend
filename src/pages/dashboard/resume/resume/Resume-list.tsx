@@ -18,13 +18,12 @@ const ResumeList: React.FC = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
   const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const isGuestMode = !localStorage.getItem('token'); // 게스트 모드 체크
-  const { login } = useAuth();
+  const { login, isGuest } = useAuth();
 
   const fetchResumes = async () => {
     try {
       setLoading(true);
-      if (isGuestMode) {
+      if (isGuest) {
         // 게스트 모드일 경우 mock 데이터 사용
         setResumes(mockResumeList as ResumeSummary[]);
       } else {
@@ -42,10 +41,10 @@ const ResumeList: React.FC = () => {
   };
 
   useEffect(() => {
-    if (spaceId || isGuestMode) {
+    if (spaceId || isGuest) {
       fetchResumes();
     }
-  }, [spaceId, isGuestMode]);
+  }, [spaceId, isGuest]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
@@ -58,7 +57,7 @@ const ResumeList: React.FC = () => {
   };
 
   const handleCreateResume = () => {
-    if (isGuestMode) {
+    if (isGuest) {
       setIsLoginModalOpen(true);
     } else {
       navigate(`/space/${spaceId}/resume/resumes/new`);
@@ -126,7 +125,7 @@ const ResumeList: React.FC = () => {
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           onClick={() => {
-            if (isGuestMode) {
+            if (isGuest) {
               setIsLoginModalOpen(true);
             } else {
               setIsCustomModalOpen(true);
