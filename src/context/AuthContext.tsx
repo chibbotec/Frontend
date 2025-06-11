@@ -28,6 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+
+  // // 
   // 사용자 정보 확인
   useEffect(() => {
     const checkAuth = async () => {
