@@ -170,7 +170,7 @@ export function CreateSpaceDialog({
     }
 
     if (isGuest) {
-      toast.error("게스트 모드에서는 스페이스를 생성할 수 없습니다.");
+      toast.error("게스트 모드에서는 스페이스를 생성할 수 없습니다. 로그인을 해주세요");
       return;
     }
 

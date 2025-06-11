@@ -33,15 +33,15 @@ export default function GitHubCallback() {
         await login();
         console.log('로그인 함수 호출 완료');
 
-        // 메인 페이지 또는 원래 접근하려던 페이지로 리다이렉트
-        navigate('/');
+        // 메인 페이지로 리다이렉트
+        navigate('/dashboard');
       } catch (err) {
         console.error('GitHub 콜백 처리 오류:', err);
         setError('GitHub 로그인에 실패했습니다. 다시 시도해주세요.');
 
-        // 3초 후 로그인 페이지로 리다이렉트
+        // 3초 후 메인 페이지로 리다이렉트
         setTimeout(() => {
-          navigate('/login');
+          navigate('/dashboard');
         }, 3000);
       }
     };
@@ -51,27 +51,27 @@ export default function GitHubCallback() {
 
   if (error) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-          <div className="w-full max-w-md">
-            <Alert variant="destructive">
-              <AlertTitle>로그인 오류</AlertTitle>
-              <AlertDescription>
-                <p className="mb-2">{error}</p>
-                <p className="text-sm">잠시 후 로그인 페이지로 이동합니다...</p>
-              </AlertDescription>
-            </Alert>
-          </div>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md">
+          <Alert variant="destructive">
+            <AlertTitle>로그인 오류</AlertTitle>
+            <AlertDescription>
+              <p className="mb-2">{error}</p>
+              <p className="text-sm">잠시 후 로그인 페이지로 이동합니다...</p>
+            </AlertDescription>
+          </Alert>
         </div>
+      </div>
     );
   }
 
   return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <h2 className="text-xl font-semibold">GitHub 로그인 처리 중...</h2>
-          <p className="text-muted-foreground">잠시만 기다려주세요</p>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <h2 className="text-xl font-semibold">GitHub 로그인 처리 중...</h2>
+        <p className="text-muted-foreground">잠시만 기다려주세요</p>
       </div>
+    </div>
   );
 }
