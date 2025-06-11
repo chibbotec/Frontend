@@ -158,7 +158,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
                 {step2Data.additionalInfo
                   .filter(info => info.trim() !== '')
                   .map((info, index) => (
-                    <p key={index}><span className="font-medium">•</span> {info}</p>
+                    <p key={index}><span className="font-medium">•</span> {info.length > 50 ? `${info.slice(0, 50)}...` : info}</p>
                   ))}
               </div>
             ) : (

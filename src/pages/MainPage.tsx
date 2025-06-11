@@ -405,8 +405,66 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* 상단 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      {/* 상단 통계 */}
+      <div className="md:hidden">
+        <table className="w-full">
+          <tbody>
+            <tr className="border-b">
+              <td className="py-2 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">이력서</span>
+              </td>
+              <td className="py-2 text-right">
+                <span className="font-bold">{resumeLoading ? '...' : resumes.length}</span>
+                <span className="text-xs text-muted-foreground ml-1">건</span>
+              </td>
+            </tr>
+            <tr className="border-b">
+              <td className="py-2 flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">포트폴리오</span>
+              </td>
+              <td className="py-2 text-right">
+                <span className="font-bold">{portfolioLoading ? '...' : privatePortfolios.length}</span>
+                <span className="text-xs text-muted-foreground ml-1">건</span>
+              </td>
+            </tr>
+            <tr className="border-b">
+              <td className="py-2 flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">기술 면접</span>
+              </td>
+              <td className="py-2 text-right">
+                <span className="font-bold">{loading ? '...' : stats.totalQuestionCount}</span>
+                <span className="text-xs text-muted-foreground ml-1">건</span>
+              </td>
+            </tr>
+            <tr className="border-b">
+              <td className="py-2 flex items-center gap-2">
+                <Code className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">코딩 테스트</span>
+              </td>
+              <td className="py-2 text-right">
+                <span className="font-bold">7</span>
+                <span className="text-xs text-muted-foreground ml-1">건</span>
+              </td>
+            </tr>
+            <tr>
+              <td className="py-2 flex items-center gap-2">
+                <Users className="h-4 w-4 text-blue-500" />
+                <span className="text-sm">채용</span>
+              </td>
+              <td className="py-2 text-right">
+                <span className="font-bold">{jobDescriptions.length}</span>
+                <span className="text-xs text-muted-foreground ml-1">건</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* 데스크탑용 카드 레이아웃 */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">이력서</CardTitle>
@@ -461,9 +519,9 @@ const MainPage: React.FC = () => {
       {/* 2행 2열 그리드로 전체 레이아웃 재구성 */}
       <div className="grid gap-6">
         {/* 첫 번째 행: 포트폴리오(왼쪽) + 채용공고(오른쪽) */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 포트폴리오 */}
-          <div className="col-span-2">
+          <div className="md:col-span-2">
             <Card className="py-6 gap-1">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -547,7 +605,7 @@ const MainPage: React.FC = () => {
             </Card>
           </div>
           {/* 채용공고 */}
-          <div className="col-span-1">
+          <div className="md:col-span-1">
             <Card className="py-6 gap-1">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -595,9 +653,9 @@ const MainPage: React.FC = () => {
           </div>
         </div>
         {/* 두 번째 행: 지원현황(왼쪽) + 기술면접(오른쪽) */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 지원현황 */}
-          <div className="col-span-2">
+          <div className="md:col-span-2">
             <Card className="gap-1">
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
@@ -611,71 +669,47 @@ const MainPage: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-6 gap-1 h-[calc(100%-2rem)]">
-                  <Card className="py-4">
-                    <CardContent className="p-0 gap-1 h-full flex items-center justify-center">
-                      <ClipboardList className="h-5 w-5 text-blue-500" />
-                      <div className="flex items-center gap-1.5">
-                        <div>
-                          <p className="text-xs font-medium">지원서</p>
-                          <p className="text-right text-lg font-bold">{applicationStats.resume}건</p>
-                        </div>
-                      </div>
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                  <Card className="py-2">
+                    <CardContent className="p-2 flex flex-col items-center justify-center">
+                      <ClipboardList className="h-5 w-5 text-blue-500 mb-1" />
+                      <p className="text-xs font-medium">지원서</p>
+                      <p className="text-base font-bold">{applicationStats.resume}건</p>
                     </CardContent>
                   </Card>
-                  <Card className="py-1">
-                    <CardContent className="p-0 gap-1 h-full flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-blue-500" />
-                      <div className="flex items-center gap-1.5">
-                        <div>
-                          <p className="text-xs font-medium">서류전형</p>
-                          <p className="text-right text-lg font-bold">{applicationStats.document}건</p>
-                        </div>
-                      </div>
+                  <Card className="py-2">
+                    <CardContent className="p-2 flex flex-col items-center justify-center">
+                      <FileText className="h-5 w-5 text-blue-500 mb-1" />
+                      <p className="text-xs font-medium">서류전형</p>
+                      <p className="text-base font-bold">{applicationStats.document}건</p>
                     </CardContent>
                   </Card>
-                  <Card className="py-1">
-                    <CardContent className="p-0 gap-1 h-full flex items-center justify-center">
-                      <Code className="h-5 w-5 text-blue-500" />
-                      <div className="flex items-center gap-1.5">
-                        <div>
-                          <p className="text-xs font-medium">코딩테스트</p>
-                          <p className="text-right text-lg font-bold">{applicationStats.coding}건</p>
-                        </div>
-                      </div>
+                  <Card className="py-2">
+                    <CardContent className="p-2 flex flex-col items-center justify-center">
+                      <Code className="h-5 w-5 text-blue-500 mb-1" />
+                      <p className="text-xs font-medium">코딩테스트</p>
+                      <p className="text-base font-bold">{applicationStats.coding}건</p>
                     </CardContent>
                   </Card>
-                  <Card className="py-1">
-                    <CardContent className="p-0 gap-1 h-full flex items-center justify-center">
-                      <Users className="h-5 w-5 text-blue-500" />
-                      <div className="flex items-center gap-1.5">
-                        <div>
-                          <p className="text-xs font-medium">면접</p>
-                          <p className="text-right text-lg font-bold">{applicationStats.interview1 + applicationStats.interview2}건</p>
-                        </div>
-                      </div>
+                  <Card className="py-2">
+                    <CardContent className="p-2 flex flex-col items-center justify-center">
+                      <Users className="h-5 w-5 text-blue-500 mb-1" />
+                      <p className="text-xs font-medium">면접</p>
+                      <p className="text-right text-base font-bold">{applicationStats.interview1 + applicationStats.interview2}건</p>
                     </CardContent>
                   </Card>
-                  <Card className="py-1">
-                    <CardContent className="p-0 gap-1 h-full flex items-center justify-center">
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                      <div className="flex items-center gap-1.5">
-                        <div>
-                          <p className="text-xs font-medium">합격</p>
-                          <p className="text-right text-lg font-bold">{applicationStats.pass}건</p>
-                        </div>
-                      </div>
+                  <Card className="py-2">
+                    <CardContent className="p-2 flex flex-col items-center justify-center">
+                      <CheckCircle className="h-5 w-5 text-green-500 mb-1" />
+                      <p className="text-xs font-medium">합격</p>
+                      <p className="text-base font-bold">{applicationStats.pass}건</p>
                     </CardContent>
                   </Card>
-                  <Card className="py-1">
-                    <CardContent className="p-0 gap-1 h-full flex items-center justify-center">
-                      <XCircle className="h-5 w-5 text-red-500" />
-                      <div className="flex items-center gap-1.5">
-                        <div>
-                          <p className="text-xs font-medium">불합격</p>
-                          <p className="text-right text-lg font-bold">{applicationStats.fail}건</p>
-                        </div>
-                      </div>
+                  <Card className="py-2">
+                    <CardContent className="p-2 flex flex-col items-center justify-center">
+                      <XCircle className="h-5 w-5 text-red-500 mb-1" />
+                      <p className="text-xs font-medium">불합격</p>
+                      <p className="text-base font-bold">{applicationStats.fail}건</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -683,39 +717,42 @@ const MainPage: React.FC = () => {
             </Card>
           </div>
           {/* 기술면접 */}
-          <div className="col-span-1">
+          <div className="md:col-span-1">
             <Card className="gap-1">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-2">
                   <CardTitle className="text-lg font-semibold">기술 면접</CardTitle>
+                  <Button variant="ghost" size="icon" onClick={() => navigate(`space/${currentSpace?.id}/interview/questions`)}>
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-2">
                   <Link to={currentSpace?.id ? `/space/${currentSpace.id}/interview/questions` : '#'} className="block">
-                    <Card className="hover:shadow-md transition-all min-w-0 py-0">
-                      <CardContent className="p-2 flex flex-col items-center text-center">
+                    <Card className="hover:shadow-md transition-all py-2">
+                      <CardContent className="p-2 flex flex-col items-center justify-center">
                         <BookOpen className="h-5 w-5 text-blue-500 mb-1" />
                         <h4 className="text-xs font-medium">문제</h4>
-                        <p className="text-base font-bold text-blue-600 mt-0.5">{loading ? '...' : stats.totalQuestionCount}</p>
+                        <p className="text-base font-bold text-blue-600">{loading ? '...' : stats.totalQuestionCount}</p>
                       </CardContent>
                     </Card>
                   </Link>
                   <Link to={currentSpace?.id ? `/space/${currentSpace.id}/interview/contests` : '#'} className="block">
-                    <Card className="hover:shadow-md transition-all min-w-0 py-0">
-                      <CardContent className="p-2 flex flex-col items-center text-center">
+                    <Card className="hover:shadow-md transition-all py-2">
+                      <CardContent className="p-2 flex flex-col items-center justify-center">
                         <Users className="h-5 w-5 text-blue-500 mb-1" />
                         <h4 className="text-xs font-medium">시험</h4>
-                        <p className="text-base font-bold text-blue-600 mt-0.5">{loading ? '...' : stats.totalContestCount}</p>
+                        <p className="text-base font-bold text-blue-600">{loading ? '...' : stats.totalContestCount}</p>
                       </CardContent>
                     </Card>
                   </Link>
                   <Link to={currentSpace?.id ? `/space/${currentSpace.id}/interview/notes` : '#'} className="block">
-                    <Card className="hover:shadow-md transition-all min-w-0 py-0">
-                      <CardContent className="p-2 flex flex-col items-center text-center">
+                    <Card className="hover:shadow-md transition-all py-2">
+                      <CardContent className="p-2 flex flex-col items-center justify-center">
                         <FileText className="h-5 w-5 text-blue-500 mb-1" />
                         <h4 className="text-xs font-medium">노트</h4>
-                        <p className="text-base font-bold text-blue-600 mt-0.5">{loading ? '...' : stats.totalNoteCount}</p>
+                        <p className="text-base font-bold text-blue-600">{loading ? '...' : stats.totalNoteCount}</p>
                       </CardContent>
                     </Card>
                   </Link>
