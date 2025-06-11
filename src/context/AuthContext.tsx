@@ -28,14 +28,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-
-  // // 
   // 사용자 정보 확인
   useEffect(() => {
     const checkAuth = async () => {
+      // 로그인 페이지에서는 인증 검사를 건너뜀
+      if (location.pathname === '/login') {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const apiUrl = import.meta.env.VITE_API_URL || ''
-        console.log('API URL:', apiUrl);
         const response = await axios.get(`${apiUrl}/api/v1/members/me`, {
           withCredentials: true
         });
@@ -43,9 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.data);
         setIsLoggedIn(true);
         setIsGuest(false);
-      } catch (error: any) {
-        console.error('인증 실패 상세:', error.response?.data || error.message);
-        // 401 에러를 포함한 모든 에러에서 게스트 모드로 전환
+      } catch (error) {
         setUser(null);
         setIsLoggedIn(false);
         setIsGuest(true);
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    checkAuth();
+    checkAuth()
   }, [])
 
   const enterGuestMode = () => {
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async () => {
     try {
+      // 사용자가 로그인한 후에 사용자 정보를 가져옵니다
       const apiUrl = import.meta.env.VITE_API_URL || ''
       const response = await axios.get(`${apiUrl}/api/v1/members/me`, {
         withCredentials: true
@@ -73,10 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(response.data);
       setIsLoggedIn(true);
       setIsGuest(false);
-      return response.data;
+
+      // 로컬 스토리지에 로그인 상태 저장 (선택 사항)
+      localStorage.setItem('isLoggedIn', 'true');
+
+      return response.data; // 데이터 반환하도록 수정
     } catch (error) {
       console.error('사용자 정보 가져오기 실패:', error);
-      throw error;
+      throw error; // 에러를 다시 던져서 호출하는 쪽에서 처리하도록 함
     }
   }
 
@@ -87,9 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         withCredentials: true
       });
 
+      // 로그인 상태 초기화
       setIsLoggedIn(false);
       setUser(null);
       setIsGuest(true);
+
+      // 로컬 스토리지에서 로그인 상태 제거 (선택 사항)
+      localStorage.removeItem('isLoggedIn');
     } catch (error) {
       console.error('로그아웃 오류:', error);
     }
