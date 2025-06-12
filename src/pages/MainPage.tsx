@@ -31,6 +31,7 @@ import { ResumeSummary } from '@/pages/dashboard/resume/resume/components/types'
 import { DescriptionCreateModal } from '@/pages/dashboard/resume/schedule-job/component/Description-create-modal';
 import { ApplyCreateModal } from '@/pages/dashboard/resume/schedule-job/component/Apply-create-modal';
 import { DescriptionDetailModal } from '@/pages/dashboard/resume/schedule-job/component/Description-detail-modal';
+import HelpModal from './help';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -225,6 +226,7 @@ const MainPage: React.FC = () => {
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobDescription | null>(null);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   useEffect(() => {
     if (!currentSpace?.id) return;
@@ -402,6 +404,12 @@ const MainPage: React.FC = () => {
     };
     fetchResumes();
   }, [currentSpace?.id, isGuest]);
+
+  useEffect(() => {
+    if (isGuest) {
+      setIsHelpModalOpen(true);
+    }
+  }, [isGuest]);
 
   return (
     <div className="p-6 space-y-6">
@@ -792,6 +800,11 @@ const MainPage: React.FC = () => {
           fetchJobApplications();
         }}
         spaceId={currentSpace?.id ? String(currentSpace.id) : ''}
+      />
+      {/* HelpModal 추가 */}
+      <HelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
       />
     </div>
   );

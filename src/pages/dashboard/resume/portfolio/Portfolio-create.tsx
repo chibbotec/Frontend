@@ -821,7 +821,7 @@ const Portfolio: React.FC = () => {
       </div>
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="col-span-3">
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Card className="mb-6">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>기본 정보</CardTitle>
