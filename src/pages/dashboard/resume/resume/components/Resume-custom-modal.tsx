@@ -168,6 +168,13 @@ export const ResumeCustomModal: React.FC<ResumeCustomModalProps> = ({
         selectedPortfolios: [],
         careers: []
       });
+      setStepCompletion({
+        step1: false,
+        step2: false,
+        step3: false,
+        step4: false
+      });
+      setResumeResult(null);
     }
   }, [isOpen]);
 
