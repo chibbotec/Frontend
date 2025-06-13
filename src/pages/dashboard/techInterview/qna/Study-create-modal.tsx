@@ -350,7 +350,7 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
     });
 
     if (hasErrors) {
-      setError('모든 필드를 입력해주세요.');
+      // setError('모든 필드를 입력해주세요.'); // 브라우저 기본 required 풍선만 사용, 에러 박스는 띄우지 않음
       return;
     }
 
@@ -794,6 +794,7 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                                 placeholder="문제 내용을 입력하세요..."
                                 value={question.questionText}
                                 onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
+                                required
                               />
                             </div>
                           </TableCell>
@@ -876,6 +877,7 @@ export const StudyCreateModal: React.FC<StudyCreateModalProps> = ({
                             placeholder="문제 내용을 입력하세요..."
                             value={question.questionText}
                             onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
+                            required
                           />
                         </div>
                         <div className="flex items-center justify-between">

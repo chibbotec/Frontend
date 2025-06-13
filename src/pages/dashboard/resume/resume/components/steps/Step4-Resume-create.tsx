@@ -412,24 +412,22 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
 
   if (showSummary) {
     return (
-      <Card >
+      <Card>
         <CardHeader>
           <CardTitle>입력 정보 확인</CardTitle>
           <CardDescription>
             입력하신 정보를 확인하고 이력서 생성을 시작하세요.
           </CardDescription>
         </CardHeader>
-        <CardContent className="relative max-h-[400px] md:max-h-[500px]">
-          <div className=" md:pb-16">
-            {renderSummary()}
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 bg-background p-4 border-t">
+        <CardContent>
+          {renderSummary()}
+          <div className="mt-4">
             <Button
               onClick={() => {
                 setShowSummary(false);
                 setIsInitialized(false);
               }}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full"
             >
               이력서 생성 시작하기
             </Button>
@@ -447,7 +445,7 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
           입력하신 정보를 바탕으로 AI가 이력서를 생성합니다.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         <div className="flex flex-col items-center justify-center py-8">
           {loading ? (
             <>
