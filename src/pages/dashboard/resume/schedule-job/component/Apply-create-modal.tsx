@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { ProcessCard } from './Drag-and-Drop-card';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileUp, X, Building2, Briefcase, Globe, FileText, FolderOpen, Paperclip } from 'lucide-react';
+import { FileUp, X, Building2, Briefcase, Globe, FileText, FolderOpen, Paperclip, Loader2 } from 'lucide-react';
 import { ApplyResumeModal } from './Apply-resume-modal';
 import { ApplyPortfolioModal } from './Apply-portfolio-modal';
 import axios from 'axios';
@@ -103,9 +103,11 @@ export const ApplyCreateModal: React.FC<ApplyCreateModalProps> = ({
   const [selectedPortfolios, setSelectedPortfolios] = useState<Portfolio[]>([]);
   const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -166,6 +168,8 @@ export const ApplyCreateModal: React.FC<ApplyCreateModalProps> = ({
     } catch (error) {
       console.error('지원서 생성에 실패했습니다:', error);
       // TODO: 에러 메시지를 사용자에게 보여주는 로직 추가
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -447,14 +451,23 @@ export const ApplyCreateModal: React.FC<ApplyCreateModalProps> = ({
                 variant="outline"
                 onClick={onClose}
                 className="px-6 hover:bg-gray-50 transition-all duration-200"
+                disabled={isSubmitting}
               >
                 취소
               </Button>
               <Button
                 type="submit"
                 className="px-6 bg-blue-600 hover:bg-blue-700 transition-all duration-200"
+                disabled={isSubmitting}
               >
-                추가
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    추가 중...
+                  </>
+                ) : (
+                  '추가'
+                )}
               </Button>
             </div>
           </form>
