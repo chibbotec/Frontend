@@ -37,7 +37,7 @@ const data = {
   navMain: [
     {
       title: "이력서&포트폴리오",
-      url: "#",
+      url: "/resume/resumes",
       icon: SquareTerminal,
       // isActive: true,
       items: [
@@ -57,7 +57,7 @@ const data = {
     },
     {
       title: "기술면접",
-      url: "#",
+      url: "/interview/questions",
       icon: Bot,
       items: [
         {
@@ -95,7 +95,7 @@ const data = {
     },
     {
       title: "설정",
-      url: "#",
+      url: "/settings",
       icon: Settings2,
       items: [
         // {
