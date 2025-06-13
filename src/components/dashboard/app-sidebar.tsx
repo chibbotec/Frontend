@@ -80,7 +80,7 @@ const data = {
       icon: BookOpen,
       items: [
         {
-          title: "문제 풀기",
+          title: "문제 풀기(개발중)",
           url: "/coding/problems",
         },
         // {
