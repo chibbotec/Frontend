@@ -39,7 +39,7 @@ const data = {
       title: "이력서&포트폴리오",
       url: "#",
       icon: SquareTerminal,
-      isActive: true,
+      // isActive: true,
       items: [
         {
           title: "이력서",
