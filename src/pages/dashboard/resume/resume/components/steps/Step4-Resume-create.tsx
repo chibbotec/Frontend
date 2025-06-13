@@ -154,12 +154,8 @@ export const Step4ResumeCreate: React.FC<Step4ResumeCreateProps> = ({
           <h3 className="text-lg font-semibold mb-2">2단계: 추가 정보</h3>
           <div className="bg-gray-50 p-3 rounded-md text-sm">
             {step2Data.additionalInfo.length > 0 && step2Data.additionalInfo.some(info => info.trim() !== '') ? (
-              <div className="space-y-1">
-                {step2Data.additionalInfo
-                  .filter(info => info.trim() !== '')
-                  .map((info, index) => (
-                    <p key={index}><span className="font-medium">•</span> {info.length > 50 ? `${info.slice(0, 50)}...` : info}</p>
-                  ))}
+              <div>
+                <span className="font-medium">{step2Data.additionalInfo.filter(info => info.trim() !== '').length}</span> 개의 추가 정보가 입력되었습니다.
               </div>
             ) : (
               <p className="text-gray-500">추가 정보 없음</p>

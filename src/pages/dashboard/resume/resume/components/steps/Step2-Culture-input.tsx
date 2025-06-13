@@ -22,7 +22,11 @@ export const Step2CultureInput: React.FC<Step2CultureInputProps> = ({
   onStateChange,
   initialState
 }) => {
-  const [additionalInfo, setAdditionalInfo] = useState<string[]>([]);
+  const [additionalInfo, setAdditionalInfo] = useState<string[]>(initialState.additionalInfo || []);
+
+  React.useEffect(() => {
+    setAdditionalInfo(initialState.additionalInfo || []);
+  }, [initialState.additionalInfo]);
 
   const handleInfoChange = (index: number, value: string) => {
     const newInfo = [...additionalInfo];
