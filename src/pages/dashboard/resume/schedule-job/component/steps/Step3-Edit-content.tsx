@@ -130,8 +130,8 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
             </Select>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="max-h-[300px] sm:max-h-[100px] md:max-h-[400px] overflow-y-auto pr-4 space-y-3 text-sm">
+        <CardContent className="overflow-x-auto">
+          <div className="max-h-[300px] sm:max-h-[100px] md:max-h-[400px] overflow-y-auto pr-4 space-y-3 text-sm break-words">
             <div className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -160,8 +160,8 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
                 <Label className="text-sm">주요업무</Label>
                 <ul className="flex flex-col gap-2 mt-1 mb-2">
                   {formState.mainTasks.map((task, index) => (
-                    <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md">
-                      <span>• {task}</span>
+                    <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md break-words">
+                      <span className="break-words">• {task}</span>
                       <button
                         onClick={() => removeTag('mainTasks', index)}
                         className="text-gray-500 hover:text-gray-700 ml-auto"
@@ -193,8 +193,8 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
                 <Label className="text-sm">자격요건</Label>
                 <ul className="flex flex-col gap-2 mt-1 mb-2">
                   {formState.requirements.map((req, index) => (
-                    <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md">
-                      <span>• {req}</span>
+                    <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md break-words">
+                      <span className="break-words">• {req}</span>
                       <button
                         onClick={() => removeTag('requirements', index)}
                         className="text-gray-500 hover:text-gray-700 ml-auto"
@@ -237,8 +237,8 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
                 <Label className="text-sm">이력서 포함 사항</Label>
                 <ul className="flex flex-col gap-2 mt-1 mb-2">
                   {formState.resumeRequirements.map((req, index) => (
-                    <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md">
-                      <span>• {req}</span>
+                    <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md break-words">
+                      <span className="break-words">• {req}</span>
                       <button
                         onClick={() => removeTag('resumeRequirements', index)}
                         className="text-gray-500 hover:text-gray-700 ml-auto"
@@ -271,8 +271,8 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
                 <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
                   {formState.recruitmentProcess.map((process, index) => (
                     <React.Fragment key={index}>
-                      <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md">
-                        <span>{process}</span>
+                      <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md break-words">
+                        <span className="break-words">{process}</span>
                         <button
                           onClick={() => removeTag('recruitmentProcess', index)}
                           className="text-gray-500 hover:text-gray-700"
