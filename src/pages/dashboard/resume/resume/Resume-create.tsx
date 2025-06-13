@@ -277,7 +277,19 @@ const ResumeCreate: React.FC = () => {
         <div className="p-6">
             <div className="mb-5 gap-2">
                 <div className="pt-2 gap-0">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                // textarea에서는 엔터 허용, 그 외는 막기
+                                if (
+                                    e.target instanceof HTMLInputElement ||
+                                    e.target instanceof HTMLSelectElement
+                                ) {
+                                    e.preventDefault();
+                                }
+                            }
+                        }}
+                        className="space-y-6">
                         <BasicInfo
                             title={title}
                             setTitle={setTitle}
