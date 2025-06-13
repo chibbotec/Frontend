@@ -111,7 +111,7 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
 
   return (
     <div>
-      <Card className='gap-1 md:gap-2'>
+      <Card className='gap-1 md:gap-2 md:py-2'>
         <CardHeader>
           <div className="flex items-center justify-end gap-2">
             <Label htmlFor="publicGrade" className="text-sm">공개</Label>
@@ -131,7 +131,7 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
           </div>
         </CardHeader>
         <CardContent>
-          <div className="max-h-[300px] sm:max-h-[100px] md:max-h-[400px] lg:max-h-[450px] overflow-y-auto pr-4 space-y-3 text-sm">
+          <div className="max-h-[300px] sm:max-h-[100px] md:max-h-[400px] overflow-y-auto pr-4 space-y-3 text-sm">
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
