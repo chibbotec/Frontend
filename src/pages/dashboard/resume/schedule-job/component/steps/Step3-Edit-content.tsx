@@ -161,7 +161,7 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
                 <ul className="flex flex-col gap-2 mt-1 mb-2">
                   {formState.mainTasks.map((task, index) => (
                     <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md break-words">
-                      <span className="break-words">• {task}</span>
+                      <span className="break-words break-all">• {task}</span>
                       <button
                         onClick={() => removeTag('mainTasks', index)}
                         className="text-gray-500 hover:text-gray-700 ml-auto"
@@ -194,7 +194,7 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
                 <ul className="flex flex-col gap-2 mt-1 mb-2">
                   {formState.requirements.map((req, index) => (
                     <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md break-words">
-                      <span className="break-words">• {req}</span>
+                      <span className="break-words break-all">• {req}</span>
                       <button
                         onClick={() => removeTag('requirements', index)}
                         className="text-gray-500 hover:text-gray-700 ml-auto"
@@ -238,7 +238,7 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
                 <ul className="flex flex-col gap-2 mt-1 mb-2">
                   {formState.resumeRequirements.map((req, index) => (
                     <li key={index} className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md break-words">
-                      <span className="break-words">• {req}</span>
+                      <span className="break-words break-all">• {req}</span>
                       <button
                         onClick={() => removeTag('resumeRequirements', index)}
                         className="text-gray-500 hover:text-gray-700 ml-auto"
@@ -272,7 +272,7 @@ export const Step3EditContent: React.FC<Step3EditContentProps> = ({ onStateChang
                   {formState.recruitmentProcess.map((process, index) => (
                     <React.Fragment key={index}>
                       <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md break-words">
-                        <span className="break-words">{process}</span>
+                        <span className="break-words break-all">{process}</span>
                         <button
                           onClick={() => removeTag('recruitmentProcess', index)}
                           className="text-gray-500 hover:text-gray-700"
