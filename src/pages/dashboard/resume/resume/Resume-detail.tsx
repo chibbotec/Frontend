@@ -392,9 +392,9 @@ const ResumeDetail: React.FC = () => {
                                         <div className="items-start gap-1 flex">
                                           <Calendar className="w-4 h-4" />
                                           <p className="text-sm md:text-md font-bold">
-                                            {career.startDate ? format(new Date(career.startDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                            {career.startDate ? format(new Date(career.startDate), 'yy.MM', { locale: ko }) : '-'}
                                             <span> ~ </span>
-                                            {career.isCurrent ? '재직 중' : career.endDate ? format(new Date(career.endDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                            {career.isCurrent ? '재직 중' : career.endDate ? format(new Date(career.endDate), 'yy.MM', { locale: ko }) : '-'}
                                           </p>
                                         </div>
                                         <div className="items-center gap-1 flex justify-between">
@@ -463,9 +463,9 @@ const ResumeDetail: React.FC = () => {
                                         <div className="items-start gap-1 flex">
                                           <Calendar className="w-4 h-4" />
                                           <p className="text-sm md:text-sm font-bold">
-                                            {project.startDate ? format(new Date(project.startDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                            {project.startDate ? format(new Date(project.startDate), 'yy.MM', { locale: ko }) : '-'}
                                             <span> ~ </span>
-                                            {project.endDate ? format(new Date(project.endDate), 'yyyy.MM.dd', { locale: ko }) : '현재'}
+                                            {project.endDate ? format(new Date(project.endDate), 'yy.MM', { locale: ko }) : '현재'}
                                           </p>
                                         </div>
 
@@ -580,9 +580,9 @@ const ResumeDetail: React.FC = () => {
                                       <tr key={index} className="even:bg-gray-50 hover:bg-blue-50 transition">
                                         <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{education.school}</td>
                                         <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">
-                                          {education.startDate ? format(new Date(education.startDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                          {education.startDate ? format(new Date(education.startDate), 'yy.MM', { locale: ko }) : '-'}
                                           <span> ~ </span>
-                                          {education.endDate ? format(new Date(education.endDate), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                          {education.endDate ? format(new Date(education.endDate), 'yy.MM', { locale: ko }) : '-'}
                                         </td>
                                         <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{education.major || '-'}</td>
                                         <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{education.degree || '-'}</td>
@@ -620,7 +620,7 @@ const ResumeDetail: React.FC = () => {
                                       <tr key={index} className="even:bg-gray-50 hover:bg-blue-50 transition">
                                         <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{certificate.type}</td>
                                         <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">
-                                          {certificate.date ? format(new Date(certificate.date), 'yyyy.MM.dd', { locale: ko }) : '-'}
+                                          {certificate.date ? format(new Date(certificate.date), 'yy.MM', { locale: ko }) : '-'}
                                         </td>
                                         <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{certificate.name || '-'}</td>
                                         <td className="px-2 md:px-4 py-2 border-b text-center text-xs md:text-sm">{certificate.organization || '-'}</td>
