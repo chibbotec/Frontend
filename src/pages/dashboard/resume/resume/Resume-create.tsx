@@ -43,7 +43,35 @@ const ResumeCreate: React.FC = () => {
         }
 
         // YYYY-MM-DD 형식인 경우 (프로젝트)
-        return date;
+        if (date.length === 10 && date.includes('-')) {
+            return date;
+        }
+
+        // YYYYMMDD 형식인 경우
+        if (date.length === 8) {
+            const year = date.slice(0, 4);
+            const month = date.slice(4, 6);
+            const day = date.slice(6, 8);
+            return `${year}-${month}-${day}`;
+        }
+
+        // YYYYMM 형식인 경우
+        if (date.length === 6) {
+            const year = date.slice(0, 4);
+            const month = date.slice(4, 6);
+            return `${year}-${month}-01`;
+        }
+
+        // YYM 형식인 경우 (3자리)
+        if (date.length === 3) {
+            const year = '20' + date.slice(0, 2);
+            const month = '0' + date.slice(2, 3);
+            return `${year}-${month}-01`;
+        }
+
+        // 잘못된 형식인 경우 빈 문자열 반환
+        console.warn(`Invalid date format: ${date}`);
+        return '';
     };
 
     // 기본 정보
