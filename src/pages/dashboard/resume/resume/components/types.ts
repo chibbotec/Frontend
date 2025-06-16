@@ -8,8 +8,8 @@ export interface Career {
     company: string;
     position: string;
     isCurrent: boolean;
-    startDate: string;  // LocalDate 형식 (YYYY-MM-DD)
-    endDate: string;    // LocalDate 형식 (YYYY-MM-DD)
+    startDate: string;  // YYMM 형식
+    endDate: string;    // YYMM 형식
     description: string;
     achievement: string;
 }

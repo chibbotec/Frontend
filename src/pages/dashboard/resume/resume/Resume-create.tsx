@@ -32,11 +32,18 @@ const ResumeCreate: React.FC = () => {
         }
     }, [isGuest]);
 
-    const formatDate = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+    const formatDate = (date: string) => {
+        if (!date) return '';
+
+        // YYMM 형식인 경우 (경력, 교육, 자격증)
+        if (date.length === 4) {
+            const year = '20' + date.slice(0, 2);
+            const month = date.slice(2, 4);
+            return `${year}-${month}-01`;
+        }
+
+        // YYYY-MM-DD 형식인 경우 (프로젝트)
+        return date;
     };
 
     // 기본 정보
@@ -214,23 +221,23 @@ const ResumeCreate: React.FC = () => {
             links,
             careers: careers.map(career => ({
                 ...career,
-                startDate: career.startDate ? formatDate(new Date(career.startDate)) : '',
-                endDate: career.endDate ? formatDate(new Date(career.endDate)) : ''
+                startDate: career.startDate ? formatDate(career.startDate) : '',
+                endDate: career.endDate ? formatDate(career.endDate) : ''
             })),
             projects: projects.map(project => ({
                 ...project,
                 role: project.role,
-                startDate: project.startDate ? formatDate(new Date(project.startDate)) : '',
-                endDate: project.endDate ? formatDate(new Date(project.endDate)) : ''
+                startDate: project.startDate ? formatDate(project.startDate) : '',
+                endDate: project.endDate ? formatDate(project.endDate) : ''
             })),
             educations: educations.map(education => ({
                 ...education,
-                startDate: education.startDate ? formatDate(new Date(education.startDate)) : '',
-                endDate: education.endDate ? formatDate(new Date(education.endDate)) : ''
+                startDate: education.startDate ? formatDate(education.startDate) : '',
+                endDate: education.endDate ? formatDate(education.endDate) : ''
             })),
             certificates: certificates.map(certificate => ({
                 ...certificate,
-                date: certificate.date ? formatDate(new Date(certificate.date)) : ''
+                date: certificate.date ? formatDate(certificate.date) : ''
             })),
             coverLetters: coverLetters
         };

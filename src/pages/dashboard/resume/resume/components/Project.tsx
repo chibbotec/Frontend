@@ -137,8 +137,8 @@ const Project: React.FC<ProjectProps> = ({
                           newProjects[index].name = e.target.value;
                           setProjects(newProjects);
                         }}
-                        placeholder="프로젝트명"
-                        className="border-0 text-xl md:text-2xl placeholder:text-black font-extrabold leading-tight text-black focus-visible:ring-0 focus-visible:ring-offset-0 px-0 shadow-none"
+                        placeholder="프로젝트명을 입력해주세요."
+                        className="border-0 text-xl md:text-xl placeholder:text-gray font-extrabold leading-tight text-black focus-visible:ring-0 focus-visible:ring-offset-0 px-0 shadow-none"
                       />
                     </div>
                     <div>
@@ -164,6 +164,50 @@ const Project: React.FC<ProjectProps> = ({
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
+                              <div className="flex gap-2 p-2">
+                                <Select
+                                  value={project.startDate ? new Date(project.startDate).getFullYear().toString() : new Date().getFullYear().toString()}
+                                  onValueChange={(year) => {
+                                    const currentDate = project.startDate ? new Date(project.startDate) : new Date();
+                                    currentDate.setFullYear(parseInt(year));
+                                    const newProjects = [...projects];
+                                    newProjects[index].startDate = formatDate(currentDate);
+                                    setProjects(newProjects);
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs w-24">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, i) => (
+                                      <SelectItem key={i} value={(new Date().getFullYear() - i).toString()}>
+                                        {new Date().getFullYear() - i}년
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select
+                                  value={project.startDate ? (new Date(project.startDate).getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()}
+                                  onValueChange={(month) => {
+                                    const currentDate = project.startDate ? new Date(project.startDate) : new Date();
+                                    currentDate.setMonth(parseInt(month) - 1);
+                                    const newProjects = [...projects];
+                                    newProjects[index].startDate = formatDate(currentDate);
+                                    setProjects(newProjects);
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <SelectItem key={i} value={(i + 1).toString()}>
+                                        {i + 1}월
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                               <Calendar
                                 mode="single"
                                 selected={project.startDate ? new Date(project.startDate) : undefined}
@@ -201,6 +245,50 @@ const Project: React.FC<ProjectProps> = ({
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
+                              <div className="flex gap-2 p-2">
+                                <Select
+                                  value={project.endDate ? new Date(project.endDate).getFullYear().toString() : new Date().getFullYear().toString()}
+                                  onValueChange={(year) => {
+                                    const currentDate = project.endDate ? new Date(project.endDate) : new Date();
+                                    currentDate.setFullYear(parseInt(year));
+                                    const newProjects = [...projects];
+                                    newProjects[index].endDate = formatDate(currentDate);
+                                    setProjects(newProjects);
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs w-24">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, i) => (
+                                      <SelectItem key={i} value={(new Date().getFullYear() - i).toString()}>
+                                        {new Date().getFullYear() - i}년
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select
+                                  value={project.endDate ? (new Date(project.endDate).getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()}
+                                  onValueChange={(month) => {
+                                    const currentDate = project.endDate ? new Date(project.endDate) : new Date();
+                                    currentDate.setMonth(parseInt(month) - 1);
+                                    const newProjects = [...projects];
+                                    newProjects[index].endDate = formatDate(currentDate);
+                                    setProjects(newProjects);
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <SelectItem key={i} value={(i + 1).toString()}>
+                                        {i + 1}월
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                               <Calendar
                                 mode="single"
                                 selected={project.endDate ? new Date(project.endDate) : undefined}
