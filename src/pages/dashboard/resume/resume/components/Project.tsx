@@ -220,6 +220,7 @@ const Project: React.FC<ProjectProps> = ({
                                   setOpenStartDatePopovers(newPopovers);
                                 }}
                                 locale={ko}
+                                initialMonth={project.startDate ? new Date(project.startDate) : new Date()}
                               />
                             </PopoverContent>
                           </Popover>
@@ -301,6 +302,7 @@ const Project: React.FC<ProjectProps> = ({
                                   setOpenEndDatePopovers(newPopovers);
                                 }}
                                 locale={ko}
+                                initialMonth={project.endDate ? new Date(project.endDate) : new Date()}
                               />
                             </PopoverContent>
                           </Popover>
@@ -483,16 +485,14 @@ const Project: React.FC<ProjectProps> = ({
                     </div>
                     <div>
                       <label className="text-xs font-medium mb-1 block">주요역할 및 성과</label>
-                      <BulletTextarea
-                        value={project.role.map(line => line.startsWith('• ') ? line : '• ' + line).join('\n')}
-                        onChange={val => {
+                      <Textarea
+                        value={project.role.join('\n')}
+                        onChange={e => {
                           const newProjects = [...projects];
-                          newProjects[index].role = val.split('\n')
-                            .filter(line => line.trim() !== '')
-                            .map(line => line.replace(/^•\s*/, ''));
+                          newProjects[index].role = e.target.value.split('\n');
                           setProjects(newProjects);
                         }}
-                        placeholder="프로젝트 주요역할 및 성과 (Enter로 bullet 추가)"
+                        placeholder="프로젝트 주요역할 및 성과 (Enter로 줄바꿈)"
                         className="text-xs h-32 resize-none w-full rounded-md border"
                       />
                     </div>

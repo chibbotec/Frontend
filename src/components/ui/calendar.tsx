@@ -15,7 +15,7 @@ import {
   Locale
 } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface CalendarProps {
   selected?: Date | null
@@ -27,6 +27,7 @@ interface CalendarProps {
   endDate?: Date | null
   mode?: 'single' | 'range'
   locale?: Locale
+  initialMonth?: Date
 }
 
 export function Calendar({
@@ -38,9 +39,16 @@ export function Calendar({
   startDate,
   endDate,
   mode = 'single',
-  locale = ko
+  locale = ko,
+  initialMonth
 }: CalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [currentMonth, setCurrentMonth] = useState(initialMonth || new Date())
+
+  useEffect(() => {
+    if (initialMonth) {
+      setCurrentMonth(initialMonth)
+    }
+  }, [initialMonth])
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(monthStart)
@@ -76,7 +84,7 @@ export function Calendar({
   return (
     <div className="w-full max-w-[280px] p-2">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-sm font-medium text-gray-900">
+        {/* <h2 className="text-sm font-medium text-gray-900">
           {format(currentMonth, 'yyyy년 MM월', { locale })}
         </h2>
         <div className="flex gap-1">
@@ -89,7 +97,7 @@ export function Calendar({
           <button onClick={goToNextMonth} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
             <ChevronRightIcon className="w-4 h-4 text-gray-600" />
           </button>
-        </div>
+        </div> */}
       </div>
 
       <div className="grid grid-cols-7 gap-0.5">

@@ -23,38 +23,30 @@ const BulletTextarea: React.FC<BulletTextareaProps> = ({
       const currentLineIndex = value.substring(0, start).split('\n').length - 1;
       const currentLine = lines[currentLineIndex];
 
-      if (currentLine === '• ') {
-        const beforeCurrentLine = lines.slice(0, currentLineIndex).join('\n');
-        const afterCurrentLine = lines.slice(currentLineIndex + 1).join('\n');
-        const newValue =
-          beforeCurrentLine +
-          (beforeCurrentLine ? '\n' : '') +
-          (afterCurrentLine ? '\n' + afterCurrentLine : '');
-        onChange(newValue);
+      // 현재 라인의 내용만 유지하고 새로운 불릿 라인 추가
+      const newValue = value.slice(0, start) + '\n• ';
 
-        setTimeout(() => {
-          const newPosition = beforeCurrentLine.length + (beforeCurrentLine ? 1 : 0);
-          textarea.setSelectionRange(newPosition, newPosition);
-        }, 0);
-      } else {
-        const newValue = value.slice(0, start) + '\n• ' + value.slice(end);
-        onChange(newValue);
+      onChange(newValue);
 
-        setTimeout(() => {
-          textarea.setSelectionRange(start + 3, start + 3);
-        }, 0);
-      }
+      // 커서를 새로운 불릿 다음으로 이동
+      setTimeout(() => {
+        const newPosition = start + 3;
+        textarea.setSelectionRange(newPosition, newPosition);
+      }, 0);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    let newValue = e.target.value;
-    newValue = newValue.split('\n').map(line => {
-      if (line.trim() && !line.startsWith('• ')) {
-        return '• ' + line;
-      }
-      return line;
-    }).join('\n');
+    const newValue = e.target.value;
+    const lines = newValue.split('\n');
+
+    // 첫 번째 라인에만 불릿 추가
+    if (lines.length === 1 && !lines[0].startsWith('• ') && lines[0].trim()) {
+      onChange('• ' + lines[0]);
+      return;
+    }
+
+    // 그 외의 경우는 입력값 그대로 사용
     onChange(newValue);
   };
 
