@@ -922,6 +922,46 @@ const Portfolio: React.FC = () => {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
+                              <div className="flex gap-2 p-2">
+                                <Select
+                                  value={startDate ? new Date(startDate).getFullYear().toString() : new Date().getFullYear().toString()}
+                                  onValueChange={(year) => {
+                                    const currentDate = startDate ? new Date(startDate) : new Date();
+                                    currentDate.setFullYear(parseInt(year));
+                                    setStartDate(formatDate(currentDate));
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs w-24">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, i) => (
+                                      <SelectItem key={i} value={(new Date().getFullYear() - i).toString()}>
+                                        {new Date().getFullYear() - i}년
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select
+                                  value={startDate ? (new Date(startDate).getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()}
+                                  onValueChange={(month) => {
+                                    const currentDate = startDate ? new Date(startDate) : new Date();
+                                    currentDate.setMonth(parseInt(month) - 1);
+                                    setStartDate(formatDate(currentDate));
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <SelectItem key={i} value={(i + 1).toString()}>
+                                        {i + 1}월
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                               <CalendarComponent
                                 mode="single"
                                 selected={startDate ? new Date(startDate) : undefined}
@@ -930,6 +970,7 @@ const Portfolio: React.FC = () => {
                                   setOpenStartDatePopover(false);
                                 }}
                                 locale={ko}
+                                initialMonth={startDate ? new Date(startDate) : new Date()}
                               />
                             </PopoverContent>
                           </Popover>
@@ -953,6 +994,46 @@ const Portfolio: React.FC = () => {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
+                              <div className="flex gap-2 p-2">
+                                <Select
+                                  value={endDate ? new Date(endDate).getFullYear().toString() : new Date().getFullYear().toString()}
+                                  onValueChange={(year) => {
+                                    const currentDate = endDate ? new Date(endDate) : new Date();
+                                    currentDate.setFullYear(parseInt(year));
+                                    setEndDate(formatDate(currentDate));
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs w-24">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: new Date().getFullYear() - 2010 + 1 }, (_, i) => (
+                                      <SelectItem key={i} value={(new Date().getFullYear() - i).toString()}>
+                                        {new Date().getFullYear() - i}년
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select
+                                  value={endDate ? (new Date(endDate).getMonth() + 1).toString() : (new Date().getMonth() + 1).toString()}
+                                  onValueChange={(month) => {
+                                    const currentDate = endDate ? new Date(endDate) : new Date();
+                                    currentDate.setMonth(parseInt(month) - 1);
+                                    setEndDate(formatDate(currentDate));
+                                  }}
+                                >
+                                  <SelectTrigger className="h-9 text-xs w-20">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                      <SelectItem key={i} value={(i + 1).toString()}>
+                                        {i + 1}월
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                               <CalendarComponent
                                 mode="single"
                                 selected={endDate ? new Date(endDate) : undefined}
@@ -961,6 +1042,7 @@ const Portfolio: React.FC = () => {
                                   setOpenEndDatePopover(false);
                                 }}
                                 locale={ko}
+                                initialMonth={endDate ? new Date(endDate) : new Date()}
                               />
                             </PopoverContent>
                           </Popover>
