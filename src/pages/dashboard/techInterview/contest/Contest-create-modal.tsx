@@ -100,6 +100,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
   const [isLoading, setIsLoading] = useState(false);
   const [randomQuestion, setRandomQuestion] = useState(false);
   const [randomQuestionCount, setRandomQuestionCount] = useState(1);
+  const [randomTechClasses, setRandomTechClasses] = useState<string[]>([]);
 
   // 검색 조건 상태 추가
   const [searchTechClass, setSearchTechClass] = useState<string | null>(null);
@@ -195,7 +196,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
           timeoutMillis: timeoutMinutes * 60 * 1000,
           participants: selectedParticipants,
           randomCount: randomQuestionCount,
-          techClasses: searchTechClass ? [searchTechClass] : []
+          techClasses: randomTechClasses
         };
         await axios.post(
           `${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/contests/random`,
@@ -329,18 +330,19 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
               {randomQuestion ? (
                 <div className="flex flex-col gap-4 p-4">
                   <div className="flex items-center gap-4">
-                    <Label htmlFor="random-techclass">기술 분야</Label>
-                    <select
-                      id="random-techclass"
-                      className="border rounded-md p-2"
-                      value={searchTechClass || ''}
-                      onChange={e => setSearchTechClass(e.target.value || null)}
-                    >
-                      <option value="">전체</option>
+                    <Label>기술 분야</Label>
+                    <div className="flex flex-wrap gap-2">
                       {techClassOptions.map((tech) => (
-                        <option key={tech} value={tech}>{tech}</option>
+                        <button
+                          key={tech}
+                          type="button"
+                          onClick={() => setRandomTechClasses(prev => prev.includes(tech) ? prev.filter(t => t !== tech) : [...prev, tech])}
+                          className={`px-3 py-1 rounded-md text-xs border transition-colors ${randomTechClasses.includes(tech) ? 'bg-blue-100 text-blue-800 border-blue-400' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}`}
+                        >
+                          {tech}
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <Label htmlFor="random-count">문제 개수</Label>
