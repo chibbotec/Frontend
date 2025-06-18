@@ -98,6 +98,8 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
   const [selectedQuestions, setSelectedQuestions] = useState<SelectedQuestion[]>([]);
   const [selectedParticipants, setSelectedParticipants] = useState<Participant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [randomQuestion, setRandomQuestion] = useState(false);
+  const [randomQuestionCount, setRandomQuestionCount] = useState(1);
 
   // 검색 조건 상태 추가
   const [searchTechClass, setSearchTechClass] = useState<string | null>(null);
@@ -176,7 +178,7 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
   };
 
   const handleCreateContest = async () => {
-    if (!currentSpaceId || !title || selectedQuestions.length === 0) {
+    if (!currentSpaceId || !title || (!randomQuestion && selectedQuestions.length === 0)) {
       alert('필수 정보를 모두 입력해주세요.');
       return;
     }
@@ -185,22 +187,38 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
 
     try {
       const now = new Date();
-      const contestData: ContestCreateRequest = {
-        title,
-        createAt: now.toISOString(),
-        timeoutMillis: timeoutMinutes * 60 * 1000,
-        problems: selectedQuestions.map(q => ({
-          problemId: q.techInterviewId
-        })),
-        participants: selectedParticipants
-      };
-
-      await axios.post(
-        `${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/contests`,
-        contestData,
-        { withCredentials: true }
-      );
-
+      if (randomQuestion) {
+        // 랜덤 문제 대회 생성
+        const randomData = {
+          title,
+          createAt: now.toISOString(),
+          timeoutMillis: timeoutMinutes * 60 * 1000,
+          participants: selectedParticipants,
+          randomCount: randomQuestionCount,
+          techClasses: searchTechClass ? [searchTechClass] : []
+        };
+        await axios.post(
+          `${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/contests/random`,
+          randomData,
+          { withCredentials: true }
+        );
+      } else {
+        // 기존 문제 선택 대회 생성
+        const contestData: ContestCreateRequest = {
+          title,
+          createAt: now.toISOString(),
+          timeoutMillis: timeoutMinutes * 60 * 1000,
+          problems: selectedQuestions.map(q => ({
+            problemId: q.techInterviewId
+          })),
+          participants: selectedParticipants
+        };
+        await axios.post(
+          `${API_BASE_URL}/api/v1/tech-interview/${currentSpaceId}/contests`,
+          contestData,
+          { withCredentials: true }
+        );
+      }
       onSuccess();
       onClose();
     } catch (error) {
@@ -216,9 +234,25 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
       <DialogContent className="sm:max-w-[90vw] md:w-[75vw] h-[80vh] flex flex-col gap-1">
         <DialogHeader>
           <DialogTitle>테스트 등록</DialogTitle>
-          <DialogDescription>
-            등록할 기술 문제의 정보를 입력해주세요. 등록 후 참여자들이 답변할 수 있습니다.
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <DialogDescription>
+              등록할 기술 문제의 정보를 입력해주세요. 등록 후 참여자들이 답변할 수 있습니다.
+            </DialogDescription>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="random-submission"
+                checked={randomQuestion}
+                onCheckedChange={(checked) => setRandomQuestion(checked as boolean)}
+                className="h-4 w-4"
+              />
+              <label
+                htmlFor="random-submission"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                랜덤 제출
+              </label>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto pt-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -290,87 +324,121 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
               </div>
             </div>
 
-            {/* 우측 컨테이너: 문제 리스트 테이블 */}
+            {/* 우측 컨테이너: 문제 리스트 테이블 or 랜덤 문제 설정 */}
             <div className="border rounded-md col-span-3">
-              {isLoading ? (
-                <div className="p-4 text-center">로딩 중...</div>
+              {randomQuestion ? (
+                <div className="flex flex-col gap-4 p-4">
+                  <div className="flex items-center gap-4">
+                    <Label htmlFor="random-techclass">기술 분야</Label>
+                    <select
+                      id="random-techclass"
+                      className="border rounded-md p-2"
+                      value={searchTechClass || ''}
+                      onChange={e => setSearchTechClass(e.target.value || null)}
+                    >
+                      <option value="">전체</option>
+                      {techClassOptions.map((tech) => (
+                        <option key={tech} value={tech}>{tech}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Label htmlFor="random-count">문제 개수</Label>
+                    <Input
+                      id="random-count"
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={randomQuestionCount}
+                      onChange={(e) => setRandomQuestionCount(Number(e.target.value))}
+                      className="w-20"
+                    />
+                  </div>
+                  <div className="text-gray-500 text-xs">* 대회 생성 시, 선택한 분야에서 무작위로 문제가 출제됩니다.</div>
+                </div>
               ) : (
                 <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[50px]">선택</TableHead>
-                        <TableHead className='w-[80px] md:w-auto'>기술 분야</TableHead>
-                        <TableHead className='w-[50px] text-center hidden md:table-cell'>AI답변</TableHead>
-                        <TableHead className='w-[80px] md:w-auto'>문제내용</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {questions.map((question) => (
-                        <TableRow
-                          key={question.id}
-                          className={`cursor-pointer hover:bg-gray-50 ${!question.aiAnswer ? 'opacity-50' : ''}`}
-                          onClick={() => question.aiAnswer && handleQuestionSelect(question)}
-                        >
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={selectedQuestions.some(q => q.id === question.id)}
-                                onChange={() => question.aiAnswer && handleQuestionSelect(question)}
-                                className="h-4 w-4 rounded border-gray-300"
-                                disabled={!question.aiAnswer}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs ${question.aiAnswer
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-500'
-                              }`}>
-                              {question.techClass}
-                            </span>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs ${question.aiAnswer
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-500'
-                              }`}>
-                              {question.aiAnswer ? '있음' : '없음'}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-[10px] md:text-xs md:whitespace-nowrap md:break-normal whitespace-normal break-words">
-                            {question.questionText.length > 50
-                              ? question.questionText.slice(0, 50) + '...'
-                              : question.questionText}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  {totalPages > 1 && (
-                    <div className="flex justify-center gap-2 p-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 0}
-                      >
-                        이전
-                      </Button>
-                      <span className="flex items-center px-4">
-                        {currentPage + 1} / {totalPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages - 1}
-                      >
-                        다음
-                      </Button>
-                    </div>
+                  {isLoading ? (
+                    <div className="p-4 text-center">로딩 중...</div>
+                  ) : (
+                    <>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[50px]">선택</TableHead>
+                            <TableHead className='w-[80px] md:w-auto'>기술 분야</TableHead>
+                            <TableHead className='w-[50px] text-center hidden md:table-cell'>AI답변</TableHead>
+                            <TableHead className='w-[80px] md:w-auto'>문제내용</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {questions.map((question) => (
+                            <TableRow
+                              key={question.id}
+                              className={`cursor-pointer hover:bg-gray-50 ${!question.aiAnswer ? 'opacity-50' : ''}`}
+                              onClick={() => question.aiAnswer && handleQuestionSelect(question)}
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedQuestions.some(q => q.id === question.id)}
+                                    onChange={() => question.aiAnswer && handleQuestionSelect(question)}
+                                    className="h-4 w-4 rounded border-gray-300"
+                                    disabled={!question.aiAnswer}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs ${question.aiAnswer
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-gray-100 text-gray-500'
+                                  }`}>
+                                  {question.techClass}
+                                </span>
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs ${question.aiAnswer
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-500'
+                                  }`}>
+                                  {question.aiAnswer ? '있음' : '없음'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-[10px] md:text-xs md:whitespace-nowrap md:break-normal whitespace-normal break-words">
+                                {question.questionText.length > 50
+                                  ? question.questionText.slice(0, 50) + '...'
+                                  : question.questionText}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      {totalPages > 1 && (
+                        <div className="flex justify-center gap-2 p-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 0}
+                          >
+                            이전
+                          </Button>
+                          <span className="flex items-center px-4">
+                            {currentPage + 1} / {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages - 1}
+                          >
+                            다음
+                          </Button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}
