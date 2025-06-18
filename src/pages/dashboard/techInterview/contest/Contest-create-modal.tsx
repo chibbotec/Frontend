@@ -223,8 +223,17 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
       onSuccess();
       onClose();
     } catch (error) {
+      // 상세 에러 처리
+      const err = error as any;
+      const errorCode = err?.response?.data?.errorCode;
+      if (errorCode === 'TECH_INTERVIEW_NOT_FOUND') {
+        alert('선택한 조건에 맞는 문제가 존재하지 않습니다.\n기술 분야와 문제 개수를 다시 확인해 주세요.');
+      } else if (errorCode === 'TECH_INTERVIEW_NOT_ENOUGH') {
+        alert('선택한 조건에 맞는 문제가 요청한 개수보다 적습니다.\n문제 개수를 줄이거나 기술 분야를 추가로 선택해 주세요.');
+      } else {
+        alert('대회 생성에 실패했습니다.');
+      }
       console.error('대회 생성 중 오류 발생:', error);
-      alert('대회 생성에 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -329,8 +338,8 @@ export function ContestCreateModal({ isOpen, onClose, onSuccess }: ContestCreate
             <div className="border rounded-md col-span-3">
               {randomQuestion ? (
                 <div className="flex flex-col gap-4 p-4">
-                  <div className="flex items-center gap-4">
-                    <Label>기술 분야</Label>
+                  <div className="flex flex-col gap-1">
+                    <Label className="mb-1">기술 분야</Label>
                     <div className="flex flex-wrap gap-2">
                       {techClassOptions.map((tech) => (
                         <button
